@@ -1,172 +1,147 @@
 # API Documentation
 
-Complete reference for all API endpoints in the StudyHall Platform.
+Complete API reference for the StudyHall Platform backend.
 
 ## Base URL
 
 - **Development**: `http://localhost:5000`
-- **Production**: Configure based on your deployment
+- **Production**: Configure based on deployment
 
-All endpoints are prefixed with `/api`.
+All API endpoints are prefixed with `/api`.
 
 ## Authentication
 
-Most endpoints require authentication via session cookies. The session token is set as an HTTP-only cookie after login.
+The API uses session-based authentication. After successful login, a session token is stored in an HTTP-only cookie named `session_token`.
 
-### Session Management
+### Authentication Flow
 
-- Sessions are stored in-memory (MVP)
-- Session token is set as `session_token` cookie
-- Sessions expire after 7 days (604800 seconds)
+1. User logs in via `POST /api/auth/login`
+2. Server sets `session_token` cookie
+3. Subsequent requests automatically include the cookie
+4. Server validates the session token on protected endpoints
 
----
+## Endpoints
 
-## Authentication Endpoints
+### Authentication
 
-### POST /api/auth/login
+#### Login
+```http
+POST /api/auth/login
+Content-Type: application/json
 
-Authenticate a student and create a session.
-
-**Request Body:**
-```json
 {
   "email": "student@studyhall.com",
   "password": "password123"
 }
 ```
 
-**Response (200 OK):**
+**Response** (200 OK):
 ```json
 {
   "success": true,
   "student": {
     "id": 1,
     "email": "student@studyhall.com",
-    "name": "John Doe"
+    "name": "Student Name"
   }
 }
 ```
 
-**Response (401 Unauthorized):**
+**Error Response** (401 Unauthorized):
 ```json
 {
   "error": "Invalid email or password"
 }
 ```
 
-**Sets Cookie:** `session_token` (HTTP-only, 7-day expiry)
+#### Register
+```http
+POST /api/auth/register
+Content-Type: application/json
 
----
-
-### POST /api/auth/register
-
-Register a new student account.
-
-**Request Body:**
-```json
 {
   "email": "newstudent@studyhall.com",
-  "name": "Jane Doe",
-  "password": "securepassword"
+  "name": "New Student",
+  "password": "password123"
 }
 ```
 
-**Response (200 OK):**
+**Response** (200 OK):
 ```json
 {
   "success": true,
   "student": {
     "id": 2,
     "email": "newstudent@studyhall.com",
-    "name": "Jane Doe"
+    "name": "New Student"
   }
 }
 ```
 
-**Response (400 Bad Request):**
+**Error Response** (400 Bad Request):
 ```json
 {
-  "error": "Maximum of 30 students reached"
-}
-```
-or
-```json
-{
-  "error": "Email already registered"
+  "error": "Email already registered" // or "Maximum 30 students allowed"
 }
 ```
 
-**Limitations:**
-- Maximum 30 students allowed
-- Email must be unique
+#### Logout
+```http
+POST /api/auth/logout
+```
 
----
-
-### POST /api/auth/logout
-
-Logout the current user and invalidate session.
-
-**Response (200 OK):**
+**Response** (200 OK):
 ```json
 {
   "success": true
 }
 ```
 
-**Deletes Cookie:** `session_token`
+#### Get Current User
+```http
+GET /api/auth/me
+```
 
----
-
-### GET /api/auth/me
-
-Get the currently authenticated user.
-
-**Response (200 OK):**
+**Response** (200 OK):
 ```json
 {
   "id": 1,
   "email": "student@studyhall.com",
-  "name": "John Doe"
+  "name": "Student Name"
 }
 ```
 
-**Response (401 Unauthorized):**
+**Error Response** (401 Unauthorized):
 ```json
 {
   "error": "Not authenticated"
 }
 ```
 
----
+### Materials
 
-## Materials Endpoints
-
-### GET /api/materials
-
-Get all materials with optional filtering and search.
-
-**Query Parameters:**
-- `search` (optional) - Search in title and content
-- `category` (optional) - Filter by category
-
-**Example:**
-```
-GET /api/materials?search=python&category=Basics
+#### List Materials
+```http
+GET /api/materials?search=python&category=Python
 ```
 
-**Response (200 OK):**
+**Query Parameters**:
+- `search` (optional): Search term for title and content
+- `category` (optional): Filter by category
+
+**Response** (200 OK):
 ```json
 [
   {
     "id": 1,
     "title": "Introduction to Python",
     "content": "Python is a programming language...",
-    "category": "Basics",
+    "category": "Python",
     "notion_url": "https://notion.so/...",
     "created_at": "2024-01-01T00:00:00",
     "progress": {
       "is_completed": false,
-      "progress_percentage": 45,
+      "progress_percentage": 50,
       "last_accessed_at": "2024-01-15T10:30:00"
     },
     "is_bookmarked": true
@@ -174,67 +149,52 @@ GET /api/materials?search=python&category=Basics
 ]
 ```
 
-**Response (401 Unauthorized):**
-```json
-{
-  "error": "Not authenticated"
-}
+#### Get Material Categories
+```http
+GET /api/materials/categories
 ```
 
----
+**Response** (200 OK):
+```json
+["Python", "Web Development", "Data Science"]
+```
 
-### GET /api/materials/:id
+#### Get Material Detail
+```http
+GET /api/materials/:id
+```
 
-Get a specific material by ID.
-
-**Path Parameters:**
-- `id` (integer) - Material ID
-
-**Response (200 OK):**
+**Response** (200 OK):
 ```json
 {
   "id": 1,
   "title": "Introduction to Python",
-  "content": "Python is a programming language...",
-  "category": "Basics",
+  "content": "Full content here...",
+  "category": "Python",
   "notion_url": "https://notion.so/...",
   "created_at": "2024-01-01T00:00:00",
   "progress": {
     "is_completed": false,
-    "progress_percentage": 45,
+    "progress_percentage": 50,
     "last_accessed_at": "2024-01-15T10:30:00"
   },
   "is_bookmarked": true
 }
 ```
 
-**Response (404 Not Found):**
+**Error Response** (404 Not Found):
 ```json
 {
   "error": "Material not found"
 }
 ```
 
-**Note:** This endpoint automatically updates `last_accessed_at` when accessed.
-
----
-
-### GET /api/materials/categories
-
-Get all unique categories from materials.
-
-**Response (200 OK):**
-```json
-["Basics", "Advanced", "Web Development", "Data Science"]
+#### Sync from Notion
+```http
+POST /api/materials/sync-notion
 ```
 
----
-
-### POST /api/materials/sync-notion
-
-Sync materials from Notion database.
-
-**Response (200 OK):**
+**Response** (200 OK):
 ```json
 {
   "success": true,
@@ -242,42 +202,33 @@ Sync materials from Notion database.
 }
 ```
 
-**Response (500 Internal Server Error):**
+**Error Response** (500 Internal Server Error):
 ```json
 {
-  "error": "Error message"
+  "error": "Notion API error: ..."
 }
 ```
 
-**Requirements:**
-- `NOTION_API_KEY` environment variable must be set
-- `NOTION_DATABASE_ID` environment variable must be set
-- Notion database must be shared with the integration
+**Note**: Requires `NOTION_API_KEY` and `NOTION_DATABASE_ID` environment variables.
 
----
+### Progress Tracking
 
-## Progress Endpoints
+#### Update Progress
+```http
+POST /api/progress/:material_id
+Content-Type: application/json
 
-### POST /api/progress/:id
-
-Create or update progress for a material.
-
-**Path Parameters:**
-- `id` (integer) - Material ID
-
-**Request Body:**
-```json
 {
   "is_completed": true,
   "progress_percentage": 100
 }
 ```
 
-**Fields:**
-- `is_completed` (boolean, optional) - Mark as completed
-- `progress_percentage` (integer, optional) - Progress percentage (0-100)
+**Request Body** (all fields optional):
+- `is_completed` (boolean): Mark material as completed
+- `progress_percentage` (number, 0-100): Set progress percentage
 
-**Response (200 OK):**
+**Response** (200 OK):
 ```json
 {
   "success": true,
@@ -285,171 +236,144 @@ Create or update progress for a material.
     "is_completed": true,
     "progress_percentage": 100,
     "last_accessed_at": "2024-01-15T10:30:00",
-    "completed_at": "2024-01-15T10:35:00"
+    "completed_at": "2024-01-15T10:30:00"
   }
 }
 ```
 
-**Note:**
-- Setting `is_completed: true` automatically sets `progress_percentage` to 100
-- Setting `progress_percentage: 100` automatically sets `is_completed: true`
-- Progress percentage is clamped between 0 and 100
+### Bookmarks
 
----
+#### List Bookmarks
+```http
+GET /api/bookmarks
+```
 
-### PUT /api/progress/:id
-
-Same as POST /api/progress/:id (alias for update).
-
----
-
-## Bookmark Endpoints
-
-### GET /api/bookmarks
-
-Get all bookmarked materials for the current user.
-
-**Response (200 OK):**
+**Response** (200 OK):
 ```json
 [
   {
     "id": 1,
     "title": "Introduction to Python",
     "content": "Python is a programming language...",
-    "category": "Basics",
+    "category": "Python",
     "notion_url": "https://notion.so/...",
     "created_at": "2024-01-01T00:00:00"
   }
 ]
 ```
 
----
+#### Add Bookmark
+```http
+POST /api/bookmarks/:material_id
+```
 
-### POST /api/bookmarks/:id
-
-Add a material to bookmarks.
-
-**Path Parameters:**
-- `id` (integer) - Material ID
-
-**Response (200 OK):**
+**Response** (200 OK):
 ```json
 {
   "success": true
 }
 ```
 
-**Response (404 Not Found):**
+**Error Response** (404 Not Found):
 ```json
 {
   "error": "Material not found"
 }
 ```
 
-**Note:** If already bookmarked, returns success without error.
+#### Remove Bookmark
+```http
+DELETE /api/bookmarks/:material_id
+```
 
----
-
-### DELETE /api/bookmarks/:id
-
-Remove a material from bookmarks.
-
-**Path Parameters:**
-- `id` (integer) - Material ID
-
-**Response (200 OK):**
+**Response** (200 OK):
 ```json
 {
   "success": true
 }
 ```
 
----
+### Profile
 
-## Profile Endpoints
+#### Get Profile
+```http
+GET /api/profile
+```
 
-### GET /api/profile
-
-Get user profile with statistics.
-
-**Response (200 OK):**
+**Response** (200 OK):
 ```json
 {
   "id": 1,
   "email": "student@studyhall.com",
-  "name": "John Doe",
+  "name": "Student Name",
   "created_at": "2024-01-01T00:00:00",
   "stats": {
     "total_materials": 50,
-    "completed_materials": 15,
-    "bookmarks_count": 8,
-    "completion_rate": 30.0
+    "completed_materials": 25,
+    "bookmarks_count": 10,
+    "completion_rate": 50.0
   }
 }
 ```
 
----
+#### Update Profile
+```http
+PUT /api/profile
+Content-Type: application/json
 
-### PUT /api/profile
-
-Update user profile.
-
-**Request Body:**
-```json
 {
-  "name": "John Updated",
+  "name": "Updated Name",
   "email": "newemail@studyhall.com",
-  "password": "newpassword"
+  "password": "newpassword123"
 }
 ```
 
-**Fields:**
-- `name` (string, optional) - Update name
-- `email` (string, optional) - Update email (must be unique)
-- `password` (string, optional) - Update password
+**Request Body** (all fields optional):
+- `name` (string): Update student name
+- `email` (string): Update email address
+- `password` (string): Update password
 
-**Response (200 OK):**
+**Response** (200 OK):
 ```json
 {
   "success": true,
   "student": {
     "id": 1,
     "email": "newemail@studyhall.com",
-    "name": "John Updated"
+    "name": "Updated Name"
   }
 }
 ```
 
-**Response (400 Bad Request):**
+**Error Response** (400 Bad Request):
 ```json
 {
   "error": "Email already taken"
 }
 ```
 
----
+### Dashboard
 
-## Dashboard Endpoints
+#### Get Dashboard Stats
+```http
+GET /api/dashboard/stats
+```
 
-### GET /api/dashboard/stats
-
-Get dashboard statistics and recent activity.
-
-**Response (200 OK):**
+**Response** (200 OK):
 ```json
 {
   "total_materials": 50,
-  "completed_materials": 15,
+  "completed_materials": 25,
   "in_progress_materials": 10,
-  "not_started_materials": 25,
-  "bookmarks_count": 8,
-  "completion_rate": 30.0,
+  "not_started_materials": 15,
+  "bookmarks_count": 10,
+  "completion_rate": 50.0,
   "recent_activity": [
     {
       "id": 1,
       "title": "Introduction to Python",
-      "category": "Basics",
-      "progress_percentage": 45,
+      "category": "Python",
+      "progress_percentage": 75,
       "is_completed": false,
       "last_accessed_at": "2024-01-15T10:30:00"
     }
@@ -457,20 +381,109 @@ Get dashboard statistics and recent activity.
 }
 ```
 
-**Fields:**
-- `total_materials` - Total number of materials
-- `completed_materials` - Number of completed materials
-- `in_progress_materials` - Number of materials with progress > 0% but not completed
-- `not_started_materials` - Number of materials not yet started
-- `bookmarks_count` - Number of bookmarked materials
-- `completion_rate` - Percentage of completed materials
-- `recent_activity` - Last 5 accessed materials
+### Testing
 
----
+#### Run Backend Tests
+```http
+POST /api/tests/backend/run
+```
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "tests_run": 25,
+  "tests_passed": 24,
+  "tests_failed": 1,
+  "duration": 2.5
+}
+```
+
+#### Get Backend Coverage
+```http
+GET /api/tests/backend/coverage
+```
+
+**Response** (200 OK):
+```json
+{
+  "total_coverage": 85.5,
+  "files": [
+    {
+      "name": "backend/models/student.py",
+      "coverage": 90.0
+    }
+  ]
+}
+```
+
+#### Run Frontend Tests
+```http
+POST /api/tests/frontend/run
+```
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "tests_run": 15,
+  "tests_passed": 15,
+  "tests_failed": 0,
+  "duration": 1.2
+}
+```
+
+#### Get Frontend Coverage
+```http
+GET /api/tests/frontend/coverage
+```
+
+**Response** (200 OK):
+```json
+{
+  "total_coverage": 78.3,
+  "files": [
+    {
+      "name": "src/views/Login.vue",
+      "coverage": 85.0
+    }
+  ]
+}
+```
+
+#### Get Tests Summary
+```http
+GET /api/tests/summary
+```
+
+**Response** (200 OK):
+```json
+{
+  "backend": {
+    "coverage": {
+      "total_coverage": 85.5,
+      "files": [...]
+    }
+  },
+  "frontend": {
+    "coverage": {
+      "total_coverage": 78.3,
+      "files": [...]
+    }
+  }
+}
+```
 
 ## Error Responses
 
 All endpoints may return the following error responses:
+
+### 400 Bad Request
+```json
+{
+  "error": "Error message describing what went wrong"
+}
+```
 
 ### 401 Unauthorized
 ```json
@@ -489,15 +502,13 @@ All endpoints may return the following error responses:
 ### 500 Internal Server Error
 ```json
 {
-  "error": "Error message"
+  "error": "Internal server error message"
 }
 ```
 
----
-
 ## Rate Limiting
 
-Currently, there is no rate limiting implemented. Consider adding rate limiting for production use.
+Currently, there is no rate limiting implemented. Consider adding rate limiting for production deployments.
 
 ## CORS
 
@@ -505,48 +516,12 @@ CORS is enabled for:
 - `http://localhost:5173` (frontend dev server)
 - `http://localhost:5000` (backend)
 
-Configure CORS properly for production deployment.
+Update CORS origins in `backend/main.py` for production.
 
----
+## Environment Variables
 
-## Example Usage
+Required environment variables:
 
-### JavaScript/Fetch Example
-
-```javascript
-// Login
-const response = await fetch('http://localhost:5000/api/auth/login', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  credentials: 'include', // Important for cookies
-  body: JSON.stringify({
-    email: 'student@studyhall.com',
-    password: 'password123'
-  })
-});
-
-const data = await response.json();
-
-// Get materials
-const materialsResponse = await fetch('http://localhost:5000/api/materials', {
-  credentials: 'include'
-});
-
-const materials = await materialsResponse.json();
-```
-
-### cURL Example
-
-```bash
-# Login
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"student@studyhall.com","password":"password123"}' \
-  -c cookies.txt
-
-# Get materials (using saved cookies)
-curl http://localhost:5000/api/materials \
-  -b cookies.txt
-```
+- `SECRET_KEY`: Secret key for Flask sessions (default: "dev-secret-key-change-in-production")
+- `NOTION_API_KEY`: Notion API key (optional, for Notion sync)
+- `NOTION_DATABASE_ID`: Notion database ID (optional, for Notion sync)

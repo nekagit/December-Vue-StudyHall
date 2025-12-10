@@ -1,528 +1,432 @@
 # Development Guide
 
-Complete guide for developing the StudyHall Platform.
+Complete guide for setting up and developing the StudyHall Platform.
 
-## Table of Contents
+## Prerequisites
 
-- [Getting Started](#getting-started)
-- [Development Environment](#development-environment)
-- [Project Structure](#project-structure)
-- [Code Style](#code-style)
-- [Backend Development](#backend-development)
-- [Frontend Development](#frontend-development)
-- [Database Development](#database-development)
-- [Testing](#testing)
-- [Debugging](#debugging)
-- [Common Tasks](#common-tasks)
+Before you begin, ensure you have the following installed:
 
-## Getting Started
+- **Python 3.9+**: [Download Python](https://www.python.org/downloads/)
+- **Node.js 18+**: [Download Node.js](https://nodejs.org/)
+- **npm**: Comes with Node.js
+- **Git**: [Download Git](https://git-scm.com/downloads)
 
-### Prerequisites
+## Initial Setup
 
-Ensure you have the following installed:
-
-- **Python 3.9+** - Check with `python3 --version`
-- **Node.js 18+** - Check with `node --version`
-- **npm** - Check with `npm --version`
-- **Git** - Check with `git --version`
-
-### Initial Setup
-
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd December-Vue-StudyHall
-   ```
-
-2. **Set up backend:**
-   ```bash
-   cd backend
-   python3 -m venv .venv
-   source .venv/bin/activate  # Windows: .venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
-
-3. **Set up frontend:**
-   ```bash
-   cd frontend
-   npm install
-   cd ..
-   ```
-
-4. **Initialize database:**
-   ```bash
-   source backend/.venv/bin/activate
-   python backend/init_db.py
-   ```
-
-5. **Start development servers:**
-   ```bash
-   ./manage.py dev
-   ```
-
-## Development Environment
-
-### Environment Variables
-
-Create a `.env` file in the project root (optional, for local development):
+### 1. Clone the Repository
 
 ```bash
-SECRET_KEY=your-dev-secret-key
-NOTION_API_KEY=your-notion-api-key
-NOTION_DATABASE_ID=your-database-id
+git clone <repository-url>
+cd December-Vue-StudyHall
 ```
 
-### Development Servers
+### 2. Backend Setup
 
-The `./manage.py dev` command starts both servers:
+```bash
+# Navigate to backend directory
+cd backend
 
-- **Backend**: http://localhost:5000
-- **Frontend**: http://localhost:5173
+# Create virtual environment
+python3 -m venv .venv
 
-The frontend dev server (Vite) automatically proxies `/api/*` requests to the backend.
+# Activate virtual environment
+# On macOS/Linux:
+source .venv/bin/activate
+# On Windows:
+# .venv\Scripts\activate
 
-### Hot Reload
+# Install dependencies
+pip install -r requirements.txt
 
-Both servers support hot reload:
-- **Backend**: Flask debug mode (auto-reload on file changes)
-- **Frontend**: Vite HMR (Hot Module Replacement)
+# Return to project root
+cd ..
+```
+
+### 3. Frontend Setup
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Return to project root
+cd ..
+```
+
+### 4. Initialize Database
+
+```bash
+# Activate backend virtual environment first
+source backend/.venv/bin/activate  # On Windows: backend\.venv\Scripts\activate
+
+# Initialize database
+python backend/init_db.py
+```
+
+This creates the SQLite database and a default student account:
+- **Email**: `student@studyhall.com`
+- **Password**: `password123`
+
+## Development Workflow
+
+### Running Development Servers
+
+The easiest way to run both frontend and backend in development mode:
+
+```bash
+./manage.py dev
+```
+
+This will:
+- Start the Flask backend on `http://localhost:5000`
+- Start the Vite dev server on `http://localhost:5173`
+- Proxy `/api/*` requests from frontend to backend
+
+### Running Servers Separately
+
+If you prefer to run servers separately:
+
+**Backend**:
+```bash
+source backend/.venv/bin/activate
+python backend/main.py
+```
+
+**Frontend**:
+```bash
+cd frontend
+npm run dev
+```
+
+### Building for Production
+
+```bash
+# Build frontend
+./manage.py build
+
+# Serve production build (runs backend + serves static frontend)
+./manage.py serve
+```
 
 ## Project Structure
 
-### Backend Structure
-
 ```
-backend/
-├── main.py              # Flask app and routes
-├── database.py          # SQLAlchemy setup
-├── init_db.py           # Database initialization
-├── requirements.txt     # Python dependencies
-├── models/              # Database models
-│   ├── __init__.py
-│   ├── student.py
-│   ├── material.py
-│   ├── progress.py
-│   └── bookmark.py
-└── services/            # Business logic
-    ├── auth.py          # Authentication
-    ├── session.py       # Session management
-    └── notion_sync.py   # Notion integration
-```
-
-### Frontend Structure
-
-```
-frontend/
-├── src/
-│   ├── views/           # Page components (routes)
-│   │   ├── Home.vue
-│   │   ├── Login.vue
-│   │   ├── Register.vue
-│   │   ├── Materials.vue
-│   │   ├── MaterialDetail.vue
-│   │   └── Compiler.vue
-│   ├── components/      # Reusable components
-│   │   └── PythonRunner.vue
-│   ├── App.vue          # Root component
-│   ├── main.ts          # Entry point + router
-│   └── style.scss       # TailwindCSS imports
-├── vite.config.ts       # Vite configuration
-├── tailwind.config.js   # TailwindCSS config
-└── package.json         # Dependencies
+December-Vue-StudyHall/
+├── backend/
+│   ├── main.py              # Flask API application
+│   ├── database.py          # SQLAlchemy database setup
+│   ├── init_db.py           # Database initialization script
+│   ├── models/              # Database models
+│   │   ├── __init__.py
+│   │   ├── student.py       # Student model
+│   │   ├── material.py      # Material model
+│   │   ├── progress.py      # MaterialProgress model
+│   │   └── bookmark.py      # Bookmark model
+│   ├── services/            # Business logic services
+│   │   ├── auth.py          # Authentication service
+│   │   ├── session.py       # Session management
+│   │   ├── notion_sync.py   # Notion integration
+│   │   └── test_runner.py   # Test execution service
+│   ├── tests/               # Backend tests
+│   │   ├── conftest.py      # Pytest configuration
+│   │   ├── test_models.py
+│   │   ├── test_auth_service.py
+│   │   ├── test_session_service.py
+│   │   └── test_api.py
+│   └── requirements.txt     # Python dependencies
+│
+├── frontend/
+│   ├── src/
+│   │   ├── App.vue          # Root Vue component
+│   │   ├── main.ts          # Entry point with router
+│   │   ├── style.scss       # TailwindCSS imports
+│   │   ├── views/           # Page components
+│   │   │   ├── Home.vue
+│   │   │   ├── Login.vue
+│   │   │   ├── Register.vue
+│   │   │   ├── Dashboard.vue
+│   │   │   ├── Materials.vue
+│   │   │   ├── MaterialDetail.vue
+│   │   │   ├── Bookmarks.vue
+│   │   │   ├── Compiler.vue
+│   │   │   ├── Profile.vue
+│   │   │   └── TestDashboard.vue
+│   │   ├── components/      # Reusable components
+│   │   │   ├── HelloWorld.vue
+│   │   │   └── PythonRunner.vue
+│   │   └── utils/           # Utility functions
+│   │       └── mount.ts
+│   ├── tests/               # Frontend tests
+│   ├── vite.config.ts       # Vite configuration
+│   ├── tailwind.config.js   # TailwindCSS configuration
+│   ├── package.json         # Node dependencies
+│   └── index.html           # HTML entry point
+│
+├── manage.py                # Management script
+├── README.md                # Project overview
+├── API.md                   # API documentation
+├── DEVELOPMENT.md           # This file
+├── DEPLOYMENT.md            # Deployment guide
+├── CONTRIBUTING.md          # Contribution guidelines
+└── TESTING.md               # Testing guide
 ```
 
 ## Code Style
 
-### Python
+### Python (Backend)
 
 - Follow **PEP 8** style guide
 - Use **type hints** for all function parameters and return types
-- Maximum line length: 100 characters
+- Maximum line length: 88 characters (Black formatter default)
 - Use 4 spaces for indentation
+- Use docstrings for functions and classes
 
-**Example:**
+**Example**:
 ```python
-from typing import Optional
-from sqlalchemy.orm import Session
-
-def authenticate_student(
-    db: Session, 
-    email: str, 
-    password: str
-) -> Optional[Student]:
-    """Authenticate a student by email and password."""
+def authenticate_student(db: Session, email: str, password: str) -> Optional[Student]:
+    """Authenticate a student with email and password.
+    
+    Args:
+        db: Database session
+        email: Student email address
+        password: Plain text password
+        
+    Returns:
+        Student object if authenticated, None otherwise
+    """
     student = db.query(Student).filter(Student.email == email).first()
     if student and verify_password(password, student.password_hash):
         return student
     return None
 ```
 
-### TypeScript/Vue
+### TypeScript/Vue (Frontend)
 
-- Use **Composition API** (`<script setup>`) for all components
+- Use **Composition API** (`<script setup>`) for all Vue components
 - Use **TypeScript strict mode**
-- Use **TailwindCSS** for styling (no custom CSS)
-- Use **camelCase** for variables and functions
-- Use **PascalCase** for components
+- Use **TailwindCSS** for all styling (no custom CSS except imports)
+- Use **Vue Router** for navigation
+- Use **async/await** for API calls
 
-**Example:**
+**Example**:
 ```vue
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
-interface Material {
-  id: number
-  title: string
-  content: string
-}
-
+const router = useRouter()
 const materials = ref<Material[]>([])
-const searchQuery = ref('')
 
-const filteredMaterials = computed(() => {
-  return materials.value.filter(m => 
-    m.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-  )
-})
-</script>
-
-<template>
-  <div class="container mx-auto p-4">
-    <input 
-      v-model="searchQuery" 
-      class="border rounded p-2"
-      placeholder="Search materials..."
-    />
-  </div>
-</template>
-```
-
-## Backend Development
-
-### Adding a New Endpoint
-
-1. **Add route in `main.py`:**
-   ```python
-   @app.route("/api/example", methods=["GET"])
-   def get_example():
-       student_id = get_current_student_id()
-       if not student_id:
-           return jsonify({"error": "Not authenticated"}), 401
-       
-       # Your logic here
-       return jsonify({"success": True})
-   ```
-
-2. **Add business logic in `services/` if needed:**
-   ```python
-   # backend/services/example.py
-   def process_example(db: Session, student_id: int) -> dict:
-       # Business logic
-       return {"result": "data"}
-   ```
-
-### Database Models
-
-1. **Create model in `models/`:**
-   ```python
-   # backend/models/example.py
-   from sqlalchemy import Column, Integer, String
-   from backend.database import Base
-   
-   class Example(Base):
-       __tablename__ = "examples"
-       
-       id = Column(Integer, primary_key=True, index=True)
-       name = Column(String, nullable=False)
-   ```
-
-2. **Import in `models/__init__.py`:**
-   ```python
-   from .example import Example
-   __all__ = [..., "Example"]
-   ```
-
-3. **Update database:**
-   - Tables are auto-created on app start
-   - For production, use Alembic migrations
-
-### Session Management
-
-Sessions are stored in-memory (MVP). To upgrade to Redis:
-
-1. Install Redis and `redis` Python package
-2. Update `backend/services/session.py`
-3. Use Redis client instead of in-memory dict
-
-## Frontend Development
-
-### Adding a New Route
-
-1. **Create view component in `src/views/`:**
-   ```vue
-   <!-- src/views/Example.vue -->
-   <script setup lang="ts">
-   // Component logic
-   </script>
-   
-   <template>
-     <div class="container mx-auto p-4">
-       <!-- Your template -->
-     </div>
-   </template>
-   ```
-
-2. **Add route in `src/main.ts`:**
-   ```typescript
-   import Example from './views/Example.vue'
-   
-   const routes = [
-     // ... existing routes
-     { 
-       path: '/example', 
-       component: Example,
-       meta: { requiresAuth: true } // If auth required
-     }
-   ]
-   ```
-
-### API Calls
-
-Use `fetch` with credentials for authenticated requests:
-
-```typescript
-const response = await fetch('/api/materials', {
-  credentials: 'include' // Important for cookies
-})
-
-if (!response.ok) {
-  throw new Error('Failed to fetch materials')
+async function fetchMaterials(): Promise<void> {
+  const response = await fetch('/api/materials')
+  materials.value = await response.json()
 }
 
-const materials = await response.json()
-```
-
-### Styling with TailwindCSS
-
-Use Tailwind utility classes:
-
-```vue
-<template>
-  <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">
-      Title
-    </h1>
-    <button class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
-      Click me
-    </button>
-  </div>
-</template>
-```
-
-### Components
-
-Create reusable components in `src/components/`:
-
-```vue
-<!-- src/components/Button.vue -->
-<script setup lang="ts">
-interface Props {
-  label: string
-  variant?: 'primary' | 'secondary'
-}
-
-defineProps<Props>()
+onMounted(() => {
+  fetchMaterials()
+})
 </script>
-
-<template>
-  <button 
-    :class="[
-      'px-4 py-2 rounded',
-      variant === 'primary' ? 'bg-indigo-600 text-white' : 'bg-gray-200'
-    ]"
-  >
-    {{ label }}
-  </button>
-</template>
 ```
 
-## Database Development
+## Database Management
 
-### Database Location
+### SQLite Database Location
 
-- **Development**: `sql_app.db` in project root
-- **Production**: Configure via `SQLALCHEMY_DATABASE_URL`
+The SQLite database is created at: `backend/studyhall.db`
 
-### Viewing Database
+### Database Migrations
 
-Use SQLite browser or command line:
+Currently, the project uses manual schema updates. For production, consider using Alembic for migrations:
 
 ```bash
-sqlite3 sql_app.db
-.tables
-SELECT * FROM students;
+# Install Alembic
+pip install alembic
+
+# Initialize Alembic
+alembic init alembic
+
+# Create migration
+alembic revision --autogenerate -m "Description"
+
+# Apply migration
+alembic upgrade head
 ```
 
 ### Resetting Database
 
+To reset the database:
+
 ```bash
-rm sql_app.db
+# Delete database file
+rm backend/studyhall.db
+
+# Reinitialize
 python backend/init_db.py
 ```
 
-### Database Migrations
+## Environment Variables
 
-Currently, tables are auto-created. For production:
-
-1. Install Alembic: `pip install alembic`
-2. Initialize: `alembic init alembic`
-3. Create migrations: `alembic revision --autogenerate -m "description"`
-4. Apply: `alembic upgrade head`
-
-## Testing
-
-### Backend Testing
-
-Create tests in `backend/tests/`:
-
-```python
-# backend/tests/test_auth.py
-import pytest
-from backend.services.auth import authenticate_student, create_student
-
-def test_authenticate_student(db_session):
-    student = create_student(db_session, "test@test.com", "Test", "password")
-    authenticated = authenticate_student(db_session, "test@test.com", "password")
-    assert authenticated is not None
-    assert authenticated.email == "test@test.com"
-```
-
-Run tests:
-```bash
-pytest backend/tests/
-```
-
-### Frontend Testing
-
-Consider adding Vitest for Vue component testing:
+Create a `.env` file in the project root (or set environment variables):
 
 ```bash
-npm install -D vitest @vue/test-utils
+# Flask
+SECRET_KEY=your-secret-key-here
+
+# Notion Integration (optional)
+NOTION_API_KEY=your-notion-api-key
+NOTION_DATABASE_ID=your-database-id
 ```
 
 ## Debugging
 
 ### Backend Debugging
 
-Flask debug mode is enabled in development. Use `print()` or logging:
+Flask runs in debug mode by default in development. To enable more verbose logging:
 
 ```python
 import logging
 logging.basicConfig(level=logging.DEBUG)
-
-@app.route("/api/example")
-def example():
-    logging.debug("Debug message")
-    return jsonify({"success": True})
 ```
 
 ### Frontend Debugging
 
-Use browser DevTools:
-- **Console**: `console.log()`, `console.error()`
-- **Network**: Inspect API requests
-- **Vue DevTools**: Install Vue DevTools browser extension
+- Use browser DevTools (F12)
+- Vue DevTools extension for Vue component inspection
+- Network tab to inspect API requests
 
-### Database Debugging
+### Database Inspection
 
-Enable SQLAlchemy logging:
+Use SQLite command-line tool:
 
-```python
-import logging
-logging.basicConfig()
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+```bash
+sqlite3 backend/studyhall.db
+
+# List tables
+.tables
+
+# View schema
+.schema students
+
+# Query data
+SELECT * FROM students;
+```
+
+## Testing
+
+See [TESTING.md](./TESTING.md) for complete testing guide.
+
+**Quick test commands**:
+
+```bash
+# Backend tests
+cd backend
+pytest
+
+# Frontend tests
+cd frontend
+npm run test
 ```
 
 ## Common Tasks
 
-### Adding a New Feature
+### Adding a New API Endpoint
 
-1. **Backend:**
-   - Add model (if needed) in `models/`
-   - Add service logic in `services/`
-   - Add endpoint in `main.py`
+1. Add route in `backend/main.py`
+2. Add business logic in `backend/services/` if needed
+3. Add test in `backend/tests/test_api.py`
+4. Update `API.md` documentation
 
-2. **Frontend:**
-   - Create view component in `views/`
-   - Add route in `main.ts`
-   - Update navigation in `App.vue` (if needed)
+### Adding a New Vue Page
 
-### Updating Dependencies
+1. Create component in `frontend/src/views/`
+2. Add route in `frontend/src/main.ts`
+3. Add navigation link in `frontend/src/App.vue` if needed
+4. Add test in `frontend/tests/views/`
 
-**Backend:**
-```bash
-pip install <package>
-pip freeze > requirements.txt
-```
+### Adding a New Database Model
 
-**Frontend:**
-```bash
-npm install <package>
-# package.json is updated automatically
-```
-
-### Building for Production
-
-```bash
-./manage.py build
-```
-
-This builds the frontend to `frontend/dist/`.
-
-### Code Formatting
-
-**Python:**
-```bash
-pip install black
-black backend/
-```
-
-**TypeScript:**
-```bash
-npm install -D prettier
-npx prettier --write frontend/src/
-```
+1. Create model in `backend/models/`
+2. Import in `backend/models/__init__.py`
+3. Update `backend/database.py` if needed
+4. Add test in `backend/tests/test_models.py`
 
 ## Troubleshooting
 
 ### Port Already in Use
 
-```bash
-# Find process using port 5000
-lsof -i :5000
-# Kill process
-kill -9 <PID>
+If port 5000 or 5173 is already in use:
+
+**Backend** (change port in `backend/main.py`):
+```python
+app.run(debug=True, port=5001)  # Change port
 ```
 
-### Database Locked
+**Frontend** (change port in `frontend/vite.config.ts`):
+```typescript
+server: {
+  port: 5174  // Change port
+}
+```
 
-Close all database connections or restart the server.
+### Module Not Found Errors
+
+**Backend**:
+```bash
+# Ensure virtual environment is activated
+source backend/.venv/bin/activate
+
+# Reinstall dependencies
+pip install -r backend/requirements.txt
+```
+
+**Frontend**:
+```bash
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### Database Locked Errors
+
+SQLite may lock if multiple processes access it. Ensure only one Flask instance is running.
 
 ### CORS Errors
 
-Ensure backend CORS is configured for your frontend URL in `main.py`.
+Ensure CORS origins in `backend/main.py` match your frontend URL.
 
-### Module Not Found
+## IDE Setup
 
-- **Backend**: Ensure virtual environment is activated
-- **Frontend**: Run `npm install`
+### VS Code
 
-## Next Steps
+Recommended extensions:
+- **Python**: Python extension by Microsoft
+- **Volar**: Vue 3 language support
+- **Tailwind CSS IntelliSense**: Tailwind autocomplete
+- **ESLint**: JavaScript/TypeScript linting
+- **Prettier**: Code formatting
 
-- Add unit tests
-- Add integration tests
-- Set up CI/CD
-- Add code linting (flake8, ESLint)
-- Add pre-commit hooks
-- Set up error tracking (Sentry)
-- Add logging infrastructure
+### PyCharm
+
+- Configure Python interpreter to use `backend/.venv`
+- Mark `frontend/` as excluded from Python inspection
+- Enable TypeScript support
+
+## Git Workflow
+
+1. Create a feature branch: `git checkout -b feature/your-feature`
+2. Make changes and commit: `git commit -m "Add feature"`
+3. Push branch: `git push origin feature/your-feature`
+4. Create pull request
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed contribution guidelines.
+
+## Resources
+
+- [Flask Documentation](https://flask.palletsprojects.com/)
+- [Vue 3 Documentation](https://vuejs.org/)
+- [Vite Documentation](https://vitejs.dev/)
+- [TailwindCSS Documentation](https://tailwindcss.com/)
+- [SQLAlchemy Documentation](https://docs.sqlalchemy.org/)
+- [Notion API Documentation](https://developers.notion.com/)

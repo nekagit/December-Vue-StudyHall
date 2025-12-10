@@ -16,7 +16,9 @@ def build_frontend():
 
 def start_backend():
     print("Starting backend server on http://localhost:5000...")
-    subprocess.run(["python", "backend/main.py"], cwd=".")
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.getcwd()
+    subprocess.run([sys.executable, "backend/main.py"], cwd=".", env=env)
 
 def start_frontend():
     print("Starting frontend dev server on http://localhost:5173...")
@@ -28,9 +30,12 @@ def dev_mode():
     print("Frontend: http://localhost:5173")
     
     # Start backend (non-blocking)
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.getcwd()
     backend_process = subprocess.Popen(
-        ["python", "backend/main.py"],
-        cwd="."
+        [sys.executable, "backend/main.py"],
+        cwd=".",
+        env=env
     )
     
     # Start frontend (blocking)

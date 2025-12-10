@@ -1,8 +1,8 @@
 from .student import Student
 from .material import Material
-from .progress import MaterialProgress
 from .bookmark import Bookmark
+from .progress import Progress
 
-__all__ = ["Student", "Material", "MaterialProgress", "Bookmark"]
+__all__ = ["Student", "Material", "Bookmark", "Progress"]
 
 
