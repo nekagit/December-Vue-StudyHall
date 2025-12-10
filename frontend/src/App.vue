@@ -53,6 +53,30 @@
                 class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                 active-class="border-indigo-500 text-gray-900"
               >
+                Sessions
+              </router-link>
+              <router-link
+                v-if="user"
+                to="/goals"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                active-class="border-indigo-500 text-gray-900"
+              >
+                Goals
+              </router-link>
+              <router-link
+                v-if="user"
+                to="/goals"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                active-class="border-indigo-500 text-gray-900"
+              >
+                Goals
+              </router-link>
+              <router-link
+                v-if="user"
+                to="/study-sessions"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                active-class="border-indigo-500 text-gray-900"
+              >
                 Study Sessions
               </router-link>
             </div>

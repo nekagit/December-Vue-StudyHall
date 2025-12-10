@@ -125,22 +125,6 @@ manage.py                # Management script
 - `GET /api/materials/:id` - Get material detail
 - `POST /api/materials/sync-notion` - Sync from Notion
 
-For complete API documentation, see [API.md](./API.md).
-
-## Documentation
-
-Comprehensive documentation is available:
-
-- **[API.md](./API.md)** - Complete API reference with request/response examples
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture and design decisions
-- **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Development setup and workflow guide
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Production deployment guide
-- **[DATABASE.md](./DATABASE.md)** - Database schema and model documentation
-- **[FRONTEND.md](./FRONTEND.md)** - Frontend development guide
-- **[SECURITY.md](./SECURITY.md)** - Security best practices and considerations
-- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution guidelines
-- **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** - Common issues and solutions
-
 ## License
 
 MIT

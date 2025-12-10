@@ -14,66 +14,8 @@
     </div>
 
     <div v-else>
-      <!-- Learning Streak Card -->
-      <div class="mb-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-lg font-medium mb-2">Learning Streak 🔥</h2>
-            <div class="flex items-baseline space-x-4">
-              <div>
-                <div class="text-4xl font-bold">{{ streak.current_streak_days }}</div>
-                <div class="text-sm opacity-90">Current Streak</div>
-              </div>
-              <div>
-                <div class="text-2xl font-semibold">{{ streak.longest_streak_days }}</div>
-                <div class="text-sm opacity-90">Best Streak</div>
-              </div>
-            </div>
-          </div>
-          <div class="text-right">
-            <button
-              @click="exportProgress"
-              :disabled="exporting"
-              class="inline-flex items-center px-4 py-2 border border-white/30 text-sm font-medium rounded-md text-white bg-white/10 hover:bg-white/20 disabled:opacity-50"
-            >
-              {{ exporting ? 'Exporting...' : 'Export Progress' }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Study Stats -->
-      <div class="mb-8 bg-white shadow rounded-lg">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-medium text-gray-900">Study Statistics</h2>
-        </div>
-        <div class="px-6 py-4">
-          <div v-if="studyStatsLoading" class="text-center py-4">
-            <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
-          </div>
-          <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div class="text-center">
-              <div class="text-2xl font-bold text-indigo-600">{{ formatTime(studyStats.total_study_time_minutes) }}</div>
-              <div class="text-sm text-gray-500">Total Study Time</div>
-            </div>
-            <div class="text-center">
-              <div class="text-2xl font-bold text-green-600">{{ formatTime(studyStats.today_study_time_minutes) }}</div>
-              <div class="text-sm text-gray-500">Today</div>
-            </div>
-            <div class="text-center">
-              <div class="text-2xl font-bold text-blue-600">{{ formatTime(studyStats.week_study_time_minutes) }}</div>
-              <div class="text-sm text-gray-500">This Week</div>
-            </div>
-            <div class="text-center">
-              <div class="text-2xl font-bold text-orange-600">{{ studyStats.current_streak_days }} 🔥</div>
-              <div class="text-sm text-gray-500">Day Streak</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Stats Grid -->
-      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5 mb-8">
         <div class="bg-white overflow-hidden shadow rounded-lg">
           <div class="p-5">
             <div class="flex items-center">
@@ -140,6 +82,25 @@
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">In Progress</dt>
                   <dd class="text-lg font-medium text-gray-900">{{ stats.in_progress_materials }}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Study Streak</dt>
+                  <dd class="text-lg font-medium text-gray-900">{{ streak.current_streak }} days</dd>
+                  <dd class="text-xs text-gray-400">Best: {{ streak.longest_streak }} days</dd>
                 </dl>
               </div>
             </div>
@@ -324,6 +285,93 @@
               </router-link>
             </div>
           </div>
+
+          <!-- Study Goals Feature -->
+          <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+            <div class="p-6">
+              <div class="flex items-center mb-3">
+                <div class="flex-shrink-0">
+                  <svg class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 class="ml-3 text-lg font-medium text-gray-900">Study Goals</h3>
+              </div>
+              <p class="text-sm text-gray-600 mb-4">
+                Set and track your learning objectives. Create goals with target dates and mark them as complete.
+              </p>
+              <ul class="text-xs text-gray-500 space-y-1 mb-4">
+                <li>• Create learning goals</li>
+                <li>• Set target dates</li>
+                <li>• Track completion</li>
+                <li>• Organize your objectives</li>
+              </ul>
+              <router-link
+                to="/goals"
+                class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                Manage Goals →
+              </router-link>
+            </div>
+          </div>
+
+          <!-- Study Sessions Feature -->
+          <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+            <div class="p-6">
+              <div class="flex items-center mb-3">
+                <div class="flex-shrink-0">
+                  <svg class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 class="ml-3 text-lg font-medium text-gray-900">Study Sessions</h3>
+              </div>
+              <p class="text-sm text-gray-600 mb-4">
+                Track your study time with a built-in timer. Build consistency with study streaks and session history.
+              </p>
+              <ul class="text-xs text-gray-500 space-y-1 mb-4">
+                <li>• Built-in study timer</li>
+                <li>• Track study streaks</li>
+                <li>• Session history</li>
+                <li>• Link sessions to materials</li>
+              </ul>
+              <router-link
+                to="/study-sessions"
+                class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                Start Session →
+              </router-link>
+            </div>
+          </div>
+
+          <!-- Notes & Ratings Feature -->
+          <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+            <div class="p-6">
+              <div class="flex items-center mb-3">
+                <div class="flex-shrink-0">
+                  <svg class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </div>
+                <h3 class="ml-3 text-lg font-medium text-gray-900">Notes & Ratings</h3>
+              </div>
+              <p class="text-sm text-gray-600 mb-4">
+                Take notes on materials and rate them. Keep your thoughts organized and share feedback.
+              </p>
+              <ul class="text-xs text-gray-500 space-y-1 mb-4">
+                <li>• Take notes on materials</li>
+                <li>• Rate materials (1-5 stars)</li>
+                <li>• Add comments</li>
+                <li>• Edit and delete notes</li>
+              </ul>
+              <router-link
+                to="/materials"
+                class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                View Materials →
+              </router-link>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -428,42 +476,33 @@ const stats = ref<any>({
   recent_bookmarks: [],
   recent_progress: []
 })
-const streak = ref<any>({
-  current_streak_days: 0,
-  longest_streak_days: 0,
-  last_study_date: null
-})
-const studyStats = ref<any>({
+const statistics = ref<any>({
   total_study_time_minutes: 0,
-  today_study_time_minutes: 0,
-  week_study_time_minutes: 0,
-  current_streak_days: 0,
-  longest_streak_days: 0
+  total_sessions: 0,
+  weekly_study_time_minutes: 0,
+  daily_study_time_minutes: 0,
+  active_goals: 0,
+  completed_goals: 0
 })
 const loading = ref(true)
-const studyStatsLoading = ref(false)
 const error = ref('')
-const exporting = ref(false)
-
-const formatTime = (minutes: number) => {
-  if (minutes < 60) {
-    return `${Math.round(minutes)}m`
-  }
-  const hours = Math.floor(minutes / 60)
-  const mins = Math.round(minutes % 60)
-  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
-}
 
 const loadStats = async () => {
   loading.value = true
   try {
-    const response = await fetch('/api/dashboard/stats', {
-      credentials: 'include'
-    })
-    if (response.ok) {
-      stats.value = await response.json()
+    const [statsResponse, statisticsResponse] = await Promise.all([
+      fetch('/api/dashboard/stats', { credentials: 'include' }),
+      fetch('/api/statistics', { credentials: 'include' })
+    ])
+    
+    if (statsResponse.ok) {
+      stats.value = await statsResponse.json()
     } else {
       error.value = 'Failed to load dashboard stats'
+    }
+    
+    if (statisticsResponse.ok) {
+      statistics.value = await statisticsResponse.json()
     }
   } catch (e) {
     error.value = 'An error occurred'
@@ -472,65 +511,14 @@ const loadStats = async () => {
   }
 }
 
-const loadStreak = async () => {
-  try {
-    const response = await fetch('/api/learning-streak', {
-      credentials: 'include'
-    })
-    if (response.ok) {
-      streak.value = await response.json()
-    }
-  } catch (e) {
-    // Ignore errors
+const formatTime = (minutes: number): string => {
+  const hrs = Math.floor(minutes / 60)
+  const mins = Math.floor(minutes % 60)
+  if (hrs > 0) {
+    return `${hrs}h ${mins}m`
   }
+  return `${mins}m`
 }
 
-const exportProgress = async () => {
-  exporting.value = true
-  try {
-    const response = await fetch('/api/export/progress', {
-      credentials: 'include'
-    })
-    if (response.ok) {
-      const data = await response.json()
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `studyhall-progress-${new Date().toISOString().split('T')[0]}.json`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      window.URL.revokeObjectURL(url)
-    } else {
-      error.value = 'Failed to export progress'
-    }
-  } catch (e) {
-    error.value = 'An error occurred while exporting'
-  } finally {
-    exporting.value = false
-  }
-}
-
-const loadStudyStats = async () => {
-  studyStatsLoading.value = true
-  try {
-    const response = await fetch('/api/study-sessions/stats', {
-      credentials: 'include'
-    })
-    if (response.ok) {
-      studyStats.value = await response.json()
-    }
-  } catch (e) {
-    // Ignore errors
-  } finally {
-    studyStatsLoading.value = false
-  }
-}
-
-onMounted(() => {
-  loadStats()
-  loadStreak()
-  loadStudyStats()
-})
+onMounted(loadStats)
 </script>

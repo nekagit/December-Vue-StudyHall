@@ -13,7 +13,7 @@
 
     <!-- Search and Filter -->
     <div class="mb-6 bg-white p-4 rounded-lg shadow">
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search</label>
           <input
@@ -37,22 +37,8 @@
             <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
           </select>
         </div>
-        <div>
-          <label for="progressStatus" class="block text-sm font-medium text-gray-700 mb-2">Progress Status</label>
-          <select
-            id="progressStatus"
-            v-model="selectedProgressStatus"
-            @change="loadMaterials"
-            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
-          >
-            <option value="">All Statuses</option>
-            <option value="not_started">Not Started</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-          </select>
-        </div>
       </div>
-      <div v-if="searchQuery || selectedCategory || selectedProgressStatus" class="mt-3">
+      <div v-if="searchQuery || selectedCategory" class="mt-3">
         <button
           @click="clearFilters"
           class="text-sm text-indigo-600 hover:text-indigo-500"
@@ -111,28 +97,13 @@
           <p v-if="material.content" class="mt-2 text-sm text-gray-500 line-clamp-3">
             {{ material.content.substring(0, 150) }}...
           </p>
-          <div class="mt-4 flex items-center justify-between">
+          <div class="mt-4">
             <router-link
               :to="`/materials/${material.id}`"
               class="text-indigo-600 hover:text-indigo-500 font-medium text-sm"
             >
               Read more →
             </router-link>
-            <span v-if="material.reading_time_minutes" class="text-xs text-gray-400">
-              ⏱ {{ material.reading_time_minutes }} min read
-            </span>
-          </div>
-          <div v-if="material.progress_status" class="mt-2">
-            <span
-              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-              :class="{
-                'bg-green-100 text-green-800': material.progress_status === 'completed',
-                'bg-blue-100 text-blue-800': material.progress_status === 'in_progress',
-                'bg-gray-100 text-gray-800': material.progress_status === 'not_started'
-              }"
-            >
-              {{ material.progress_status.replace('_', ' ') }}
-            </span>
           </div>
         </div>
       </div>
@@ -151,7 +122,6 @@ const success = ref('')
 const syncing = ref(false)
 const searchQuery = ref('')
 const selectedCategory = ref('')
-const selectedProgressStatus = ref('')
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
 const loadMaterials = async () => {
@@ -163,9 +133,6 @@ const loadMaterials = async () => {
     }
     if (selectedCategory.value) {
       params.append('category', selectedCategory.value)
-    }
-    if (selectedProgressStatus.value) {
-      params.append('progress_status', selectedProgressStatus.value)
     }
     
     const url = `/api/materials${params.toString() ? '?' + params.toString() : ''}`
@@ -209,7 +176,6 @@ const debouncedSearch = () => {
 const clearFilters = () => {
   searchQuery.value = ''
   selectedCategory.value = ''
-  selectedProgressStatus.value = ''
   loadMaterials()
 }
 

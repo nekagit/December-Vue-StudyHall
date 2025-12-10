@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Text
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from backend.database import Base
@@ -10,7 +10,7 @@ class StudyGoal(Base):
     student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
-    target_date = Column(DateTime(timezone=True), nullable=True)
+    target_date = Column(DateTime(timezone=True), nullable=True)  # Optional deadline
     is_completed = Column(Boolean, default=False)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -20,4 +20,4 @@ class StudyGoal(Base):
     student = relationship("Student", backref="study_goals")
     
     def __repr__(self):
-        return f"<StudyGoal(id={self.id}, student_id={self.student_id}, title={self.title[:50]}, completed={self.is_completed})>"
+        return f"<StudyGoal(id={self.id}, student_id={self.student_id}, title={self.title[:50]})>"

@@ -15,6 +15,8 @@ import Bookmarks from './views/Bookmarks.vue'
 import Profile from './views/Profile.vue'
 import StudySessions from './views/StudySessions.vue'
 import Goals from './views/Goals.vue'
+import Goals from './views/Goals.vue'
+import StudySessions from './views/StudySessions.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -28,6 +30,8 @@ const routes = [
   { path: '/profile', component: Profile, meta: { requiresAuth: true } },
   { path: '/study-sessions', component: StudySessions, meta: { requiresAuth: true } },
   { path: '/goals', component: Goals, meta: { requiresAuth: true } },
+  { path: '/goals', component: Goals, meta: { requiresAuth: true } },
+  { path: '/study-sessions', component: StudySessions, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({
