@@ -1,10 +1,7 @@
 import pytest
 from datetime import datetime
-from backend.models import (
-    Student, Material, Bookmark, Progress, Note, Rating, 
-    StudySession, StudyStreak
-)
-from backend.services.auth import hash_password
+from backend.models import Student, Material
+import hashlib
 
 
 class TestStudent:
@@ -12,10 +9,11 @@ class TestStudent:
     
     def test_create_student(self, db):
         """Test creating a student."""
+        password_hash = hashlib.sha256("password123".encode()).hexdigest()
         student = Student(
             email="student@example.com",
             name="John Doe",
-            password_hash=hash_password("password123")
+            password_hash=password_hash
         )
         db.add(student)
         db.commit()
@@ -26,13 +24,15 @@ class TestStudent:
         assert student.name == "John Doe"
         assert student.is_active is True
         assert student.created_at is not None
+        assert isinstance(student.created_at, datetime)
     
     def test_student_repr(self, db):
         """Test student string representation."""
+        password_hash = hashlib.sha256("password".encode()).hexdigest()
         student = Student(
             email="test@example.com",
             name="Test User",
-            password_hash=hash_password("password")
+            password_hash=password_hash
         )
         db.add(student)
         db.commit()
@@ -41,6 +41,82 @@ class TestStudent:
         assert "Student" in repr_str
         assert "test@example.com" in repr_str
         assert "Test User" in repr_str
+    
+    def test_student_unique_email(self, db):
+        """Test that email must be unique."""
+        password_hash = hashlib.sha256("password".encode()).hexdigest()
+        student1 = Student(
+            email="unique@example.com",
+            name="User 1",
+            password_hash=password_hash
+        )
+        db.add(student1)
+        db.commit()
+        
+        student2 = Student(
+            email="unique@example.com",
+            name="User 2",
+            password_hash=password_hash
+        )
+        db.add(student2)
+        
+        with pytest.raises(Exception):  # Should raise integrity error
+            db.commit()
+    
+    def test_student_email_indexed(self, db):
+        """Test that email is indexed for faster lookups."""
+        # This is more of a schema test - verify the column has index=True
+        student_table = Student.__table__
+        email_column = student_table.columns.get("email")
+        assert email_column.index is True or any(
+            idx.columns.values()[0].name == "email" 
+            for idx in student_table.indexes
+        )
+    
+    def test_student_default_is_active(self, db):
+        """Test that is_active defaults to True."""
+        password_hash = hashlib.sha256("password".encode()).hexdigest()
+        student = Student(
+            email="active@example.com",
+            name="Active User",
+            password_hash=password_hash
+        )
+        db.add(student)
+        db.commit()
+        db.refresh(student)
+        
+        assert student.is_active is True
+    
+    def test_student_set_is_active_false(self, db):
+        """Test setting is_active to False."""
+        password_hash = hashlib.sha256("password".encode()).hexdigest()
+        student = Student(
+            email="inactive@example.com",
+            name="Inactive User",
+            password_hash=password_hash,
+            is_active=False
+        )
+        db.add(student)
+        db.commit()
+        db.refresh(student)
+        
+        assert student.is_active is False
+    
+    def test_student_created_at_timestamp(self, db):
+        """Test that created_at is automatically set."""
+        password_hash = hashlib.sha256("password".encode()).hexdigest()
+        
+        student = Student(
+            email="timestamp@example.com",
+            name="Timestamp User",
+            password_hash=password_hash
+        )
+        db.add(student)
+        db.commit()
+        db.refresh(student)
+        
+        assert student.created_at is not None
+        assert isinstance(student.created_at, datetime)
 
 
 class TestMaterial:
@@ -66,7 +142,9 @@ class TestMaterial:
         assert material.category == "Python"
         assert material.order_index == 1
         assert material.notion_page_id == "notion-123"
+        assert material.notion_url == "https://notion.so/test"
         assert material.created_at is not None
+        assert isinstance(material.created_at, datetime)
     
     def test_material_repr(self, db):
         """Test material string representation."""
@@ -80,292 +158,157 @@ class TestMaterial:
         repr_str = repr(material)
         assert "Material" in repr_str
         assert len(repr_str) < 100  # Should truncate long titles
-
-
-class TestBookmark:
-    """Test Bookmark model."""
     
-    def test_create_bookmark(self, db, sample_student, sample_material):
-        """Test creating a bookmark."""
-        bookmark = Bookmark(
-            student_id=sample_student.id,
-            material_id=sample_material.id
+    def test_material_minimal_fields(self, db):
+        """Test creating material with only required fields."""
+        material = Material(title="Minimal Material")
+        db.add(material)
+        db.commit()
+        db.refresh(material)
+        
+        assert material.id is not None
+        assert material.title == "Minimal Material"
+        assert material.content is None
+        assert material.category is None
+        assert material.order_index == 0  # Default value
+        assert material.notion_page_id is None
+        assert material.notion_url is None
+    
+    def test_material_default_order_index(self, db):
+        """Test that order_index defaults to 0."""
+        material = Material(title="Test Material")
+        db.add(material)
+        db.commit()
+        db.refresh(material)
+        
+        assert material.order_index == 0
+    
+    def test_material_unique_notion_page_id(self, db):
+        """Test that notion_page_id must be unique."""
+        material1 = Material(
+            title="Material 1",
+            notion_page_id="notion-123"
         )
-        db.add(bookmark)
+        db.add(material1)
         db.commit()
-        db.refresh(bookmark)
         
-        assert bookmark.id is not None
-        assert bookmark.student_id == sample_student.id
-        assert bookmark.material_id == sample_material.id
-        assert bookmark.created_at is not None
-        assert bookmark.student == sample_student
-        assert bookmark.material == sample_material
-    
-    def test_bookmark_repr(self, db, sample_student, sample_material):
-        """Test bookmark string representation."""
-        bookmark = Bookmark(
-            student_id=sample_student.id,
-            material_id=sample_material.id
+        material2 = Material(
+            title="Material 2",
+            notion_page_id="notion-123"
         )
-        db.add(bookmark)
-        db.commit()
-        
-        repr_str = repr(bookmark)
-        assert "Bookmark" in repr_str
-        assert str(sample_student.id) in repr_str
-        assert str(sample_material.id) in repr_str
-
-
-class TestProgress:
-    """Test Progress model."""
-    
-    def test_create_progress(self, db, sample_student, sample_material):
-        """Test creating a progress record."""
-        progress = Progress(
-            student_id=sample_student.id,
-            material_id=sample_material.id,
-            status="in_progress",
-            progress_percentage=50.0
-        )
-        db.add(progress)
-        db.commit()
-        db.refresh(progress)
-        
-        assert progress.id is not None
-        assert progress.student_id == sample_student.id
-        assert progress.material_id == sample_material.id
-        assert progress.status == "in_progress"
-        assert progress.progress_percentage == 50.0
-        assert progress.last_accessed_at is not None
-        assert progress.created_at is not None
-    
-    def test_progress_defaults(self, db, sample_student, sample_material):
-        """Test progress default values."""
-        progress = Progress(
-            student_id=sample_student.id,
-            material_id=sample_material.id
-        )
-        db.add(progress)
-        db.commit()
-        db.refresh(progress)
-        
-        assert progress.status == "not_started"
-        assert progress.progress_percentage == 0.0
-        assert progress.completed_at is None
-    
-    def test_progress_repr(self, db, sample_student, sample_material):
-        """Test progress string representation."""
-        progress = Progress(
-            student_id=sample_student.id,
-            material_id=sample_material.id,
-            status="completed"
-        )
-        db.add(progress)
-        db.commit()
-        
-        repr_str = repr(progress)
-        assert "Progress" in repr_str
-        assert "completed" in repr_str
-
-
-class TestNote:
-    """Test Note model."""
-    
-    def test_create_note(self, db, sample_student, sample_material):
-        """Test creating a note."""
-        note = Note(
-            student_id=sample_student.id,
-            material_id=sample_material.id,
-            content="This is a test note"
-        )
-        db.add(note)
-        db.commit()
-        db.refresh(note)
-        
-        assert note.id is not None
-        assert note.student_id == sample_student.id
-        assert note.material_id == sample_material.id
-        assert note.content == "This is a test note"
-        assert note.created_at is not None
-        assert note.student == sample_student
-        assert note.material == sample_material
-    
-    def test_note_repr(self, db, sample_student, sample_material):
-        """Test note string representation."""
-        note = Note(
-            student_id=sample_student.id,
-            material_id=sample_material.id,
-            content="Test content"
-        )
-        db.add(note)
-        db.commit()
-        
-        repr_str = repr(note)
-        assert "Note" in repr_str
-        assert str(sample_student.id) in repr_str
-
-
-class TestRating:
-    """Test Rating model."""
-    
-    def test_create_rating(self, db, sample_student, sample_material):
-        """Test creating a rating."""
-        rating = Rating(
-            student_id=sample_student.id,
-            material_id=sample_material.id,
-            rating=5,
-            comment="Great material!"
-        )
-        db.add(rating)
-        db.commit()
-        db.refresh(rating)
-        
-        assert rating.id is not None
-        assert rating.student_id == sample_student.id
-        assert rating.material_id == sample_material.id
-        assert rating.rating == 5
-        assert rating.comment == "Great material!"
-        assert rating.created_at is not None
-        assert rating.student == sample_student
-        assert rating.material == sample_material
-    
-    def test_rating_without_comment(self, db, sample_student, sample_material):
-        """Test creating a rating without comment."""
-        rating = Rating(
-            student_id=sample_student.id,
-            material_id=sample_material.id,
-            rating=4
-        )
-        db.add(rating)
-        db.commit()
-        db.refresh(rating)
-        
-        assert rating.rating == 4
-        assert rating.comment is None
-    
-    def test_rating_repr(self, db, sample_student, sample_material):
-        """Test rating string representation."""
-        rating = Rating(
-            student_id=sample_student.id,
-            material_id=sample_material.id,
-            rating=5
-        )
-        db.add(rating)
-        db.commit()
-        
-        repr_str = repr(rating)
-        assert "Rating" in repr_str
-        assert "5" in repr_str
-
-
-class TestStudySession:
-    """Test StudySession model."""
-    
-    def test_create_study_session(self, db, sample_student, sample_material):
-        """Test creating a study session."""
-        session = StudySession(
-            student_id=sample_student.id,
-            material_id=sample_material.id,
-            duration_minutes=30.5,
-            notes="Studied Python basics"
-        )
-        db.add(session)
-        db.commit()
-        db.refresh(session)
-        
-        assert session.id is not None
-        assert session.student_id == sample_student.id
-        assert session.material_id == sample_material.id
-        assert session.duration_minutes == 30.5
-        assert session.notes == "Studied Python basics"
-        assert session.started_at is not None
-        assert session.created_at is not None
-    
-    def test_study_session_without_material(self, db, sample_student):
-        """Test creating a study session without material."""
-        session = StudySession(
-            student_id=sample_student.id,
-            duration_minutes=15.0
-        )
-        db.add(session)
-        db.commit()
-        db.refresh(session)
-        
-        assert session.material_id is None
-        assert session.duration_minutes == 15.0
-    
-    def test_study_session_repr(self, db, sample_student):
-        """Test study session string representation."""
-        session = StudySession(
-            student_id=sample_student.id,
-            duration_minutes=25.0
-        )
-        db.add(session)
-        db.commit()
-        
-        repr_str = repr(session)
-        assert "StudySession" in repr_str
-        assert "25" in repr_str
-
-
-class TestStudyStreak:
-    """Test StudyStreak model."""
-    
-    def test_create_study_streak(self, db, sample_student):
-        """Test creating a study streak."""
-        streak = StudyStreak(
-            student_id=sample_student.id,
-            current_streak_days=5,
-            longest_streak_days=10,
-            last_study_date=datetime.utcnow()
-        )
-        db.add(streak)
-        db.commit()
-        db.refresh(streak)
-        
-        assert streak.id is not None
-        assert streak.student_id == sample_student.id
-        assert streak.current_streak_days == 5
-        assert streak.longest_streak_days == 10
-        assert streak.last_study_date is not None
-        assert streak.student == sample_student
-    
-    def test_study_streak_defaults(self, db, sample_student):
-        """Test study streak default values."""
-        streak = StudyStreak(
-            student_id=sample_student.id
-        )
-        db.add(streak)
-        db.commit()
-        db.refresh(streak)
-        
-        assert streak.current_streak_days == 0
-        assert streak.longest_streak_days == 0
-        assert streak.last_study_date is None
-    
-    def test_study_streak_unique_student(self, db, sample_student):
-        """Test that each student can only have one streak."""
-        streak1 = StudyStreak(student_id=sample_student.id)
-        db.add(streak1)
-        db.commit()
-        
-        # Try to create another streak for the same student
-        streak2 = StudyStreak(student_id=sample_student.id)
-        db.add(streak2)
+        db.add(material2)
         
         with pytest.raises(Exception):  # Should raise integrity error
             db.commit()
     
-    def test_study_streak_repr(self, db, sample_student):
-        """Test study streak string representation."""
-        streak = StudyStreak(
-            student_id=sample_student.id,
-            current_streak_days=7
-        )
-        db.add(streak)
+    def test_material_notion_page_id_can_be_none(self, db):
+        """Test that multiple materials can have None notion_page_id."""
+        material1 = Material(title="Material 1")
+        material2 = Material(title="Material 2")
+        
+        db.add_all([material1, material2])
         db.commit()
         
-        repr_str = repr(streak)
-        assert "StudyStreak" in repr_str
-        assert "7" in repr_str
+        assert material1.notion_page_id is None
+        assert material2.notion_page_id is None
+    
+    def test_material_title_indexed(self, db):
+        """Test that title is indexed for faster searches."""
+        material_table = Material.__table__
+        title_column = material_table.columns.get("title")
+        assert title_column.index is True or any(
+            idx.columns.values()[0].name == "title" 
+            for idx in material_table.indexes
+        )
+    
+    def test_material_created_at_timestamp(self, db):
+        """Test that created_at is automatically set."""
+        material = Material(title="Timestamp Test")
+        db.add(material)
+        db.commit()
+        db.refresh(material)
+        
+        assert material.created_at is not None
+        assert isinstance(material.created_at, datetime)
+    
+    def test_material_updated_at_on_update(self, db):
+        """Test that updated_at is set when material is updated."""
+        material = Material(title="Original Title")
+        db.add(material)
+        db.commit()
+        db.refresh(material)
+        
+        assert material.updated_at is None
+        
+        material.title = "Updated Title"
+        db.commit()
+        db.refresh(material)
+        
+        assert material.updated_at is not None
+        assert isinstance(material.updated_at, datetime)
+    
+    def test_material_long_content(self, db):
+        """Test material with very long content."""
+        long_content = "A" * 10000
+        material = Material(
+            title="Long Content Material",
+            content=long_content
+        )
+        db.add(material)
+        db.commit()
+        db.refresh(material)
+        
+        assert material.content == long_content
+        assert len(material.content) == 10000
+    
+    def test_material_ordering(self, db):
+        """Test materials can be ordered by order_index."""
+        materials = [
+            Material(title="Third", order_index=3),
+            Material(title="First", order_index=1),
+            Material(title="Second", order_index=2),
+        ]
+        db.add_all(materials)
+        db.commit()
+        
+        # Query ordered by order_index
+        ordered = db.query(Material).order_by(Material.order_index).all()
+        assert ordered[0].title == "First"
+        assert ordered[1].title == "Second"
+        assert ordered[2].title == "Third"
+    
+    def test_material_category_filtering(self, db):
+        """Test filtering materials by category."""
+        materials = [
+            Material(title="Python 1", category="Python"),
+            Material(title="Python 2", category="Python"),
+            Material(title="JS 1", category="JavaScript"),
+        ]
+        db.add_all(materials)
+        db.commit()
+        
+        python_materials = db.query(Material).filter(Material.category == "Python").all()
+        assert len(python_materials) == 2
+        assert all(m.category == "Python" for m in python_materials)
+    
+    def test_material_without_category(self, db):
+        """Test material without category."""
+        material = Material(title="No Category Material")
+        db.add(material)
+        db.commit()
+        db.refresh(material)
+        
+        assert material.category is None
+    
+    def test_material_notion_url_without_page_id(self, db):
+        """Test material can have notion_url without notion_page_id."""
+        material = Material(
+            title="External Link",
+            notion_url="https://notion.so/external"
+        )
+        db.add(material)
+        db.commit()
+        db.refresh(material)
+        
+        assert material.notion_url == "https://notion.so/external"
+        assert material.notion_page_id is None

@@ -2,8 +2,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from backend.database import Base
-from backend.models import Student, Material, Bookmark, Progress, Note, Rating, StudySession, StudyStreak
-from backend.services.auth import hash_password
+from backend.models import Student, Material
 from unittest.mock import patch
 from backend.main import app as flask_app
 
@@ -48,10 +47,12 @@ def client(db_patch):
 @pytest.fixture
 def sample_student(db):
     """Create a sample student for testing."""
+    import hashlib
+    password_hash = hashlib.sha256("testpassword123".encode()).hexdigest()
     student = Student(
         email="test@example.com",
         name="Test User",
-        password_hash=hash_password("testpassword123")
+        password_hash=password_hash
     )
     db.add(student)
     db.commit()
@@ -75,10 +76,17 @@ def sample_material(db):
 
 
 @pytest.fixture
-def authenticated_client(client, db, sample_student):
-    """Create an authenticated test client."""
-    from backend.services.session import create_session
-    
-    token = create_session(sample_student.id)
-    client.set_cookie('localhost', 'session_token', token)
-    return client
+def multiple_materials(db):
+    """Create multiple materials for testing."""
+    materials = [
+        Material(title="Python Basics", content="Learn Python", category="Python", order_index=1),
+        Material(title="JavaScript Advanced", content="Learn JS", category="JavaScript", order_index=2),
+        Material(title="Python Advanced", content="Advanced Python", category="Python", order_index=3),
+        Material(title="Web Development", content="Build websites", category="Web", order_index=4),
+    ]
+    for material in materials:
+        db.add(material)
+    db.commit()
+    for material in materials:
+        db.refresh(material)
+    return materials

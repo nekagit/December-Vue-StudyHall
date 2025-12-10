@@ -1,13 +1,14 @@
 <template>
   <div class="min-h-screen bg-msit-dark text-msit-dark-50">
-    <nav v-if="character" class="bg-msit-dark border-b border-msit-dark-700">
+    <nav class="bg-msit-dark border-b border-msit-dark-700">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
-          <div class="flex">
-            <div class="flex-shrink-0 flex items-center">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
               <router-link to="/" class="text-xl font-bold text-msit-accent">StudyHall</router-link>
             </div>
-            <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+            <!-- Desktop Navigation -->
+            <div class="hidden md:ml-6 md:flex md:space-x-4 lg:space-x-8">
               <router-link
                 to="/"
                 class="border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
@@ -20,7 +21,6 @@
                 Home
               </router-link>
               <router-link
-                v-if="character"
                 to="/dashboard"
                 class="border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
                 style="color: #E0EADD; font-family: 'Inter', sans-serif;"
@@ -31,7 +31,6 @@
                 Dashboard
               </router-link>
               <router-link
-                v-if="character"
                 to="/materials"
                 class="border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
                 style="color: #E0EADD; font-family: 'Inter', sans-serif;"
@@ -42,18 +41,6 @@
                 Materials
               </router-link>
               <router-link
-                v-if="character"
-                to="/bookmarks"
-                class="border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
-                style="color: #E0EADD; font-family: 'Inter', sans-serif;"
-                :style="$route.path === '/bookmarks' ? 'border-color: #83E65B; color: #83E65B;' : ''"
-                @mouseover="$event.target.style.color='#83E65B'"
-                @mouseleave="$route.path === '/bookmarks' ? $event.target.style.color='#83E65B' : $event.target.style.color='#E0EADD'"
-              >
-                Bookmarks
-              </router-link>
-              <router-link
-                v-if="character"
                 to="/compiler"
                 class="border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
                 style="color: #E0EADD; font-family: 'Inter', sans-serif;"
@@ -64,116 +51,135 @@
                 Compiler
               </router-link>
               <router-link
-                v-if="character"
-                to="/goals"
+                to="/snippets"
                 class="border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
                 style="color: #E0EADD; font-family: 'Inter', sans-serif;"
-                :style="$route.path === '/goals' ? 'border-color: #83E65B; color: #83E65B;' : ''"
+                :style="$route.path === '/snippets' ? 'border-color: #83E65B; color: #83E65B;' : ''"
                 @mouseover="$event.target.style.color='#83E65B'"
-                @mouseleave="$route.path === '/goals' ? $event.target.style.color='#83E65B' : $event.target.style.color='#E0EADD'"
+                @mouseleave="$route.path === '/snippets' ? $event.target.style.color='#83E65B' : $event.target.style.color='#E0EADD'"
               >
-                Goals
+                Snippets
               </router-link>
               <router-link
-                v-if="character"
-                to="/study-sessions"
+                to="/export"
                 class="border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
                 style="color: #E0EADD; font-family: 'Inter', sans-serif;"
-                :style="$route.path === '/study-sessions' ? 'border-color: #83E65B; color: #83E65B;' : ''"
+                :style="$route.path === '/export' ? 'border-color: #83E65B; color: #83E65B;' : ''"
                 @mouseover="$event.target.style.color='#83E65B'"
-                @mouseleave="$route.path === '/study-sessions' ? $event.target.style.color='#83E65B' : $event.target.style.color='#E0EADD'"
+                @mouseleave="$route.path === '/export' ? $event.target.style.color='#83E65B' : $event.target.style.color='#E0EADD'"
               >
-                Study Sessions
-              </router-link>
-              <router-link
-                v-if="character"
-                to="/notes"
-                class="border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
-                style="color: #E0EADD; font-family: 'Inter', sans-serif;"
-                :style="$route.path === '/notes' ? 'border-color: #83E65B; color: #83E65B;' : ''"
-                @mouseover="$event.target.style.color='#83E65B'"
-                @mouseleave="$route.path === '/notes' ? $event.target.style.color='#83E65B' : $event.target.style.color='#E0EADD'"
-              >
-                Notes
-              </router-link>
-              <router-link
-                v-if="character"
-                to="/ratings"
-                class="border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
-                style="color: #E0EADD; font-family: 'Inter', sans-serif;"
-                :style="$route.path === '/ratings' ? 'border-color: #83E65B; color: #83E65B;' : ''"
-                @mouseover="$event.target.style.color='#83E65B'"
-                @mouseleave="$route.path === '/ratings' ? $event.target.style.color='#83E65B' : $event.target.style.color='#E0EADD'"
-              >
-                Ratings
+                Export
               </router-link>
             </div>
           </div>
-          <div class="flex items-center">
-            <div v-if="character" class="flex items-center space-x-4">
-              <router-link
-                to="/profile"
-                class="font-medium transition-colors"
-                style="color: #E0EADD; font-family: 'Inter', sans-serif;"
-                @mouseover="$event.target.style.color='#83E65B'"
-                @mouseleave="$event.target.style.color='#E0EADD'"
+          <!-- Mobile menu button -->
+          <div class="md:hidden flex items-center">
+            <button
+              @click="mobileMenuOpen = !mobileMenuOpen"
+              class="inline-flex items-center justify-center p-2 rounded-md text-msit-dark-50 hover:text-msit-accent hover:bg-msit-dark-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-msit-accent transition-colors"
+              aria-expanded="false"
+            >
+              <span class="sr-only">Open main menu</span>
+              <svg
+                v-if="!mobileMenuOpen"
+                class="block h-6 w-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                {{ character.name }}
-              </router-link>
-              <span class="text-msit-dark-300 text-sm font-sans">({{ character.role }})</span>
-              <button
-                @click="resetConfiguration"
-                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-semibold rounded-md transition-colors"
-                style="color: #1A312B; background-color: #83E65B; font-family: 'Inter', sans-serif;"
-                @mouseover="$event.target.style.backgroundColor='#6BD945'"
-                @mouseleave="$event.target.style.backgroundColor='#83E65B'"
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <svg
+                v-else
+                class="block h-6 w-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                Reset Character
-              </button>
-            </div>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
+        </div>
+      </div>
+
+      <!-- Mobile menu -->
+      <div v-if="mobileMenuOpen" class="md:hidden border-t border-msit-dark-700">
+        <div class="px-2 pt-2 pb-3 space-y-1">
+          <router-link
+            to="/"
+            @click="mobileMenuOpen = false"
+            class="block px-3 py-2 rounded-md text-base font-medium transition-colors"
+            style="color: #E0EADD; font-family: 'Inter', sans-serif;"
+            :style="$route.path === '/' ? 'background-color: rgba(131, 230, 91, 0.1); color: #83E65B;' : ''"
+            :class="$route.path === '/' ? 'text-msit-accent' : 'text-msit-dark-50 hover:bg-msit-dark-800 hover:text-msit-accent'"
+          >
+            Home
+          </router-link>
+          <router-link
+            to="/dashboard"
+            @click="mobileMenuOpen = false"
+            class="block px-3 py-2 rounded-md text-base font-medium transition-colors"
+            style="color: #E0EADD; font-family: 'Inter', sans-serif;"
+            :style="$route.path === '/dashboard' ? 'background-color: rgba(131, 230, 91, 0.1); color: #83E65B;' : ''"
+            :class="$route.path === '/dashboard' ? 'text-msit-accent' : 'text-msit-dark-50 hover:bg-msit-dark-800 hover:text-msit-accent'"
+          >
+            Dashboard
+          </router-link>
+          <router-link
+            to="/materials"
+            @click="mobileMenuOpen = false"
+            class="block px-3 py-2 rounded-md text-base font-medium transition-colors"
+            style="color: #E0EADD; font-family: 'Inter', sans-serif;"
+            :style="$route.path.startsWith('/materials') ? 'background-color: rgba(131, 230, 91, 0.1); color: #83E65B;' : ''"
+            :class="$route.path.startsWith('/materials') ? 'text-msit-accent' : 'text-msit-dark-50 hover:bg-msit-dark-800 hover:text-msit-accent'"
+          >
+            Materials
+          </router-link>
+          <router-link
+            to="/compiler"
+            @click="mobileMenuOpen = false"
+            class="block px-3 py-2 rounded-md text-base font-medium transition-colors"
+            style="color: #E0EADD; font-family: 'Inter', sans-serif;"
+            :style="$route.path === '/compiler' ? 'background-color: rgba(131, 230, 91, 0.1); color: #83E65B;' : ''"
+            :class="$route.path === '/compiler' ? 'text-msit-accent' : 'text-msit-dark-50 hover:bg-msit-dark-800 hover:text-msit-accent'"
+          >
+            Compiler
+          </router-link>
+          <router-link
+            to="/snippets"
+            @click="mobileMenuOpen = false"
+            class="block px-3 py-2 rounded-md text-base font-medium transition-colors"
+            style="color: #E0EADD; font-family: 'Inter', sans-serif;"
+            :style="$route.path === '/snippets' ? 'background-color: rgba(131, 230, 91, 0.1); color: #83E65B;' : ''"
+            :class="$route.path === '/snippets' ? 'text-msit-accent' : 'text-msit-dark-50 hover:bg-msit-dark-800 hover:text-msit-accent'"
+          >
+            Snippets
+          </router-link>
+          <router-link
+            to="/export"
+            @click="mobileMenuOpen = false"
+            class="block px-3 py-2 rounded-md text-base font-medium transition-colors"
+            style="color: #E0EADD; font-family: 'Inter', sans-serif;"
+            :style="$route.path === '/export' ? 'background-color: rgba(131, 230, 91, 0.1); color: #83E65B;' : ''"
+            :class="$route.path === '/export' ? 'text-msit-accent' : 'text-msit-dark-50 hover:bg-msit-dark-800 hover:text-msit-accent'"
+          >
+            Export
+          </router-link>
         </div>
       </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <main class="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
       <router-view />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref } from 'vue'
 
-const router = useRouter()
-const character = ref<any>(null)
-
-const loadCharacter = () => {
-  const stored = localStorage.getItem('character')
-  if (stored) {
-    try {
-      character.value = JSON.parse(stored)
-    } catch (e) {
-      character.value = null
-    }
-  } else {
-    character.value = null
-  }
-}
-
-const resetConfiguration = () => {
-  if (confirm('Are you sure you want to reset your character configuration?')) {
-    localStorage.removeItem('character')
-    character.value = null
-    router.push('/configuration')
-  }
-}
-
-onMounted(() => {
-  loadCharacter()
-  router.afterEach(() => {
-    loadCharacter()
-  })
-})
+const mobileMenuOpen = ref(false)
 </script>

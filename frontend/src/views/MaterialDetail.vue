@@ -1,225 +1,72 @@
 <template>
-  <div class="px-4 py-6 sm:px-0">
+  <div class="px-4 py-4 sm:py-6 sm:px-0">
     <div v-if="loading" class="text-center py-12">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-msit-accent"></div>
     </div>
 
-    <div v-else-if="error" class="rounded-md bg-red-50 p-4">
-      <div class="text-sm text-red-800">{{ error }}</div>
+    <div v-else-if="error" class="rounded-md bg-red-900/30 border border-red-700 p-4">
+      <div class="text-sm text-red-300 font-sans">{{ error }}</div>
     </div>
 
-    <div v-else-if="material" class="bg-white shadow rounded-lg overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <div class="flex items-center justify-between mb-4">
-          <h1 class="text-3xl font-bold text-gray-900">{{ material.title }}</h1>
-          <span v-if="material.category" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+    <div v-else-if="material" class="bg-msit-dark-800 shadow rounded-lg overflow-hidden border border-msit-dark-700">
+      <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-msit-dark-700">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <h1 class="text-2xl sm:text-3xl font-bold text-msit-dark-50 font-serif break-words">{{ material.title }}</h1>
+          <span v-if="material.category" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-msit-accent/20 text-msit-accent font-sans self-start sm:self-auto">
             {{ material.category }}
           </span>
         </div>
         
-        <!-- Progress Bar -->
-        <div v-if="material.progress" class="mb-4">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-gray-700">Progress</span>
-            <span class="text-sm text-gray-500">{{ Math.round(material.progress.progress_percentage) }}%</span>
-          </div>
-          <div class="w-full bg-gray-200 rounded-full h-2">
-            <div
-              class="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-              :style="{ width: `${material.progress.progress_percentage}%` }"
-            ></div>
-          </div>
-          <div class="mt-2 flex space-x-2">
-            <button
-              @click="updateProgress('in_progress', 25)"
-              class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
-            >
-              25%
-            </button>
-            <button
-              @click="updateProgress('in_progress', 50)"
-              class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
-            >
-              50%
-            </button>
-            <button
-              @click="updateProgress('in_progress', 75)"
-              class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
-            >
-              75%
-            </button>
-            <button
-              @click="updateProgress('completed', 100)"
-              class="text-xs px-2 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200"
-            >
-              Complete
-            </button>
-          </div>
-        </div>
-
         <!-- Action Buttons -->
-        <div class="flex items-center space-x-3">
-          <button
-            @click="toggleBookmark"
-            :class="[
-              'inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md',
-              material.is_bookmarked
-                ? 'border-red-300 text-red-700 bg-red-50 hover:bg-red-100'
-                : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
-            ]"
-          >
-            <svg v-if="material.is_bookmarked" class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
-            </svg>
-            <svg v-else class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-            {{ material.is_bookmarked ? 'Bookmarked' : 'Bookmark' }}
-          </button>
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <a
             v-if="material.notion_url"
             :href="material.notion_url"
             target="_blank"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-msit-dark-600 shadow-sm text-sm font-medium rounded-md text-msit-dark-50 bg-msit-dark-700 hover:bg-msit-dark-600 transition-colors font-sans"
           >
+            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
             View in Notion
           </a>
-        </div>
-      </div>
-      <div class="px-6 py-4">
-        <div class="prose max-w-none" v-html="formatContent(material.content)"></div>
-      </div>
-
-      <!-- Rating Section -->
-      <div class="px-6 py-4 border-t border-gray-200">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">Rate this Material</h2>
-        <div class="flex items-center space-x-2 mb-2">
           <button
-            v-for="star in 5"
-            :key="star"
-            @click="submitRating(star)"
-            class="focus:outline-none"
+            @click="exportMaterial"
+            class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-msit-dark-600 shadow-sm text-sm font-medium rounded-md text-msit-dark-50 bg-msit-dark-700 hover:bg-msit-dark-600 transition-colors font-sans"
           >
-            <svg
-              class="w-8 h-8"
-              :class="star <= (userRating?.rating || 0) ? 'text-yellow-400' : 'text-gray-300'"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
+            Export
           </button>
-          <span v-if="userRating" class="ml-2 text-sm text-gray-600">
-            Your rating: {{ userRating.rating }}/5
-          </span>
-        </div>
-        <textarea
-          v-model="ratingComment"
-          rows="2"
-          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 mb-2"
-          placeholder="Add a comment (optional)"
-        ></textarea>
-        <button
-          v-if="userRating"
-          @click="deleteRating"
-          class="text-sm text-red-600 hover:text-red-800"
-        >
-          Remove rating
-        </button>
-      </div>
-
-      <!-- Notes Section -->
-      <div class="px-6 py-4 border-t border-gray-200">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">My Notes</h2>
-        
-        <!-- Add Note Form -->
-        <div class="mb-4">
-          <textarea
-            v-model="newNoteContent"
-            rows="3"
-            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 mb-2"
-            placeholder="Add a note about this material..."
-          ></textarea>
           <button
-            @click="createNote"
-            :disabled="!newNoteContent.trim()"
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="printMaterial"
+            class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-msit-dark-600 shadow-sm text-sm font-medium rounded-md text-msit-dark-50 bg-msit-dark-700 hover:bg-msit-dark-600 transition-colors font-sans"
           >
-            Add Note
+            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Print
+          </button>
+          <button
+            @click="copyMaterialLink"
+            class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-msit-dark-600 shadow-sm text-sm font-medium rounded-md text-msit-dark-50 bg-msit-dark-700 hover:bg-msit-dark-600 transition-colors font-sans"
+          >
+            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            Copy Link
           </button>
         </div>
-
-        <!-- Notes List -->
-        <div v-if="notesLoading" class="text-center py-4">
-          <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
-        </div>
-        <div v-else-if="notes.length === 0" class="text-sm text-gray-500 py-4">
-          No notes yet. Add your first note above!
-        </div>
-        <div v-else class="space-y-4">
-          <div
-            v-for="note in notes"
-            :key="note.id"
-            class="bg-gray-50 rounded-lg p-4"
-          >
-            <div v-if="editingNoteId !== note.id" class="flex items-start justify-between">
-              <p class="text-sm text-gray-700 whitespace-pre-wrap flex-1">{{ note.content }}</p>
-              <div class="ml-4 flex space-x-2">
-                <button
-                  @click="startEditingNote(note)"
-                  class="text-indigo-600 hover:text-indigo-800"
-                  title="Edit note"
-                >
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
-                <button
-                  @click="deleteNote(note.id)"
-                  class="text-red-600 hover:text-red-800"
-                  title="Delete note"
-                >
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div v-else class="space-y-2">
-              <textarea
-                v-model="editingNoteContent"
-                rows="3"
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              ></textarea>
-              <div class="flex space-x-2">
-                <button
-                  @click="saveNote(note.id)"
-                  class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                >
-                  Save
-                </button>
-                <button
-                  @click="cancelEditingNote"
-                  class="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-            <p class="mt-2 text-xs text-gray-400">
-              {{ formatDate(note.created_at) }}
-              <span v-if="note.updated_at && note.updated_at !== note.created_at" class="ml-2">
-                (edited {{ formatDate(note.updated_at) }})
-              </span>
-            </p>
-          </div>
-        </div>
+      </div>
+      <div class="px-4 sm:px-6 py-4 sm:py-6">
+        <div class="prose prose-invert max-w-none text-msit-dark-100" style="color: #E0EADD;" v-html="formatContent(material.content)"></div>
       </div>
 
-      <div class="px-6 py-4 border-t border-gray-200">
+      <div class="px-4 sm:px-6 py-4 border-t border-msit-dark-700">
         <router-link
           to="/materials"
-          class="text-indigo-600 hover:text-indigo-500 font-medium"
+          class="text-msit-accent hover:text-msit-accent-300 font-medium transition-colors font-sans inline-flex items-center"
         >
           ← Back to Materials
         </router-link>
@@ -236,13 +83,6 @@ const route = useRoute()
 const material = ref<any>(null)
 const loading = ref(true)
 const error = ref('')
-const notes = ref<any[]>([])
-const userRating = ref<any>(null)
-const ratingComment = ref('')
-const notesLoading = ref(false)
-const newNoteContent = ref('')
-const editingNoteId = ref<number | null>(null)
-const editingNoteContent = ref('')
 
 const formatContent = (content: string) => {
   if (!content) return ''
@@ -252,23 +92,92 @@ const formatContent = (content: string) => {
     .replace(/#{3}\s(.+)/g, '<h3>$1</h3>')
     .replace(/#{2}\s(.+)/g, '<h2>$1</h2>')
     .replace(/#{1}\s(.+)/g, '<h1>$1</h1>')
+    .replace(/```python\n([\s\S]*?)```/g, '<pre class="bg-msit-dark-700 p-4 rounded my-2 overflow-x-auto"><code class="text-msit-dark-50">$1</code></pre>')
+    .replace(/```([\s\S]*?)```/g, '<pre class="bg-msit-dark-700 p-4 rounded my-2 overflow-x-auto"><code class="text-msit-dark-50">$1</code></pre>')
+    .replace(/`([^`]+)`/g, '<code class="bg-msit-dark-700 px-1 rounded text-msit-accent">$1</code>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
 }
 
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+const exportMaterial = () => {
+  if (!material.value) return
+  
+  const content = `
+# ${material.value.title}
+
+${material.value.category ? `**Category:** ${material.value.category}\n` : ''}
+${material.value.notion_url ? `**Source:** ${material.value.notion_url}\n` : ''}
+
+---
+
+${material.value.content}
+
+---
+
+*Exported from StudyHall on ${new Date().toLocaleString()}*
+  `.trim()
+  
+  const blob = new Blob([content], { type: 'text/markdown' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${material.value.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+const printMaterial = () => {
+  const printWindow = window.open('', '_blank')
+  if (!printWindow || !material.value) return
+  
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>${material.value.title}</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+          h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }
+          h2 { color: #555; margin-top: 30px; }
+          h3 { color: #777; }
+          pre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }
+          code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; }
+          .meta { color: #666; font-size: 14px; margin-bottom: 20px; }
+          @media print { body { margin: 0; } }
+        </style>
+      </head>
+      <body>
+        <h1>${material.value.title}</h1>
+        <div class="meta">
+          ${material.value.category ? `<strong>Category:</strong> ${material.value.category}<br>` : ''}
+          ${material.value.notion_url ? `<strong>Source:</strong> <a href="${material.value.notion_url}">${material.value.notion_url}</a><br>` : ''}
+          <strong>Date:</strong> ${new Date().toLocaleString()}
+        </div>
+        <div>${formatContent(material.value.content)}</div>
+      </body>
+    </html>
+  `)
+  printWindow.document.close()
+  printWindow.focus()
+  setTimeout(() => {
+    printWindow.print()
+  }, 250)
+}
+
+const copyMaterialLink = () => {
+  const url = window.location.href
+  navigator.clipboard.writeText(url)
+  alert('Link copied to clipboard!')
 }
 
 const loadMaterial = async () => {
   loading.value = true
   try {
-    const response = await fetch(`/api/materials/${route.params.id}`, {
-      credentials: 'include'
-    })
+    const response = await fetch(`/api/materials/${route.params.id}`)
     if (response.ok) {
       material.value = await response.json()
-      loadRating()
-      loadNotes()
     } else {
       error.value = 'Material not found'
     }
@@ -279,254 +188,5 @@ const loadMaterial = async () => {
   }
 }
 
-const loadRating = async () => {
-  if (!material.value) return
-  try {
-    const response = await fetch(`/api/materials/${material.value.id}/ratings`, {
-      credentials: 'include'
-    })
-    if (response.ok) {
-      const data = await response.json()
-      if (data.user_rating) {
-        userRating.value = data.user_rating
-        ratingComment.value = data.user_rating.comment || ''
-      } else {
-        userRating.value = null
-        ratingComment.value = ''
-      }
-    }
-  } catch (e) {
-    // Ignore errors
-  }
-}
-
-const loadNotes = async () => {
-  if (!material.value) return
-  notesLoading.value = true
-  try {
-    const response = await fetch(`/api/materials/${material.value.id}/notes`, {
-      credentials: 'include'
-    })
-    if (response.ok) {
-      notes.value = await response.json()
-    }
-  } catch (e) {
-    // Ignore errors
-  } finally {
-    notesLoading.value = false
-  }
-}
-
-const submitRating = async (rating: number) => {
-  if (!material.value) return
-  try {
-    const response = await fetch(`/api/materials/${material.value.id}/ratings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        rating: rating,
-        comment: ratingComment.value || null
-      })
-    })
-    if (response.ok) {
-      const data = await response.json()
-      userRating.value = data.rating
-    }
-  } catch (e) {
-    error.value = 'Failed to submit rating'
-  }
-}
-
-const deleteRating = async () => {
-  if (!material.value || !userRating.value) return
-  try {
-    const response = await fetch(`/api/materials/${material.value.id}/ratings`, {
-      method: 'DELETE',
-      credentials: 'include'
-    })
-    if (response.ok) {
-      userRating.value = null
-      ratingComment.value = ''
-    }
-  } catch (e) {
-    error.value = 'Failed to delete rating'
-  }
-}
-
-const createNote = async () => {
-  if (!material.value || !newNoteContent.value.trim()) return
-  try {
-    const response = await fetch('/api/notes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        material_id: material.value.id,
-        content: newNoteContent.value
-      })
-    })
-    if (response.ok) {
-      newNoteContent.value = ''
-      loadNotes()
-    } else {
-      error.value = 'Failed to create note'
-    }
-  } catch (e) {
-    error.value = 'Failed to create note'
-  }
-}
-
-const startEditingNote = (note: any) => {
-  editingNoteId.value = note.id
-  editingNoteContent.value = note.content
-}
-
-const cancelEditingNote = () => {
-  editingNoteId.value = null
-  editingNoteContent.value = ''
-}
-
-const saveNote = async (noteId: number) => {
-  if (!editingNoteContent.value.trim()) {
-    error.value = 'Note content cannot be empty'
-    return
-  }
-
-  try {
-    const response = await fetch(`/api/notes/${noteId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        content: editingNoteContent.value
-      })
-    })
-    if (response.ok) {
-      editingNoteId.value = null
-      editingNoteContent.value = ''
-      loadNotes()
-    } else {
-      error.value = 'Failed to update note'
-    }
-  } catch (e) {
-    error.value = 'Failed to update note'
-  }
-}
-
-const deleteNote = async (noteId: number) => {
-  try {
-    const response = await fetch(`/api/notes/${noteId}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    })
-    if (response.ok) {
-      loadNotes()
-    } else {
-      error.value = 'Failed to delete note'
-    }
-  } catch (e) {
-    error.value = 'Failed to delete note'
-  }
-}
-
-const startEditingNote = (note: any) => {
-  editingNoteId.value = note.id
-  editingNoteContent.value = note.content
-}
-
-const cancelEditingNote = () => {
-  editingNoteId.value = null
-  editingNoteContent.value = ''
-}
-
-const saveNote = async (noteId: number) => {
-  if (!editingNoteContent.value.trim()) {
-    error.value = 'Note content cannot be empty'
-    return
-  }
-
-  try {
-    const response = await fetch(`/api/notes/${noteId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        content: editingNoteContent.value
-      })
-    })
-    if (response.ok) {
-      editingNoteId.value = null
-      editingNoteContent.value = ''
-      loadNotes()
-    } else {
-      error.value = 'Failed to update note'
-    }
-  } catch (e) {
-    error.value = 'Failed to update note'
-  }
-}
-
-const toggleBookmark = async () => {
-  if (!material.value) return
-  
-  try {
-    if (material.value.is_bookmarked) {
-      // Remove bookmark
-      const response = await fetch(`/api/bookmarks/material/${material.value.id}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      })
-      if (response.ok) {
-        material.value.is_bookmarked = false
-        material.value.bookmark_id = null
-      }
-    } else {
-      // Add bookmark
-      const response = await fetch('/api/bookmarks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ material_id: material.value.id })
-      })
-      if (response.ok) {
-        const data = await response.json()
-        material.value.is_bookmarked = true
-        material.value.bookmark_id = data.bookmark.id
-      }
-    }
-  } catch (e) {
-    error.value = 'Failed to update bookmark'
-  }
-}
-
-const updateProgress = async (status: string, percentage: number) => {
-  if (!material.value) return
-  
-  try {
-    const response = await fetch(`/api/progress/material/${material.value.id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ status, progress_percentage: percentage })
-    })
-    if (response.ok) {
-      const data = await response.json()
-      if (material.value.progress) {
-        material.value.progress.status = data.progress.status
-        material.value.progress.progress_percentage = data.progress.progress_percentage
-      } else {
-        material.value.progress = {
-          status: data.progress.status,
-          progress_percentage: data.progress.progress_percentage
-        }
-      }
-    }
-  } catch (e) {
-    error.value = 'Failed to update progress'
-  }
-}
-
 onMounted(loadMaterial)
 </script>
-

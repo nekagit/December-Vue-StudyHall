@@ -67,6 +67,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { getCharacterConfig, saveCharacterConfig } from '../utils/character'
 
 const router = useRouter()
 const characterName = ref('')
@@ -76,15 +77,10 @@ const loading = ref(false)
 
 onMounted(() => {
   // Check if already configured
-  const existingCharacter = localStorage.getItem('character')
+  const existingCharacter = getCharacterConfig()
   if (existingCharacter) {
-    try {
-      const character = JSON.parse(existingCharacter)
-      characterName.value = character.name || ''
-      role.value = character.role || ''
-    } catch (e) {
-      // Invalid stored data, continue with empty form
-    }
+    characterName.value = existingCharacter.name || ''
+    role.value = existingCharacter.role || ''
   }
 })
 
@@ -106,7 +102,7 @@ const handleConfigure = async () => {
       id: Date.now().toString() // Simple ID generation
     }
     
-    localStorage.setItem('character', JSON.stringify(character))
+    saveCharacterConfig(character)
     
     // Navigate to home/dashboard
     router.push('/')

@@ -2,21 +2,18 @@
  * API utility functions with character headers
  */
 
+import { getCharacterConfig } from './character'
+
 export function getCharacterHeaders(): Record<string, string> {
-  const character = localStorage.getItem('character')
+  const character = getCharacterConfig()
   if (!character) {
     return {}
   }
   
-  try {
-    const char = JSON.parse(character)
-    return {
-      'X-Character-Id': char.id || '',
-      'X-Character-Name': char.name || '',
-      'X-Character-Role': char.role || 'student'
-    }
-  } catch (e) {
-    return {}
+  return {
+    'X-Character-Id': character.id || '',
+    'X-Character-Name': character.name || '',
+    'X-Character-Role': character.role || 'student'
   }
 }
 

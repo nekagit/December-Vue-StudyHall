@@ -118,3 +118,15 @@ All endpoints are under `/api/*`:
 3. **Modern Frontend**: Vue 3 SPA with TailwindCSS
 4. **Type Safety**: Use TypeScript and Python type hints everywhere
 5. **Simplicity First**: MVP should be functional but not over-engineered
+
+## No Progress Tracking or User-Specific Features
+
+**CRITICAL RULE**: This platform is a simple learning environment with NO progress tracking, NO user-specific data, and NO tracking features.
+
+- **NO Progress Tracking**: Do not track completion status, progress percentages, or learning progress
+- **NO User-Specific Data**: Do not store or track any data tied to individual users
+- **NO Tracking Features**: No study sessions, streaks, goals, bookmarks, notes, or ratings
+- **Simple Learning Platform**: Users can learn, practice, and export their work - that's it
+- **Export Functionality**: Users should always be able to export what they did/created that day
+- **Public Materials**: All materials are public and accessible to everyone
+- **No Authentication Required**: Materials and compiler should work without user authentication
