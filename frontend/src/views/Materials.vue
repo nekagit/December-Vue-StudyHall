@@ -1,37 +1,37 @@
 <template>
   <div class="px-4 py-6 sm:px-0">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-900">Course Materials</h1>
+      <h1 class="text-3xl font-serif font-bold text-msit-dark-50">Course Materials</h1>
       <button
         @click="syncNotion"
         :disabled="syncing"
-        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-semibold rounded-md text-msit-dark bg-msit-accent hover:bg-msit-accent-500 disabled:opacity-50 transition-colors font-sans"
       >
         {{ syncing ? 'Syncing...' : 'Sync from Notion' }}
       </button>
     </div>
 
     <!-- Search and Filter -->
-    <div class="mb-6 bg-white p-4 rounded-lg shadow">
+    <div class="mb-6 bg-msit-dark-800 p-4 rounded-lg shadow border border-msit-dark-700">
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+          <label for="search" class="block text-sm font-semibold text-msit-dark-50 mb-2 font-sans">Search</label>
           <input
             id="search"
             v-model="searchQuery"
             @input="debouncedSearch"
             type="text"
             placeholder="Search materials..."
-            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+            class="block w-full rounded-md border-msit-dark-600 bg-msit-dark-700 text-msit-dark-50 placeholder-msit-dark-300 shadow-sm focus:border-msit-accent focus:ring-msit-accent sm:text-sm px-3 py-2 border font-sans"
           />
         </div>
         <div>
-          <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+          <label for="category" class="block text-sm font-semibold text-msit-dark-50 mb-2 font-sans">Category</label>
           <select
             id="category"
             v-model="selectedCategory"
             @change="loadMaterials"
-            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+            class="block w-full rounded-md border-msit-dark-600 bg-msit-dark-700 text-msit-dark-50 shadow-sm focus:border-msit-accent focus:ring-msit-accent sm:text-sm px-3 py-2 border font-sans"
           >
             <option value="">All Categories</option>
             <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
@@ -41,50 +41,50 @@
       <div v-if="searchQuery || selectedCategory" class="mt-3">
         <button
           @click="clearFilters"
-          class="text-sm text-indigo-600 hover:text-indigo-500"
+          class="text-sm text-msit-accent hover:text-msit-accent-300 transition-colors font-sans"
         >
           Clear filters
         </button>
       </div>
     </div>
 
-    <div v-if="error" class="rounded-md bg-red-50 p-4 mb-4">
-      <div class="text-sm text-red-800">{{ error }}</div>
+    <div v-if="error" class="rounded-md bg-red-900/30 border border-red-700 p-4 mb-4">
+      <div class="text-sm text-red-300 font-sans">{{ error }}</div>
     </div>
 
-    <div v-if="success" class="rounded-md bg-green-50 p-4 mb-4">
-      <div class="text-sm text-green-800">{{ success }}</div>
+    <div v-if="success" class="rounded-md bg-msit-accent/20 border border-msit-accent p-4 mb-4">
+      <div class="text-sm text-msit-accent font-sans">{{ success }}</div>
     </div>
 
     <div v-if="loading" class="text-center py-12">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-msit-accent"></div>
     </div>
 
     <div v-else-if="materials.length === 0" class="text-center py-12">
-      <p class="text-gray-500">No materials found. Click "Sync from Notion" to import materials.</p>
+      <p class="text-msit-dark-200 font-sans">No materials found. Click "Sync from Notion" to import materials.</p>
     </div>
 
     <div v-else class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       <div
         v-for="material in materials"
         :key="material.id"
-        class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow"
+        class="bg-msit-dark-800 overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow border border-msit-dark-700 hover:border-msit-accent"
       >
         <div class="p-6">
           <div class="flex items-start justify-between mb-2">
             <h3
               @click="$router.push(`/materials/${material.id}`)"
-              class="text-lg font-medium text-gray-900 cursor-pointer hover:text-indigo-600"
+              class="text-lg font-semibold text-msit-dark-50 cursor-pointer hover:text-msit-accent transition-colors font-sans"
             >
               {{ material.title }}
             </h3>
             <div class="flex items-center space-x-2">
-              <span v-if="material.category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+              <span v-if="material.category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-msit-accent/20 text-msit-accent font-sans">
                 {{ material.category }}
               </span>
               <button
                 v-if="material.is_bookmarked"
-                class="text-red-500"
+                class="text-msit-accent"
                 title="Bookmarked"
                 @click.stop="toggleBookmark(material)"
               >
@@ -94,13 +94,13 @@
               </button>
             </div>
           </div>
-          <p v-if="material.content" class="mt-2 text-sm text-gray-500 line-clamp-3">
+          <p v-if="material.content" class="mt-2 text-sm text-msit-dark-200 line-clamp-3 font-sans">
             {{ material.content.substring(0, 150) }}...
           </p>
           <div class="mt-4">
             <router-link
               :to="`/materials/${material.id}`"
-              class="text-indigo-600 hover:text-indigo-500 font-medium text-sm"
+              class="text-msit-accent hover:text-msit-accent-300 font-semibold text-sm transition-colors font-sans"
             >
               Read more →
             </router-link>

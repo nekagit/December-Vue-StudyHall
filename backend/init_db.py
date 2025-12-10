@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Initialize database with sample data."""
 from backend.database import SessionLocal, engine, Base
-from backend.models import Student, Material
-from backend.services.auth import hash_password
+from backend.models import Material
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -10,37 +9,6 @@ Base.metadata.create_all(bind=engine)
 db = SessionLocal()
 
 try:
-    # Demo accounts to create
-    demo_accounts = [
-        {"email": "student@studyhall.com", "name": "Sample Student", "password": "password123"},
-        {"email": "alice@studyhall.com", "name": "Alice Johnson", "password": "demo123"},
-        {"email": "bob@studyhall.com", "name": "Bob Smith", "password": "demo123"},
-        {"email": "charlie@studyhall.com", "name": "Charlie Brown", "password": "demo123"},
-        {"email": "diana@studyhall.com", "name": "Diana Prince", "password": "demo123"},
-        {"email": "eve@studyhall.com", "name": "Eve Williams", "password": "demo123"},
-    ]
-    
-    # Create demo accounts (skip if they already exist)
-    created_count = 0
-    for account in demo_accounts:
-        existing = db.query(Student).filter(Student.email == account["email"]).first()
-        if not existing:
-            student = Student(
-                email=account["email"],
-                name=account["name"],
-                password_hash=hash_password(account["password"])
-            )
-            db.add(student)
-            created_count += 1
-            print(f"Created demo account: {account['email']} / {account['password']}")
-        else:
-            print(f"Account already exists: {account['email']}")
-    
-    if created_count > 0:
-        print(f"\nCreated {created_count} new demo account(s)")
-    else:
-        print("\nAll demo accounts already exist")
-    
     # Create sample materials
     if db.query(Material).count() == 0:
         materials = [

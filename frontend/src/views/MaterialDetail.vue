@@ -162,19 +162,55 @@
             :key="note.id"
             class="bg-gray-50 rounded-lg p-4"
           >
-            <div class="flex items-start justify-between">
-              <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ note.content }}</p>
-              <button
-                @click="deleteNote(note.id)"
-                class="ml-4 text-red-600 hover:text-red-800"
-              >
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+            <div v-if="editingNoteId !== note.id" class="flex items-start justify-between">
+              <p class="text-sm text-gray-700 whitespace-pre-wrap flex-1">{{ note.content }}</p>
+              <div class="ml-4 flex space-x-2">
+                <button
+                  @click="startEditingNote(note)"
+                  class="text-indigo-600 hover:text-indigo-800"
+                  title="Edit note"
+                >
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button
+                  @click="deleteNote(note.id)"
+                  class="text-red-600 hover:text-red-800"
+                  title="Delete note"
+                >
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div v-else class="space-y-2">
+              <textarea
+                v-model="editingNoteContent"
+                rows="3"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              ></textarea>
+              <div class="flex space-x-2">
+                <button
+                  @click="saveNote(note.id)"
+                  class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  Save
+                </button>
+                <button
+                  @click="cancelEditingNote"
+                  class="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
             <p class="mt-2 text-xs text-gray-400">
               {{ formatDate(note.created_at) }}
+              <span v-if="note.updated_at && note.updated_at !== note.created_at" class="ml-2">
+                (edited {{ formatDate(note.updated_at) }})
+              </span>
             </p>
           </div>
         </div>
@@ -201,10 +237,12 @@ const material = ref<any>(null)
 const loading = ref(true)
 const error = ref('')
 const notes = ref<any[]>([])
-const notesLoading = ref(false)
-const newNoteContent = ref('')
 const userRating = ref<any>(null)
 const ratingComment = ref('')
+const notesLoading = ref(false)
+const newNoteContent = ref('')
+const editingNoteId = ref<number | null>(null)
+const editingNoteContent = ref('')
 
 const formatContent = (content: string) => {
   if (!content) return ''
@@ -244,13 +282,18 @@ const loadMaterial = async () => {
 const loadRating = async () => {
   if (!material.value) return
   try {
-    const response = await fetch(`/api/materials/${material.value.id}/rating`, {
+    const response = await fetch(`/api/materials/${material.value.id}/ratings`, {
       credentials: 'include'
     })
     if (response.ok) {
       const data = await response.json()
-      userRating.value = data.user_rating
-      ratingComment.value = data.user_rating?.comment || ''
+      if (data.user_rating) {
+        userRating.value = data.user_rating
+        ratingComment.value = data.user_rating.comment || ''
+      } else {
+        userRating.value = null
+        ratingComment.value = ''
+      }
     }
   } catch (e) {
     // Ignore errors
@@ -277,7 +320,7 @@ const loadNotes = async () => {
 const submitRating = async (rating: number) => {
   if (!material.value) return
   try {
-    const response = await fetch(`/api/materials/${material.value.id}/rating`, {
+    const response = await fetch(`/api/materials/${material.value.id}/ratings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -287,7 +330,8 @@ const submitRating = async (rating: number) => {
       })
     })
     if (response.ok) {
-      await loadRating()
+      const data = await response.json()
+      userRating.value = data.rating
     }
   } catch (e) {
     error.value = 'Failed to submit rating'
@@ -295,13 +339,16 @@ const submitRating = async (rating: number) => {
 }
 
 const deleteRating = async () => {
-  if (!userRating.value || !material.value) return
+  if (!material.value || !userRating.value) return
   try {
-    // Set rating to null by sending a DELETE request or setting rating to 0
-    // Since we don't have a DELETE endpoint, we'll just clear it locally
-    // In a real app, you'd want a DELETE endpoint
-    userRating.value = null
-    ratingComment.value = ''
+    const response = await fetch(`/api/materials/${material.value.id}/ratings`, {
+      method: 'DELETE',
+      credentials: 'include'
+    })
+    if (response.ok) {
+      userRating.value = null
+      ratingComment.value = ''
+    }
   } catch (e) {
     error.value = 'Failed to delete rating'
   }
@@ -310,23 +357,60 @@ const deleteRating = async () => {
 const createNote = async () => {
   if (!material.value || !newNoteContent.value.trim()) return
   try {
-    const response = await fetch(`/api/materials/${material.value.id}/notes`, {
+    const response = await fetch('/api/notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({
-        content: newNoteContent.value,
-        title: null
+        material_id: material.value.id,
+        content: newNoteContent.value
       })
     })
     if (response.ok) {
       newNoteContent.value = ''
-      await loadNotes()
+      loadNotes()
     } else {
       error.value = 'Failed to create note'
     }
   } catch (e) {
     error.value = 'Failed to create note'
+  }
+}
+
+const startEditingNote = (note: any) => {
+  editingNoteId.value = note.id
+  editingNoteContent.value = note.content
+}
+
+const cancelEditingNote = () => {
+  editingNoteId.value = null
+  editingNoteContent.value = ''
+}
+
+const saveNote = async (noteId: number) => {
+  if (!editingNoteContent.value.trim()) {
+    error.value = 'Note content cannot be empty'
+    return
+  }
+
+  try {
+    const response = await fetch(`/api/notes/${noteId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        content: editingNoteContent.value
+      })
+    })
+    if (response.ok) {
+      editingNoteId.value = null
+      editingNoteContent.value = ''
+      loadNotes()
+    } else {
+      error.value = 'Failed to update note'
+    }
+  } catch (e) {
+    error.value = 'Failed to update note'
   }
 }
 
@@ -337,12 +421,49 @@ const deleteNote = async (noteId: number) => {
       credentials: 'include'
     })
     if (response.ok) {
-      await loadNotes()
+      loadNotes()
     } else {
       error.value = 'Failed to delete note'
     }
   } catch (e) {
     error.value = 'Failed to delete note'
+  }
+}
+
+const startEditingNote = (note: any) => {
+  editingNoteId.value = note.id
+  editingNoteContent.value = note.content
+}
+
+const cancelEditingNote = () => {
+  editingNoteId.value = null
+  editingNoteContent.value = ''
+}
+
+const saveNote = async (noteId: number) => {
+  if (!editingNoteContent.value.trim()) {
+    error.value = 'Note content cannot be empty'
+    return
+  }
+
+  try {
+    const response = await fetch(`/api/notes/${noteId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        content: editingNoteContent.value
+      })
+    })
+    if (response.ok) {
+      editingNoteId.value = null
+      editingNoteContent.value = ''
+      loadNotes()
+    } else {
+      error.value = 'Failed to update note'
+    }
+  } catch (e) {
+    error.value = 'Failed to update note'
   }
 }
 

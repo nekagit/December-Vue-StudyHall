@@ -461,6 +461,43 @@
           </div>
         </div>
       </div>
+
+      <!-- Recommendations Section -->
+      <div class="mt-8 bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 class="text-lg font-medium text-gray-900">Recommended Materials</h2>
+          <router-link
+            to="/materials"
+            class="text-sm text-indigo-600 hover:text-indigo-500"
+          >
+            View all →
+          </router-link>
+        </div>
+        <div class="px-6 py-4">
+          <div v-if="recommendationsLoading" class="text-center py-4">
+            <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+          </div>
+          <div v-else-if="recommendations.length === 0" class="text-center py-4 text-gray-500">
+            No recommendations available
+          </div>
+          <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <router-link
+              v-for="rec in recommendations"
+              :key="rec.id"
+              :to="`/materials/${rec.id}`"
+              class="block p-4 border border-gray-200 rounded-lg hover:border-indigo-500 hover:shadow-md transition-all"
+            >
+              <h3 class="text-sm font-medium text-gray-900 mb-1">{{ rec.title }}</h3>
+              <div class="flex items-center justify-between mt-2">
+                <span v-if="rec.category" class="text-xs text-gray-500">{{ rec.category }}</span>
+                <span class="text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-800">
+                  {{ rec.reason === 'bookmarked' ? 'Bookmarked' : rec.reason === 'in_progress' ? 'In Progress' : 'New' }}
+                </span>
+              </div>
+            </router-link>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -476,23 +513,22 @@ const stats = ref<any>({
   recent_bookmarks: [],
   recent_progress: []
 })
-const statistics = ref<any>({
-  total_study_time_minutes: 0,
-  total_sessions: 0,
-  weekly_study_time_minutes: 0,
-  daily_study_time_minutes: 0,
-  active_goals: 0,
-  completed_goals: 0
+const streak = ref<any>({
+  current_streak: 0,
+  longest_streak: 0,
+  last_study_date: null
 })
+const recommendations = ref<any[]>([])
+const recommendationsLoading = ref(false)
 const loading = ref(true)
 const error = ref('')
 
 const loadStats = async () => {
   loading.value = true
   try {
-    const [statsResponse, statisticsResponse] = await Promise.all([
+    const [statsResponse, streakResponse] = await Promise.all([
       fetch('/api/dashboard/stats', { credentials: 'include' }),
-      fetch('/api/statistics', { credentials: 'include' })
+      fetch('/api/streak', { credentials: 'include' })
     ])
     
     if (statsResponse.ok) {
@@ -501,8 +537,8 @@ const loadStats = async () => {
       error.value = 'Failed to load dashboard stats'
     }
     
-    if (statisticsResponse.ok) {
-      statistics.value = await statisticsResponse.json()
+    if (streakResponse.ok) {
+      streak.value = await streakResponse.json()
     }
   } catch (e) {
     error.value = 'An error occurred'
@@ -511,14 +547,24 @@ const loadStats = async () => {
   }
 }
 
-const formatTime = (minutes: number): string => {
-  const hrs = Math.floor(minutes / 60)
-  const mins = Math.floor(minutes % 60)
-  if (hrs > 0) {
-    return `${hrs}h ${mins}m`
+const loadRecommendations = async () => {
+  recommendationsLoading.value = true
+  try {
+    const response = await fetch('/api/materials/recommendations', {
+      credentials: 'include'
+    })
+    if (response.ok) {
+      recommendations.value = await response.json()
+    }
+  } catch (e) {
+    // Ignore errors
+  } finally {
+    recommendationsLoading.value = false
   }
-  return `${mins}m`
 }
 
-onMounted(loadStats)
+onMounted(() => {
+  loadStats()
+  loadRecommendations()
+})
 </script>

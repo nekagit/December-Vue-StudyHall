@@ -10,24 +10,24 @@
       <div class="text-sm text-red-800">{{ error }}</div>
     </div>
 
-    <div v-else-if="user" class="max-w-3xl">
+    <div v-else-if="character" class="max-w-3xl">
       <div class="bg-white shadow rounded-lg">
         <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-medium text-gray-900">Account Information</h2>
+          <h2 class="text-lg font-medium text-gray-900">Character Information</h2>
         </div>
         <div class="px-6 py-4">
           <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
             <div>
               <dt class="text-sm font-medium text-gray-500">Name</dt>
-              <dd class="mt-1 text-sm text-gray-900">{{ user.name }}</dd>
+              <dd class="mt-1 text-sm text-gray-900">{{ character.name }}</dd>
             </div>
             <div>
-              <dt class="text-sm font-medium text-gray-500">Email</dt>
-              <dd class="mt-1 text-sm text-gray-900">{{ user.email }}</dd>
+              <dt class="text-sm font-medium text-gray-500">Role</dt>
+              <dd class="mt-1 text-sm text-gray-900">{{ character.role || 'student' }}</dd>
             </div>
             <div>
-              <dt class="text-sm font-medium text-gray-500">User ID</dt>
-              <dd class="mt-1 text-sm text-gray-900">{{ user.id }}</dd>
+              <dt class="text-sm font-medium text-gray-500">Character ID</dt>
+              <dd class="mt-1 text-sm text-gray-900">{{ character.id }}</dd>
             </div>
           </dl>
         </div>
@@ -68,7 +68,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
-const user = ref<any>(null)
+const character = ref<any>(null)
 const loading = ref(true)
 const error = ref('')
 
@@ -80,20 +80,18 @@ const progressStats = ref({
 const progressLoading = ref(false)
 const progressError = ref('')
 
-const loadUser = async () => {
+const loadCharacter = () => {
   loading.value = true
   try {
-    const response = await fetch('/api/auth/me', {
-      credentials: 'include'
-    })
-    if (response.ok) {
-      user.value = await response.json()
-      await loadProgress()
+    const stored = localStorage.getItem('character')
+    if (stored) {
+      character.value = JSON.parse(stored)
+      loadProgress()
     } else {
-      error.value = 'Failed to load user information'
+      error.value = 'Character not configured'
     }
   } catch (e) {
-    error.value = 'An error occurred'
+    error.value = 'Failed to load character information'
   } finally {
     loading.value = false
   }
@@ -102,9 +100,7 @@ const loadUser = async () => {
 const loadProgress = async () => {
   progressLoading.value = true
   try {
-    const response = await fetch('/api/progress', {
-      credentials: 'include'
-    })
+    const response = await fetch('/api/progress')
     if (response.ok) {
       const progress = await response.json()
       progressStats.value = {
@@ -122,5 +118,5 @@ const loadProgress = async () => {
   }
 }
 
-onMounted(loadUser)
+onMounted(loadCharacter)
 </script>

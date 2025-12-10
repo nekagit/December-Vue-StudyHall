@@ -5,256 +5,146 @@
       <p class="text-gray-600">Track your study time and build consistency</p>
     </div>
 
-    <!-- Timer Section -->
-    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+    <!-- Active Session Timer -->
+    <div v-if="activeSession" class="bg-white shadow rounded-lg p-6 mb-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">Active Session</h2>
       <div class="text-center">
-        <div class="mb-6">
-          <div class="text-6xl font-mono font-bold text-indigo-600 mb-4">
-            {{ formatTime(timerSeconds) }}
-          </div>
-          <div class="flex justify-center space-x-4">
-            <button
-              v-if="!timerRunning"
-              @click="startTimer"
-              class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Start
-            </button>
-            <button
-              v-else
-              @click="pauseTimer"
-              class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700"
-            >
-              <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Pause
-            </button>
-            <button
-              v-if="timerRunning || timerSeconds > 0"
-              @click="stopTimer"
-              class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-            >
-              <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-              </svg>
-              Stop & Save
-            </button>
-            <button
-              v-if="timerSeconds > 0 && !timerRunning"
-              @click="resetTimer"
-              class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-            >
-              Reset
-            </button>
-          </div>
+        <div class="text-5xl font-mono font-bold text-indigo-600 mb-4">
+          {{ formatTime(elapsedTime) }}
         </div>
-
-        <!-- Material Selection -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Studying Material (Optional)</label>
-          <select
-            v-model="selectedMaterialId"
-            class="w-full max-w-md mx-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+        <div class="flex justify-center space-x-4">
+          <button
+            @click="stopSession"
+            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
           >
-            <option value="">None</option>
+            Stop Session
+          </button>
+        </div>
+        <div v-if="activeSession.material" class="mt-4 text-sm text-gray-600">
+          Studying: {{ activeSession.material.title }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Start New Session -->
+    <div v-else class="bg-white shadow rounded-lg p-6 mb-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">Start New Session</h2>
+      <form @submit.prevent="startSession" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Material (Optional)
+          </label>
+          <select
+            v-model="newSession.material_id"
+            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          >
+            <option :value="null">General Study</option>
             <option v-for="material in materials" :key="material.id" :value="material.id">
               {{ material.title }}
             </option>
           </select>
         </div>
-
-        <!-- Notes -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Session Notes (Optional)</label>
-          <textarea
-            v-model="sessionNotes"
-            rows="3"
-            class="w-full max-w-md mx-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="What did you study today?"
-          ></textarea>
-        </div>
-      </div>
+        <button
+          type="submit"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+        >
+          Start Session
+        </button>
+      </form>
     </div>
 
-    <!-- Study Streak -->
-    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-lg p-6 mb-8 text-white">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-xl font-bold mb-2">Study Streak</h2>
-          <p class="text-indigo-100">Keep your learning momentum going!</p>
-        </div>
-        <div class="text-right">
-          <div class="text-4xl font-bold">{{ streak.current_streak }}</div>
-          <div class="text-sm text-indigo-100">days in a row</div>
-          <div class="text-sm text-indigo-200 mt-1">Best: {{ streak.longest_streak }} days</div>
-        </div>
-      </div>
+    <!-- Sessions List -->
+    <div v-if="loading" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
     </div>
 
-    <!-- Session History -->
-    <div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">Recent Sessions</h2>
-      <div v-if="loading" class="text-center py-12">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+    <div v-else-if="error" class="rounded-md bg-red-50 p-4 mb-4">
+      <div class="text-sm text-red-800">{{ error }}</div>
+    </div>
+
+    <div v-else>
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-gray-900">Session History</h2>
+        <div class="text-sm text-gray-600">
+          Total: {{ totalMinutes }} minutes
+        </div>
       </div>
-      <div v-else-if="sessions.length === 0" class="text-center py-8 text-gray-500 bg-white rounded-lg shadow">
-        No study sessions yet. Start a timer to begin tracking!
+
+      <div v-if="sessions.length === 0" class="text-center py-12 text-gray-500">
+        No study sessions yet. Start your first session above!
       </div>
-      <div v-else class="bg-white shadow rounded-lg overflow-hidden">
-        <ul class="divide-y divide-gray-200">
-          <li v-for="session in sessions" :key="session.id" class="px-6 py-4 hover:bg-gray-50">
-            <div class="flex items-center justify-between">
-              <div class="flex-1">
-                <div class="flex items-center">
-                  <p class="text-sm font-medium text-gray-900">
-                    {{ session.material ? session.material.title : 'General Study' }}
-                  </p>
-                  <span v-if="session.material" class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                    {{ session.material.category }}
-                  </span>
-                </div>
-                <p v-if="session.notes" class="mt-1 text-sm text-gray-500">{{ session.notes }}</p>
-                <p class="mt-1 text-xs text-gray-400">
-                  {{ formatDate(session.created_at) }}
-                </p>
+
+      <div v-else class="space-y-4">
+        <div
+          v-for="session in sessions"
+          :key="session.id"
+          class="bg-white shadow rounded-lg p-6"
+        >
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <h3 class="text-lg font-medium text-gray-900">
+                {{ session.material ? session.material.title : 'General Study' }}
+              </h3>
+              <p v-if="session.material && session.material.category" class="text-sm text-gray-500 mt-1">
+                {{ session.material.category }}
+              </p>
+              <div class="mt-2 flex items-center text-sm text-gray-600 space-x-4">
+                <span>
+                  <svg class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {{ Math.round(session.duration_minutes) }} minutes
+                </span>
+                <span>
+                  <svg class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {{ formatDate(session.started_at) }}
+                </span>
               </div>
-              <div class="ml-4 text-right">
-                <p class="text-lg font-semibold text-indigo-600">
-                  {{ formatDuration(session.duration_minutes) }}
-                </p>
-              </div>
+              <p v-if="session.notes" class="mt-2 text-sm text-gray-700">
+                {{ session.notes }}
+              </p>
             </div>
-          </li>
-        </ul>
+            <button
+              @click="deleteSession(session.id)"
+              class="ml-4 text-red-600 hover:text-red-800"
+            >
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-interface Material {
-  id: number
-  title: string
-  category?: string
-}
-
-interface Session {
-  id: number
-  material_id?: number
-  material?: Material
-  duration_minutes: number
-  notes?: string
-  created_at: string
-}
-
-const timerSeconds = ref(0)
-const timerRunning = ref(false)
-const timerInterval = ref<number | null>(null)
-const selectedMaterialId = ref<number | null>(null)
-const sessionNotes = ref('')
-const sessions = ref<Session[]>([])
-const materials = ref<Material[]>([])
+const sessions = ref<any[]>([])
+const materials = ref<any[]>([])
 const loading = ref(true)
-const streak = ref({
-  current_streak: 0,
-  longest_streak: 0,
-  last_study_date: null
+const error = ref('')
+const activeSession = ref<any>(null)
+const elapsedTime = ref(0)
+const timerInterval = ref<any>(null)
+const newSession = ref({
+  material_id: null as number | null
 })
-const sessionStartTime = ref<Date | null>(null)
 
-const startTimer = () => {
-  if (!timerRunning.value) {
-    timerRunning.value = true
-    sessionStartTime.value = new Date()
-    timerInterval.value = window.setInterval(() => {
-      timerSeconds.value++
-    }, 1000)
-  }
-}
-
-const pauseTimer = () => {
-  if (timerRunning.value && timerInterval.value) {
-    timerRunning.value = false
-    clearInterval(timerInterval.value)
-    timerInterval.value = null
-  }
-}
-
-const resetTimer = () => {
-  pauseTimer()
-  timerSeconds.value = 0
-  selectedMaterialId.value = null
-  sessionNotes.value = ''
-  sessionStartTime.value = null
-}
-
-const stopTimer = async () => {
-  if (timerSeconds.value === 0) return
-  
-  pauseTimer()
-  const durationMinutes = timerSeconds.value / 60
-  
-  try {
-    const response = await fetch('/api/sessions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      credentials: 'include',
-      body: JSON.stringify({
-        material_id: selectedMaterialId.value || null,
-        duration_minutes: durationMinutes,
-        notes: sessionNotes.value || null,
-        started_at: sessionStartTime.value?.toISOString(),
-        ended_at: new Date().toISOString()
-      })
-    })
-    
-    if (response.ok) {
-      resetTimer()
-      loadSessions()
-      loadStreak()
-    } else {
-      alert('Failed to save session')
-    }
-  } catch (e) {
-    alert('An error occurred')
-  }
-}
-
-const formatTime = (seconds: number) => {
-  const hrs = Math.floor(seconds / 3600)
-  const mins = Math.floor((seconds % 3600) / 60)
-  const secs = seconds % 60
-  return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
-}
-
-const formatDuration = (minutes: number) => {
-  const hrs = Math.floor(minutes / 60)
-  const mins = Math.floor(minutes % 60)
-  if (hrs > 0) {
-    return `${hrs}h ${mins}m`
-  }
-  return `${mins}m`
-}
-
-const formatDate = (dateString: string) => {
+const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+const formatTime = (seconds: number): string => {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const secs = seconds % 60
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 }
 
 const loadSessions = async () => {
@@ -265,9 +155,11 @@ const loadSessions = async () => {
     })
     if (response.ok) {
       sessions.value = await response.json()
+    } else {
+      error.value = 'Failed to load sessions'
     }
   } catch (e) {
-    // Error handling
+    error.value = 'An error occurred'
   } finally {
     loading.value = false
   }
@@ -282,27 +174,102 @@ const loadMaterials = async () => {
       materials.value = await response.json()
     }
   } catch (e) {
-    // Error handling
+    // Ignore errors
   }
 }
 
-const loadStreak = async () => {
+const startSession = async () => {
   try {
-    const response = await fetch('/api/streak', {
-      credentials: 'include'
+    const response = await fetch('/api/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        material_id: newSession.value.material_id || null,
+        started_at: new Date().toISOString(),
+        duration_minutes: 0
+      })
     })
+
     if (response.ok) {
-      streak.value = await response.json()
+      const data = await response.json()
+      activeSession.value = data.session || data
+      elapsedTime.value = 0
+      newSession.value.material_id = null
+      
+      // Start timer
+      timerInterval.value = setInterval(() => {
+        elapsedTime.value += 1
+      }, 1000)
+      
+      loadSessions()
+    } else {
+      const errorData = await response.json()
+      error.value = errorData.error || 'Failed to start session'
     }
   } catch (e) {
-    // Error handling
+    error.value = 'An error occurred while starting the session'
   }
 }
+
+const stopSession = async () => {
+  if (!activeSession.value) return
+
+  try {
+    const durationMinutes = elapsedTime.value / 60
+    
+    const response = await fetch(`/api/sessions/${activeSession.value.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        duration_minutes: durationMinutes,
+        ended_at: new Date().toISOString()
+      })
+    })
+
+    if (response.ok) {
+      if (timerInterval.value) {
+        clearInterval(timerInterval.value)
+        timerInterval.value = null
+      }
+      activeSession.value = null
+      elapsedTime.value = 0
+      loadSessions()
+    } else {
+      error.value = 'Failed to stop session'
+    }
+  } catch (e) {
+    error.value = 'An error occurred while stopping the session'
+  }
+}
+
+const deleteSession = async (sessionId: number) => {
+  if (!confirm('Are you sure you want to delete this session?')) return
+
+  try {
+    const response = await fetch(`/api/sessions/${sessionId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    })
+
+    if (response.ok) {
+      loadSessions()
+    } else {
+      error.value = 'Failed to delete session'
+    }
+  } catch (e) {
+    error.value = 'An error occurred'
+  }
+}
+
+const totalMinutes = computed(() => {
+  return sessions.value.reduce((sum, s) => sum + (s.duration_minutes || 0), 0)
+})
 
 onMounted(() => {
   loadSessions()
   loadMaterials()
-  loadStreak()
 })
 
 onUnmounted(() => {
