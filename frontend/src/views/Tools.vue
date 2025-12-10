@@ -120,6 +120,63 @@
           Open Tool
         </button>
       </div>
+
+      <!-- Color Picker -->
+      <div class="bg-msit-dark-800 border border-msit-dark-700 rounded-lg p-6 hover:border-msit-accent transition-all">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="p-2 bg-msit-accent/20 rounded">
+            <svg class="h-6 w-6 text-msit-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-msit-dark-50 font-sans">Color Converter</h3>
+        </div>
+        <p class="text-sm text-msit-dark-200 mb-4 font-sans">Convert between HEX, RGB, and HSL color formats</p>
+        <button
+          @click="activeTool = 'color'"
+          class="w-full px-4 py-2 bg-msit-accent text-msit-dark rounded-lg font-medium hover:bg-msit-accent-500 transition-colors font-sans"
+        >
+          Open Tool
+        </button>
+      </div>
+
+      <!-- UUID Generator -->
+      <div class="bg-msit-dark-800 border border-msit-dark-700 rounded-lg p-6 hover:border-msit-accent transition-all">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="p-2 bg-msit-accent/20 rounded">
+            <svg class="h-6 w-6 text-msit-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-msit-dark-50 font-sans">UUID Generator</h3>
+        </div>
+        <p class="text-sm text-msit-dark-200 mb-4 font-sans">Generate unique identifiers (UUIDs)</p>
+        <button
+          @click="activeTool = 'uuid'"
+          class="w-full px-4 py-2 bg-msit-accent text-msit-dark rounded-lg font-medium hover:bg-msit-accent-500 transition-colors font-sans"
+        >
+          Open Tool
+        </button>
+      </div>
+
+      <!-- QR Code Generator -->
+      <div class="bg-msit-dark-800 border border-msit-dark-700 rounded-lg p-6 hover:border-msit-accent transition-all">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="p-2 bg-msit-accent/20 rounded">
+            <svg class="h-6 w-6 text-msit-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-msit-dark-50 font-sans">QR Code Generator</h3>
+        </div>
+        <p class="text-sm text-msit-dark-200 mb-4 font-sans">Generate QR codes from text or URLs</p>
+        <button
+          @click="activeTool = 'qrcode'"
+          class="w-full px-4 py-2 bg-msit-accent text-msit-dark rounded-lg font-medium hover:bg-msit-accent-500 transition-colors font-sans"
+        >
+          Open Tool
+        </button>
+      </div>
     </div>
 
     <!-- Tool Panels -->
@@ -324,6 +381,86 @@
             </div>
           </div>
         </div>
+
+        <!-- Color Converter -->
+        <div v-if="activeTool === 'color'">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-msit-dark-200 mb-2 font-sans">HEX Color:</label>
+            <div class="flex items-center gap-3">
+              <input
+                v-model="colorInput"
+                type="text"
+                placeholder="#83E65B"
+                class="flex-1 bg-msit-dark p-3 rounded border border-msit-dark-700 text-msit-dark-200 font-mono text-sm font-sans"
+              />
+              <input
+                v-model="colorInput"
+                type="color"
+                class="w-16 h-12 rounded border border-msit-dark-700 cursor-pointer"
+              />
+            </div>
+          </div>
+          <button
+            @click="convertColor"
+            class="px-4 py-2 bg-msit-accent text-msit-dark rounded-lg font-medium hover:bg-msit-accent-500 transition-colors font-sans"
+          >
+            Convert
+          </button>
+          <div v-if="colorOutput" class="mt-4">
+            <label class="block text-sm font-medium text-msit-dark-200 mb-2 font-sans">Converted Formats:</label>
+            <div class="bg-msit-dark p-3 rounded border border-msit-dark-700 text-msit-dark-200 font-mono text-sm whitespace-pre-line font-sans">
+              {{ colorOutput }}
+            </div>
+          </div>
+        </div>
+
+        <!-- UUID Generator -->
+        <div v-if="activeTool === 'uuid'">
+          <button
+            @click="generateUUID"
+            class="px-4 py-2 bg-msit-accent text-msit-dark rounded-lg font-medium hover:bg-msit-accent-500 transition-colors font-sans"
+          >
+            Generate UUID
+          </button>
+          <div v-if="uuidOutput" class="mt-4">
+            <label class="block text-sm font-medium text-msit-dark-200 mb-2 font-sans">Generated UUID:</label>
+            <div class="bg-msit-dark p-3 rounded border border-msit-dark-700 text-msit-dark-200 font-mono text-sm break-all font-sans">
+              {{ uuidOutput }}
+            </div>
+            <button
+              @click="navigator.clipboard.writeText(uuidOutput)"
+              class="mt-2 text-sm text-msit-accent hover:text-msit-accent-300 font-sans"
+            >
+              Copy to Clipboard
+            </button>
+          </div>
+        </div>
+
+        <!-- QR Code Generator -->
+        <div v-if="activeTool === 'qrcode'">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-msit-dark-200 mb-2 font-sans">Text or URL:</label>
+            <textarea
+              v-model="qrcodeInput"
+              placeholder="Enter text or URL to encode..."
+              class="w-full h-32 bg-msit-dark p-4 rounded border border-msit-dark-700 text-msit-dark-200 font-sans"
+              @input="generateQRCode"
+            ></textarea>
+          </div>
+          <div v-if="qrcodeUrl" class="mt-4">
+            <label class="block text-sm font-medium text-msit-dark-200 mb-2 font-sans">QR Code:</label>
+            <div class="bg-msit-dark p-4 rounded border border-msit-dark-700 flex flex-col items-center">
+              <img :src="qrcodeUrl" alt="QR Code" class="mb-2" />
+              <a
+                :href="qrcodeUrl"
+                download="qrcode.png"
+                class="text-sm text-msit-accent hover:text-msit-accent-300 font-sans"
+              >
+                Download QR Code
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -346,6 +483,11 @@ const hashInput = ref('')
 const hashOutput = ref('')
 const timestampInput = ref<number>(Math.floor(Date.now() / 1000))
 const timestampOutput = ref('')
+const colorInput = ref('#83E65B')
+const colorOutput = ref('')
+const uuidOutput = ref('')
+const qrcodeInput = ref('')
+const qrcodeUrl = ref('')
 
 const toolNames: Record<string, string> = {
   json: 'JSON Formatter',
@@ -353,7 +495,10 @@ const toolNames: Record<string, string> = {
   base64: 'Base64 Encoder/Decoder',
   url: 'URL Encoder/Decoder',
   hash: 'Hash Generator',
-  timestamp: 'Timestamp Converter'
+  timestamp: 'Timestamp Converter',
+  color: 'Color Converter',
+  uuid: 'UUID Generator',
+  qrcode: 'QR Code Generator'
 }
 
 const formatJSON = () => {
@@ -453,5 +598,79 @@ const convertTimestamp = () => {
   if (!timestampInput.value) return
   const date = new Date(timestampInput.value * 1000)
   timestampOutput.value = date.toLocaleString()
+}
+
+// Color Converter
+const convertColor = () => {
+  if (!colorInput.value) return
+  
+  try {
+    // Remove # if present
+    const hex = colorInput.value.replace('#', '')
+    
+    if (hex.length === 6) {
+      const r = parseInt(hex.substring(0, 2), 16)
+      const g = parseInt(hex.substring(2, 4), 16)
+      const b = parseInt(hex.substring(4, 6), 16)
+      
+      // RGB
+      const rgb = `rgb(${r}, ${g}, ${b})`
+      
+      // HSL conversion
+      const rNorm = r / 255
+      const gNorm = g / 255
+      const bNorm = b / 255
+      
+      const max = Math.max(rNorm, gNorm, bNorm)
+      const min = Math.min(rNorm, gNorm, bNorm)
+      const delta = max - min
+      
+      let h = 0
+      let s = 0
+      const l = (max + min) / 2
+      
+      if (delta !== 0) {
+        s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min)
+        
+        if (max === rNorm) {
+          h = ((gNorm - bNorm) / delta + (gNorm < bNorm ? 6 : 0)) / 6
+        } else if (max === gNorm) {
+          h = ((bNorm - rNorm) / delta + 2) / 6
+        } else {
+          h = ((rNorm - gNorm) / delta + 4) / 6
+        }
+      }
+      
+      const hsl = `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`
+      
+      colorOutput.value = `HEX: #${hex.toUpperCase()}\nRGB: ${rgb}\nHSL: ${hsl}`
+    } else {
+      colorOutput.value = 'Invalid HEX color format'
+    }
+  } catch (e) {
+    colorOutput.value = 'Error converting color'
+  }
+}
+
+// UUID Generator
+const generateUUID = () => {
+  // Generate UUID v4
+  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0
+    const v = c === 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
+  uuidOutput.value = uuid
+}
+
+// QR Code Generator (using a public API)
+const generateQRCode = () => {
+  if (!qrcodeInput.value.trim()) {
+    qrcodeUrl.value = ''
+    return
+  }
+  // Using a free QR code API
+  const encoded = encodeURIComponent(qrcodeInput.value)
+  qrcodeUrl.value = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encoded}`
 }
 </script>

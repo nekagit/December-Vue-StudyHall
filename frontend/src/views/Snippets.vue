@@ -399,6 +399,170 @@ for num in countdown(5):
 # Generator expression
 squares = (x**2 for x in range(5))
 print(list(squares))`
+  },
+  {
+    id: 19,
+    name: 'Sets Operations',
+    category: 'Data Structures',
+    description: 'Set operations and methods',
+    code: `# Create sets
+set1 = {1, 2, 3, 4, 5}
+set2 = {4, 5, 6, 7, 8}
+
+# Union
+union = set1 | set2
+print(f"Union: {union}")
+
+# Intersection
+intersection = set1 & set2
+print(f"Intersection: {intersection}")
+
+# Difference
+difference = set1 - set2
+print(f"Difference: {difference}")
+
+# Symmetric difference
+sym_diff = set1 ^ set2
+print(f"Symmetric difference: {sym_diff}")`
+  },
+  {
+    id: 20,
+    name: 'Context Managers',
+    category: 'Advanced',
+    description: 'Resource management with context managers',
+    code: `# Using with statement
+with open("file.txt", "r") as f:
+    content = f.read()
+    print(content)
+
+# Custom context manager
+class MyContextManager:
+    def __enter__(self):
+        print("Entering context")
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print("Exiting context")
+        return False
+
+with MyContextManager() as cm:
+    print("Inside context")`
+  },
+  {
+    id: 21,
+    name: 'Decorators',
+    category: 'Advanced',
+    description: 'Function decorators',
+    code: `# Basic decorator
+def my_decorator(func):
+    def wrapper():
+        print("Before function call")
+        func()
+        print("After function call")
+    return wrapper
+
+@my_decorator
+def say_hello():
+    print("Hello!")
+
+say_hello()
+
+# Decorator with arguments
+def repeat(times):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            for _ in range(times):
+                func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+@repeat(3)
+def greet(name):
+    print(f"Hello, {name}!")
+
+greet("StudyHall")`
+  },
+  {
+    id: 22,
+    name: 'Regular Expressions',
+    category: 'Strings',
+    description: 'Pattern matching with regex',
+    code: `import re
+
+# Search for pattern
+text = "Contact: email@example.com or call 123-456-7890"
+email_pattern = r'\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b'
+phone_pattern = r'\\d{3}-\\d{3}-\\d{4}'
+
+emails = re.findall(email_pattern, text)
+phones = re.findall(phone_pattern, text)
+
+print(f"Emails: {emails}")
+print(f"Phones: {phones}")
+
+# Replace pattern
+new_text = re.sub(phone_pattern, "XXX-XXX-XXXX", text)
+print(f"Masked: {new_text}")`
+  },
+  {
+    id: 23,
+    name: 'JSON Operations',
+    category: 'Data Structures',
+    description: 'Working with JSON data',
+    code: `import json
+
+# Convert Python to JSON
+data = {
+    "name": "StudyHall",
+    "age": 25,
+    "courses": ["Python", "Web Dev"]
+}
+
+json_string = json.dumps(data, indent=2)
+print("JSON String:")
+print(json_string)
+
+# Convert JSON to Python
+json_data = '{"name": "StudyHall", "age": 25}'
+python_obj = json.loads(json_data)
+print(f"\\nPython Object: {python_obj}")
+
+# Read from file
+with open("data.json", "w") as f:
+    json.dump(data, f, indent=2)
+
+# Read from file
+with open("data.json", "r") as f:
+    loaded_data = json.load(f)
+    print(f"\\nLoaded: {loaded_data}")`
+  },
+  {
+    id: 24,
+    name: 'Datetime Operations',
+    category: 'Built-ins',
+    description: 'Working with dates and times',
+    code: `from datetime import datetime, timedelta
+
+# Current date and time
+now = datetime.now()
+print(f"Now: {now}")
+
+# Format date
+formatted = now.strftime("%Y-%m-%d %H:%M:%S")
+print(f"Formatted: {formatted}")
+
+# Parse date string
+date_str = "2024-01-15 10:30:00"
+parsed = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+print(f"Parsed: {parsed}")
+
+# Date arithmetic
+future = now + timedelta(days=7)
+print(f"7 days from now: {future}")
+
+# Difference
+diff = future - now
+print(f"Difference: {diff.days} days")`
   }
 ]
 

@@ -1,14 +1,7 @@
 <template>
   <div class="px-4 py-4 sm:py-6 sm:px-0">
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+    <div class="mb-6">
       <h1 class="text-2xl sm:text-3xl font-serif font-bold text-msit-dark-50">Course Materials</h1>
-      <button
-        @click="syncNotion"
-        :disabled="syncing"
-        class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-semibold rounded-md text-msit-dark bg-msit-accent hover:bg-msit-accent-500 disabled:opacity-50 transition-colors font-sans"
-      >
-        {{ syncing ? 'Syncing...' : 'Sync from Notion' }}
-      </button>
     </div>
 
     <!-- Search and Filter -->
@@ -61,7 +54,7 @@
     </div>
 
     <div v-else-if="materials.length === 0" class="text-center py-12">
-      <p class="text-msit-dark-200 font-sans">No materials found. Click "Sync from Notion" to import materials.</p>
+      <p class="text-msit-dark-200 font-sans">No materials found.</p>
     </div>
 
     <div v-else class="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -107,7 +100,6 @@ const categories = ref<string[]>([])
 const loading = ref(true)
 const error = ref('')
 const success = ref('')
-const syncing = ref(false)
 const searchQuery = ref('')
 const selectedCategory = ref('')
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
@@ -165,30 +157,6 @@ const clearFilters = () => {
   searchQuery.value = ''
   selectedCategory.value = ''
   loadMaterials()
-}
-
-const syncNotion = async () => {
-  syncing.value = true
-  error.value = ''
-  success.value = ''
-  try {
-    const response = await fetch('/api/materials/sync-notion', {
-      method: 'POST',
-      credentials: 'include'
-    })
-    if (response.ok) {
-      const data = await response.json()
-      success.value = `Synced ${data.synced} new materials!`
-      await loadMaterials()
-    } else {
-      const data = await response.json()
-      error.value = data.error || 'Failed to sync'
-    }
-  } catch (e) {
-    error.value = 'An error occurred while syncing'
-  } finally {
-    syncing.value = false
-  }
 }
 
 onMounted(() => {

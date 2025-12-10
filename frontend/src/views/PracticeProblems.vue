@@ -358,6 +358,81 @@ const problems = [
       { input: 'binary_search([1, 2, 3, 4, 5], 6)', output: '-1' }
     ],
     constraints: ['Input list is sorted', 'Time complexity should be O(log n)']
+  },
+  {
+    id: 11,
+    title: 'Valid Parentheses',
+    difficulty: 'intermediate',
+    tags: ['Stacks', 'Strings'],
+    description: 'Check if a string containing parentheses is valid.',
+    fullDescription: 'Write a function `is_valid_parentheses` that takes a string containing only parentheses characters and returns True if the parentheses are balanced, False otherwise.\n\nExample:\n- is_valid_parentheses("()") should return True\n- is_valid_parentheses("()[]{}") should return True\n- is_valid_parentheses("(]") should return False',
+    points: 35,
+    estimatedTime: 25,
+    examples: [
+      { input: 'is_valid_parentheses("()")', output: 'True' },
+      { input: 'is_valid_parentheses("()[]{}")', output: 'True' },
+      { input: 'is_valid_parentheses("(]")', output: 'False' }
+    ],
+    constraints: ['String contains only parentheses characters', 'Use a stack data structure']
+  },
+  {
+    id: 12,
+    title: 'Remove Duplicates',
+    difficulty: 'beginner',
+    tags: ['Lists', 'Algorithms'],
+    description: 'Remove duplicates from a list while preserving order.',
+    fullDescription: 'Write a function `remove_duplicates` that takes a list and returns a new list with duplicates removed, preserving the original order.\n\nExample:\n- remove_duplicates([1, 2, 2, 3, 4, 4, 5]) should return [1, 2, 3, 4, 5]\n- remove_duplicates(["a", "b", "a", "c"]) should return ["a", "b", "c"]',
+    points: 20,
+    estimatedTime: 15,
+    examples: [
+      { input: 'remove_duplicates([1, 2, 2, 3, 4, 4, 5])', output: '[1, 2, 3, 4, 5]' },
+      { input: 'remove_duplicates(["a", "b", "a", "c"])', output: '["a", "b", "c"]' }
+    ],
+    constraints: ['Preserve original order', 'Return a new list']
+  },
+  {
+    id: 13,
+    title: 'Bubble Sort',
+    difficulty: 'intermediate',
+    tags: ['Algorithms', 'Sorting'],
+    description: 'Implement the bubble sort algorithm.',
+    fullDescription: 'Write a function `bubble_sort` that takes a list of numbers and sorts them using the bubble sort algorithm.\n\nExample:\n- bubble_sort([64, 34, 25, 12, 22, 11, 90]) should return [11, 12, 22, 25, 34, 64, 90]',
+    points: 40,
+    estimatedTime: 30,
+    examples: [
+      { input: 'bubble_sort([64, 34, 25, 12, 22, 11, 90])', output: '[11, 12, 22, 25, 34, 64, 90]' }
+    ],
+    constraints: ['Sort in-place or return new list', 'Use bubble sort algorithm']
+  },
+  {
+    id: 14,
+    title: 'Prime Number Checker',
+    difficulty: 'beginner',
+    tags: ['Math', 'Algorithms'],
+    description: 'Check if a number is prime.',
+    fullDescription: 'Write a function `is_prime` that takes a number and returns True if it is prime, False otherwise.\n\nExample:\n- is_prime(7) should return True\n- is_prime(10) should return False\n- is_prime(1) should return False',
+    points: 25,
+    estimatedTime: 20,
+    examples: [
+      { input: 'is_prime(7)', output: 'True' },
+      { input: 'is_prime(10)', output: 'False' },
+      { input: 'is_prime(1)', output: 'False' }
+    ],
+    constraints: ['Handle edge cases (1, 2, negative numbers)', 'Optimize for large numbers']
+  },
+  {
+    id: 15,
+    title: 'Matrix Transpose',
+    difficulty: 'intermediate',
+    tags: ['Lists', 'Algorithms'],
+    description: 'Transpose a matrix (2D list).',
+    fullDescription: 'Write a function `transpose_matrix` that takes a 2D list (matrix) and returns its transpose.\n\nExample:\n- transpose_matrix([[1, 2, 3], [4, 5, 6]]) should return [[1, 4], [2, 5], [3, 6]]',
+    points: 35,
+    estimatedTime: 25,
+    examples: [
+      { input: 'transpose_matrix([[1, 2, 3], [4, 5, 6]])', output: '[[1, 4], [2, 5], [3, 6]]' }
+    ],
+    constraints: ['Handle rectangular matrices', 'Return a new matrix']
   }
 ]
 

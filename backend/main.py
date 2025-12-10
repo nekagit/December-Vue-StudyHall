@@ -5,7 +5,6 @@ import traceback
 
 from backend.database import engine, SessionLocal, Base
 from backend.models import Material
-from backend.services.notion_sync import notion_service
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -89,48 +88,6 @@ def get_material(material_id):
             "notion_url": material.notion_url,
             "created_at": material.created_at.isoformat() if material.created_at else None
         })
-    finally:
-        db.close()
-
-@app.route("/api/materials/sync-notion", methods=["POST"])
-def sync_notion():
-    """Sync materials from Notion - no authentication required"""
-    db = SessionLocal()
-    try:
-        import asyncio
-        pages = asyncio.run(notion_service.fetch_pages())
-        synced_count = 0
-        
-        for page in pages:
-            title = "Untitled"
-            if "properties" in page:
-                props = page["properties"]
-                for prop_name in ["title", "Name", "Title"]:
-                    if prop_name in props:
-                        title_prop = props[prop_name]
-                        if "title" in title_prop and len(title_prop["title"]) > 0:
-                            title = title_prop["title"][0]["plain_text"]
-                            break
-            
-            notion_page_id = page.get("id")
-            notion_url = page.get("url", "")
-            
-            existing = db.query(Material).filter(Material.notion_page_id == notion_page_id).first()
-            if not existing:
-                material = Material(
-                    title=title,
-                    notion_page_id=notion_page_id,
-                    notion_url=notion_url,
-                    content=f"Synced from Notion. Page ID: {notion_page_id}"
-                )
-                db.add(material)
-                synced_count += 1
-        
-        db.commit()
-        return jsonify({"success": True, "synced": synced_count})
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": str(e)}), 500
     finally:
         db.close()
 

@@ -21,12 +21,12 @@
               <h3 class="ml-3 text-base sm:text-lg font-medium text-msit-dark-50 font-sans">Course Materials</h3>
             </div>
             <p class="text-sm text-msit-dark-200 mb-4 font-sans">
-              Browse, search, and filter course materials. Sync content from Notion.
+              Browse, search, and filter course materials.
             </p>
             <ul class="text-xs text-msit-dark-300 space-y-1 mb-4 font-sans">
               <li>• Search and filter by category</li>
-              <li>• Sync from Notion database</li>
               <li>• View detailed material content</li>
+              <li>• Access all course materials</li>
             </ul>
             <router-link
               to="/materials"
@@ -91,35 +91,6 @@
             >
               Export Now →
             </button>
-          </div>
-        </div>
-
-        <!-- Notion Integration Feature -->
-        <div class="bg-msit-dark-800 shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow border border-msit-dark-700 hover:border-msit-accent">
-          <div class="p-4 sm:p-6">
-            <div class="flex items-center mb-3">
-              <div class="flex-shrink-0">
-                <svg class="h-8 w-8 text-msit-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </div>
-              <h3 class="ml-3 text-base sm:text-lg font-medium text-msit-dark-50 font-sans">Notion Sync</h3>
-            </div>
-            <p class="text-sm text-msit-dark-200 mb-4 font-sans">
-              Sync course materials from your Notion database. Keep your content up-to-date automatically.
-            </p>
-            <ul class="text-xs text-msit-dark-300 space-y-1 mb-4 font-sans">
-              <li>• Connect to Notion database</li>
-              <li>• Sync materials automatically</li>
-              <li>• Import new content</li>
-              <li>• One-click sync button</li>
-            </ul>
-            <router-link
-              to="/materials"
-              class="inline-flex items-center text-sm font-medium text-msit-accent hover:text-msit-accent-300 transition-colors font-sans"
-            >
-              Sync Materials →
-            </router-link>
           </div>
         </div>
 

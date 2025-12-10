@@ -277,12 +277,47 @@ const learningPaths = [
       { title: 'Deployment', description: 'Deploying Python web apps', duration: 60, type: 'Tutorial' },
       { title: 'Web Development Project', description: 'Build a full-stack web application', duration: 180, type: 'Project' }
     ]
+  },
+  {
+    id: 5,
+    title: 'Python for Data Science',
+    level: 'Advanced',
+    description: 'Learn data analysis, visualization, and machine learning with Python.',
+    totalLessons: 16,
+    completedLessons: 0,
+    estimatedTime: 30,
+    skills: [
+      'NumPy and Pandas',
+      'Data visualization',
+      'Statistical analysis',
+      'Machine learning basics',
+      'Data cleaning and preprocessing'
+    ],
+    lessons: [
+      { title: 'Introduction to Data Science', description: 'Overview of data science workflow', duration: 25, type: 'Video' },
+      { title: 'NumPy Fundamentals', description: 'Working with arrays and numerical operations', duration: 45, type: 'Interactive' },
+      { title: 'Pandas Basics', description: 'DataFrames and Series operations', duration: 50, type: 'Practice' },
+      { title: 'Data Loading', description: 'Reading CSV, JSON, and Excel files', duration: 40, type: 'Interactive' },
+      { title: 'Data Cleaning', description: 'Handling missing values and outliers', duration: 55, type: 'Practice' },
+      { title: 'Data Transformation', description: 'Filtering, grouping, and aggregating data', duration: 50, type: 'Interactive' },
+      { title: 'Matplotlib Basics', description: 'Creating basic plots and charts', duration: 45, type: 'Practice' },
+      { title: 'Seaborn Visualization', description: 'Statistical data visualization', duration: 50, type: 'Interactive' },
+      { title: 'Statistical Analysis', description: 'Descriptive statistics and distributions', duration: 55, type: 'Tutorial' },
+      { title: 'Correlation Analysis', description: 'Understanding relationships in data', duration: 40, type: 'Practice' },
+      { title: 'Introduction to Machine Learning', description: 'ML concepts and types', duration: 45, type: 'Video' },
+      { title: 'Scikit-learn Basics', description: 'Using scikit-learn for ML', duration: 50, type: 'Interactive' },
+      { title: 'Regression Models', description: 'Linear and polynomial regression', duration: 60, type: 'Practice' },
+      { title: 'Classification Models', description: 'Logistic regression and decision trees', duration: 60, type: 'Interactive' },
+      { title: 'Model Evaluation', description: 'Metrics and cross-validation', duration: 50, type: 'Tutorial' },
+      { title: 'Data Science Project', description: 'Complete end-to-end data analysis project', duration: 180, type: 'Project' }
+    ]
   }
 ]
 
 const startPath = (path: any) => {
+  // Show path details modal
   selectedPath.value = path
-  // In a real app, you might navigate to the first lesson
-  // For now, we'll just show the path details
+  // You can navigate to first lesson or materials related to this path
+  // For now, we show the modal with all lessons
 }
 </script>

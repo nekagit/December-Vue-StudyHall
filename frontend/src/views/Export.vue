@@ -124,22 +124,28 @@ const downloadFile = (content: string, filename: string, type: string = 'text/pl
 const exportCode = () => {
   const history = localStorage.getItem('python_code_history')
   if (!history) {
-    alert('No code history found')
+    alert('No code history found. Start coding in the Compiler to build your history!')
     return
   }
   
   try {
     const codeHistory = JSON.parse(history)
+    if (!Array.isArray(codeHistory) || codeHistory.length === 0) {
+      alert('No code history found')
+      return
+    }
+    
     const content = `# Code Export - ${new Date().toLocaleDateString()}\n\n` +
       codeHistory.map((item: any, index: number) => 
-        `## Code Snippet ${index + 1} - ${item.timestamp}\n\`\`\`python\n${item.code}\n\`\`\`\n`
+        `## Code Snippet ${index + 1} - ${item.timestamp || 'Unknown time'}\n\`\`\`python\n${item.code || ''}\n\`\`\`\n`
       ).join('\n')
     
     const filename = `code-export-${new Date().toISOString().split('T')[0]}.md`
     downloadFile(content, filename, 'text/markdown')
     saveExportHistory(filename, { type: 'code', data: codeHistory })
   } catch (e) {
-    alert('Error exporting code')
+    console.error('Export error:', e)
+    alert('Error exporting code. Please try again.')
   }
 }
 
@@ -149,16 +155,21 @@ const exportMaterials = async () => {
       credentials: 'include'
     })
     if (!response.ok) {
-      alert('Failed to fetch materials')
+      alert('Failed to fetch materials. Please check your connection and try again.')
       return
     }
     
     const materials = await response.json()
+    if (!Array.isArray(materials) || materials.length === 0) {
+      alert('No materials found.')
+      return
+    }
+    
     const content = `# Materials Export - ${new Date().toLocaleDateString()}\n\n` +
       materials.map((m: any) => 
-        `## ${m.title}\n\n` +
+        `## ${m.title || 'Untitled'}\n\n` +
         `**Category:** ${m.category || 'N/A'}\n\n` +
-        `${m.content}\n\n` +
+        `${m.content || 'No content'}\n\n` +
         `---\n\n`
       ).join('')
     
@@ -166,7 +177,8 @@ const exportMaterials = async () => {
     downloadFile(content, filename, 'text/markdown')
     saveExportHistory(filename, { type: 'materials', data: materials })
   } catch (e) {
-    alert('Error exporting materials')
+    console.error('Export error:', e)
+    alert('Error exporting materials. Please try again.')
   }
 }
 

@@ -155,23 +155,83 @@ const router = useRouter()
 const timeUntilNextChallenge = ref('24:00:00')
 let timer: ReturnType<typeof setInterval> | null = null
 
+// Rotate challenges based on day of week
+const challengePool = [
+  {
+    id: 1,
+    title: 'String Manipulation Master',
+    description: 'Write a function that takes a string and returns the longest word. Handle edge cases like punctuation and multiple spaces.',
+    difficulty: 'Easy',
+    points: 25,
+    estimatedTime: 15
+  },
+  {
+    id: 2,
+    title: 'List Comprehension Challenge',
+    description: 'Create a function that uses list comprehension to filter and transform a list of numbers in a single line.',
+    difficulty: 'Easy',
+    points: 30,
+    estimatedTime: 10
+  },
+  {
+    id: 3,
+    title: 'Dictionary Operations',
+    description: 'Write a function that merges two dictionaries, with the second dictionary taking precedence for duplicate keys.',
+    difficulty: 'Easy',
+    points: 25,
+    estimatedTime: 12
+  },
+  {
+    id: 4,
+    title: 'Recursive Problem Solver',
+    description: 'Implement a recursive function to calculate the sum of all digits in a number.',
+    difficulty: 'Medium',
+    points: 50,
+    estimatedTime: 20
+  },
+  {
+    id: 5,
+    title: 'Algorithm Optimization',
+    description: 'Optimize a function that finds all pairs of numbers in a list that sum to a target value.',
+    difficulty: 'Medium',
+    points: 60,
+    estimatedTime: 25
+  },
+  {
+    id: 6,
+    title: 'Data Structure Challenge',
+    description: 'Implement a custom data structure that efficiently stores and retrieves key-value pairs with O(1) average time complexity.',
+    difficulty: 'Hard',
+    points: 100,
+    estimatedTime: 60
+  },
+  {
+    id: 7,
+    title: 'Graph Traversal',
+    description: 'Implement depth-first search (DFS) and breadth-first search (BFS) algorithms for graph traversal.',
+    difficulty: 'Hard',
+    points: 120,
+    estimatedTime: 45
+  }
+]
+
+const getDailyChallenge = () => {
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24))
+  return challengePool[dayOfYear % challengePool.length]
+}
+
+const getWeeklyChallenge = () => {
+  const weekOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24 * 7))
+  return challengePool[(weekOfYear + 3) % challengePool.length]
+}
+
 const dailyChallenge = {
-  id: 1,
-  title: 'String Manipulation Master',
-  description: 'Write a function that takes a string and returns the longest word. Handle edge cases like punctuation and multiple spaces.',
-  difficulty: 'Easy',
-  points: 25,
-  estimatedTime: 15,
+  ...getDailyChallenge(),
   date: new Date().toISOString().split('T')[0]
 }
 
 const weeklyChallenge = {
-  id: 2,
-  title: 'Data Structure Challenge',
-  description: 'Implement a custom data structure that efficiently stores and retrieves key-value pairs with O(1) average time complexity.',
-  difficulty: 'Hard',
-  points: 100,
-  estimatedTime: 60,
+  ...getWeeklyChallenge(),
   date: new Date().toISOString().split('T')[0]
 }
 

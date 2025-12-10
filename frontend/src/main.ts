@@ -13,26 +13,46 @@ import Compiler from './views/Compiler.vue'
 import Dashboard from './views/Dashboard.vue'
 import Snippets from './views/Snippets.vue'
 import Practice from './views/Practice.vue'
+import PracticeProblems from './views/PracticeProblems.vue'
+import Search from './views/Search.vue'
 import Resources from './views/Resources.vue'
 import Challenges from './views/Challenges.vue'
 import Tools from './views/Tools.vue'
 import Library from './views/Library.vue'
 import Export from './views/Export.vue'
+import LearningPath from './views/LearningPath.vue'
+import TypingTest from './views/TypingTest.vue'
+import Gym from './views/Gym.vue'
+import MockInterview from './views/MockInterview.vue'
+import TestCoverage from './views/TestCoverage.vue'
+import CheatSheets from './views/CheatSheets.vue'
+import Templates from './views/Templates.vue'
+import Help from './views/Help.vue'
 
 const routes = [
   { path: '/configuration', component: Configuration },
   { path: '/', component: Home },
   { path: '/dashboard', component: Dashboard },
+  { path: '/search', component: Search },
   { path: '/materials', component: Materials },
   { path: '/materials/:id', component: MaterialDetail },
   { path: '/compiler', component: Compiler },
   { path: '/snippets', component: Snippets },
   { path: '/practice', component: Practice },
+  { path: '/practice-problems', component: PracticeProblems },
   { path: '/challenges', component: Challenges },
   { path: '/library', component: Library },
   { path: '/resources', component: Resources },
   { path: '/tools', component: Tools },
   { path: '/export', component: Export },
+  { path: '/learning-path', component: LearningPath },
+  { path: '/typing-test', component: TypingTest },
+  { path: '/gym', component: Gym },
+  { path: '/mock-interview', component: MockInterview },
+  { path: '/test-coverage', component: TestCoverage },
+  { path: '/cheat-sheets', component: CheatSheets },
+  { path: '/templates', component: Templates },
+  { path: '/help', component: Help },
 ]
 
 const router = createRouter({

@@ -157,7 +157,7 @@ const sections = [
     items: [
       {
         question: 'What are Materials?',
-        answer: 'Materials are course content pages that contain lessons, tutorials, and learning resources. They are synced from Notion or added manually.'
+        answer: 'Materials are course content pages that contain lessons, tutorials, and learning resources. They are available for browsing and learning.'
       },
       {
         question: 'How do I search for materials?',

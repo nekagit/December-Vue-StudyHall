@@ -175,12 +175,12 @@
           <div class="group relative bg-msit-dark-800 p-8 rounded-xl border border-msit-dark-700 hover:border-msit-accent transition-all duration-300 hover:shadow-lg hover:shadow-msit-accent/10 hover:-translate-y-1">
             <div class="flex items-center justify-center w-14 h-14 rounded-xl bg-msit-accent/20 text-msit-accent mb-6 group-hover:bg-msit-accent group-hover:text-msit-dark transition-all duration-300">
               <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h3 class="text-xl font-semibold text-msit-dark-50 mb-3 font-sans">Notion Integration</h3>
+            <h3 class="text-xl font-semibold text-msit-dark-50 mb-3 font-sans">Practice Problems</h3>
             <p class="text-msit-dark-100 font-sans leading-relaxed">
-              Sync course materials from your Notion database automatically. Keep everything in sync with seamless integration.
+              Solve coding challenges to improve your Python skills. Filter by difficulty and topic.
             </p>
           </div>
         </div>
