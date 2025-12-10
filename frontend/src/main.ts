@@ -10,14 +10,22 @@ import Home from './views/Home.vue'
 import Materials from './views/Materials.vue'
 import MaterialDetail from './views/MaterialDetail.vue'
 import Compiler from './views/Compiler.vue'
+import Dashboard from './views/Dashboard.vue'
+import Profile from './views/Profile.vue'
+import Bookmarks from './views/Bookmarks.vue'
+import TestDashboard from './views/TestDashboard.vue'
 
 const routes = [
   { path: '/', component: Home },
   { path: '/login', component: Login },
   { path: '/register', component: Register },
+  { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true } },
   { path: '/materials', component: Materials, meta: { requiresAuth: true } },
   { path: '/materials/:id', component: MaterialDetail, meta: { requiresAuth: true } },
+  { path: '/bookmarks', component: Bookmarks, meta: { requiresAuth: true } },
   { path: '/compiler', component: Compiler, meta: { requiresAuth: true } },
+  { path: '/profile', component: Profile, meta: { requiresAuth: true } },
+  { path: '/tests', component: TestDashboard, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({
