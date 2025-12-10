@@ -1,96 +1,89 @@
 import pytest
-import tempfile
 import os
+import tempfile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from backend.database import Base
 from backend.main import app
-from backend.models import Student, Material, MaterialProgress, Bookmark
-from backend.services.session import _sessions
 
+# Create a temporary database for testing
+TEST_DATABASE_URL = "sqlite:///:memory:"
 
 @pytest.fixture(scope="function")
 def db_session():
-    """Create a temporary database for testing."""
-    # Create temporary database file
-    db_fd, db_path = tempfile.mkstemp(suffix='.db')
-    
-    # Create engine with temporary database
-    engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
+    """Create a fresh database for each test."""
+    engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
     Base.metadata.create_all(bind=engine)
-    
-    # Create session
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = TestingSessionLocal()
-    
-    yield session
-    
-    # Cleanup
-    session.close()
-    os.close(db_fd)
-    os.unlink(db_path)
-
+    try:
+        yield session
+    finally:
+        session.close()
+        Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture(scope="function")
-def client(db_session):
-    """Create a test client for the Flask app."""
-    # Override the database session in the app
-    def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
+def test_db_engine():
+    """Create a test database engine."""
+    engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
+    Base.metadata.create_all(bind=engine)
+    yield engine
+    Base.metadata.drop_all(bind=engine)
+
+@pytest.fixture(scope="function")
+def api_db_session(test_db_engine):
+    """Create a database session for API tests using the same engine as client."""
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_db_engine)
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+@pytest.fixture(scope="function")
+def client(test_db_engine):
+    """Create a test client for the Flask app with test database."""
+    # Create a test sessionmaker
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_db_engine)
     
-    app.config['TESTING'] = True
-    app.config['SECRET_KEY'] = 'test-secret-key'
+    # Patch SessionLocal in both backend.database and backend.main to use test database
+    from unittest.mock import patch
+    import backend.database
+    import backend.main
     
-    with app.test_client() as test_client:
-        with app.app_context():
-            yield test_client
+    original_session_local_db = backend.database.SessionLocal
+    original_session_local_main = backend.main.SessionLocal
     
-    # Clear sessions after each test
-    _sessions.clear()
-
-
-@pytest.fixture
-def sample_student(db_session):
-    """Create a sample student for testing."""
-    from backend.services.auth import hash_password
-    student = Student(
-        email="test@example.com",
-        name="Test User",
-        password_hash=hash_password("testpassword123")
-    )
-    db_session.add(student)
-    db_session.commit()
-    db_session.refresh(student)
-    return student
-
-
-@pytest.fixture
-def sample_material(db_session):
-    """Create a sample material for testing."""
-    material = Material(
-        title="Test Material",
-        content="This is test content",
-        category="Python",
-        order_index=1
-    )
-    db_session.add(material)
-    db_session.commit()
-    db_session.refresh(material)
-    return material
-
+    # Replace SessionLocal with test version
+    backend.database.SessionLocal = TestingSessionLocal
+    backend.main.SessionLocal = TestingSessionLocal
+    
+    try:
+        app.config["TESTING"] = True
+        app.config["SECRET_KEY"] = "test-secret-key"
+        with app.test_client() as client:
+            yield client
+    finally:
+        # Restore original SessionLocal
+        backend.database.SessionLocal = original_session_local_db
+        backend.main.SessionLocal = original_session_local_main
 
 @pytest.fixture
-def authenticated_client(client, sample_student):
-    """Create an authenticated test client."""
-    from backend.services.session import create_session
-    
-    # Login the student
-    token = create_session(sample_student.id)
-    
-    # Set cookie in client
-    client.set_cookie('localhost', 'session_token', token)
-    
-    return client
+def sample_student_data():
+    """Sample student data for testing."""
+    return {
+        "email": "test@example.com",
+        "name": "Test Student",
+        "password": "testpassword123"
+    }
+
+@pytest.fixture
+def sample_material_data():
+    """Sample material data for testing."""
+    return {
+        "title": "Test Material",
+        "content": "This is test content",
+        "category": "Python",
+        "notion_url": "https://notion.so/test",
+        "notion_page_id": "test-page-id-123"
+    }

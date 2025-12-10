@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from backend.database import Base
@@ -11,8 +11,9 @@ class Bookmark(Base):
     material_id = Column(Integer, ForeignKey("materials.id"), nullable=False, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
-    # Ensure a student can only bookmark a material once
-    __table_args__ = (UniqueConstraint('student_id', 'material_id', name='unique_student_material_bookmark'),)
+    # Relationships
+    student = relationship("Student", backref="bookmarks")
+    material = relationship("Material", backref="bookmarks")
     
     def __repr__(self):
-        return f"<Bookmark(student_id={self.student_id}, material_id={self.material_id})>"
+        return f"<Bookmark(id={self.id}, student_id={self.student_id}, material_id={self.material_id})>"

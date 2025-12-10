@@ -14,7 +14,11 @@ Base.metadata.create_all(bind=engine)
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
-CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://localhost:5000"])
+CORS(app, 
+     supports_credentials=True, 
+     origins=["http://localhost:5173", "http://localhost:5000"],
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 def get_db():
     db = SessionLocal()
@@ -39,7 +43,7 @@ def login():
         
         token = create_session(student.id)
         response = jsonify({"success": True, "student": {"id": student.id, "email": student.email, "name": student.name}})
-        response.set_cookie("session_token", token, httponly=True, max_age=604800)
+        response.set_cookie("session_token", token, httponly=True, max_age=604800, samesite="Lax", secure=False)
         session["session_token"] = token
         return response
     finally:
@@ -94,14 +98,34 @@ def get_materials():
     
     db = SessionLocal()
     try:
-        materials = db.query(Material).order_by(Material.order_index, Material.created_at).all()
+        query = db.query(Material)
+        
+        # Search functionality
+        search = request.args.get("search", "").strip()
+        if search:
+            query = query.filter(
+                (Material.title.ilike(f"%{search}%")) |
+                (Material.content.ilike(f"%{search}%"))
+            )
+        
+        # Category filter
+        category = request.args.get("category", "").strip()
+        if category:
+            query = query.filter(Material.category == category)
+        
+        materials = query.order_by(Material.order_index, Material.created_at).all()
+        
+        # Get bookmark IDs for current student
+        bookmark_ids = {b.material_id for b in db.query(Bookmark).filter(Bookmark.student_id == student_id).all()}
+        
         return jsonify([{
             "id": m.id,
             "title": m.title,
             "content": m.content,
             "category": m.category,
             "notion_url": m.notion_url,
-            "created_at": m.created_at.isoformat() if m.created_at else None
+            "created_at": m.created_at.isoformat() if m.created_at else None,
+            "is_bookmarked": m.id in bookmark_ids
         } for m in materials])
     finally:
         db.close()
