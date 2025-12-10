@@ -1,82 +1,78 @@
 <template>
-  <div class="px-4 py-6 sm:px-0">
-    <div class="bg-white shadow rounded-lg overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h1 class="text-3xl font-bold text-gray-900">Export Your Work</h1>
-        <p class="mt-2 text-sm text-gray-600">Export your code, materials, and notes from today</p>
+  <div class="px-4 py-4 sm:py-6 sm:px-0">
+    <div class="mb-6 sm:mb-8">
+      <h1 class="text-2xl sm:text-3xl font-bold text-msit-dark-50 mb-2 font-serif">Export Your Work</h1>
+      <p class="text-sm sm:text-base text-msit-dark-200 font-sans">Export your code, materials, and notes from today</p>
+    </div>
+    
+    <div class="space-y-6">
+      <!-- Code Export -->
+      <div class="bg-msit-dark-800 border border-msit-dark-700 rounded-lg p-4 sm:p-6">
+        <h3 class="text-lg font-semibold text-msit-dark-50 mb-3 font-sans">Code Snippets</h3>
+        <p class="text-sm text-msit-dark-200 mb-4 font-sans">Export all code you've written today</p>
+        <button
+          @click="exportCode"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-msit-dark bg-msit-accent hover:bg-msit-accent-500 transition-colors font-sans"
+        >
+          <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Export Code History
+        </button>
       </div>
-      
-      <div class="px-6 py-4">
-        <div class="space-y-6">
-          <!-- Code Export -->
-          <div class="border border-gray-200 rounded-lg p-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">Code Snippets</h3>
-            <p class="text-sm text-gray-600 mb-4">Export all code you've written today</p>
-            <button
-              @click="exportCode"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Export Code History
-            </button>
-          </div>
 
-          <!-- Materials Export -->
-          <div class="border border-gray-200 rounded-lg p-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">Materials</h3>
-            <p class="text-sm text-gray-600 mb-4">Export materials you've viewed today</p>
-            <button
-              @click="exportMaterials"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Export Materials
-            </button>
-          </div>
+      <!-- Materials Export -->
+      <div class="bg-msit-dark-800 border border-msit-dark-700 rounded-lg p-4 sm:p-6">
+        <h3 class="text-lg font-semibold text-msit-dark-50 mb-3 font-sans">Materials</h3>
+        <p class="text-sm text-msit-dark-200 mb-4 font-sans">Export materials you've viewed today</p>
+        <button
+          @click="exportMaterials"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-msit-dark bg-msit-accent hover:bg-msit-accent-500 transition-colors font-sans"
+        >
+          <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Export Materials
+        </button>
+      </div>
 
-          <!-- Complete Export -->
-          <div class="border-2 border-indigo-500 rounded-lg p-4 bg-indigo-50">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">Complete Export</h3>
-            <p class="text-sm text-gray-600 mb-4">Export everything: code, materials, and notes in one file</p>
-            <button
-              @click="exportEverything"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
-              Export Everything
-            </button>
-          </div>
+      <!-- Complete Export -->
+      <div class="bg-msit-dark-800 border-2 border-msit-accent rounded-lg p-4 sm:p-6">
+        <h3 class="text-lg font-semibold text-msit-dark-50 mb-3 font-sans">Complete Export</h3>
+        <p class="text-sm text-msit-dark-200 mb-4 font-sans">Export everything: code, materials, and notes in one file</p>
+        <button
+          @click="exportEverything"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-msit-dark bg-msit-accent hover:bg-msit-accent-500 transition-colors font-sans"
+        >
+          <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          Export Everything
+        </button>
+      </div>
 
-          <!-- Export History -->
-          <div class="border border-gray-200 rounded-lg p-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">Recent Exports</h3>
-            <div v-if="exportHistory.length === 0" class="text-sm text-gray-500">
-              No exports yet
+      <!-- Export History -->
+      <div class="bg-msit-dark-800 border border-msit-dark-700 rounded-lg p-4 sm:p-6">
+        <h3 class="text-lg font-semibold text-msit-dark-50 mb-3 font-sans">Recent Exports</h3>
+        <div v-if="exportHistory.length === 0" class="text-sm text-msit-dark-300 font-sans">
+          No exports yet
+        </div>
+        <div v-else class="space-y-2">
+          <div
+            v-for="(exportItem, index) in exportHistory"
+            :key="index"
+            class="flex items-center justify-between p-2 bg-msit-dark-900 rounded border border-msit-dark-700"
+          >
+            <div>
+              <div class="text-sm font-medium text-msit-dark-50 font-sans">{{ exportItem.filename }}</div>
+              <div class="text-xs text-msit-dark-300 font-sans">{{ exportItem.timestamp }}</div>
             </div>
-            <div v-else class="space-y-2">
-              <div
-                v-for="(exportItem, index) in exportHistory"
-                :key="index"
-                class="flex items-center justify-between p-2 bg-gray-50 rounded"
-              >
-                <div>
-                  <div class="text-sm font-medium text-gray-900">{{ exportItem.filename }}</div>
-                  <div class="text-xs text-gray-500">{{ exportItem.timestamp }}</div>
-                </div>
-                <button
-                  @click="downloadExport(exportItem)"
-                  class="text-sm text-indigo-600 hover:text-indigo-700"
-                >
-                  Download
-                </button>
-              </div>
-            </div>
+            <button
+              @click="downloadExport(exportItem)"
+              class="text-sm text-msit-accent hover:text-msit-accent-300 transition-colors font-sans"
+            >
+              Download
+            </button>
           </div>
         </div>
       </div>

@@ -1,87 +1,87 @@
 <template>
-  <div class="px-4 py-6 sm:px-0">
-    <div class="bg-white shadow rounded-lg overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h1 class="text-3xl font-bold text-gray-900">Code Snippets Library</h1>
-        <p class="mt-2 text-sm text-gray-600">Browse and use ready-to-use Python code templates</p>
-      </div>
-      
-      <!-- Search -->
-      <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search snippets..."
-          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
-        />
-      </div>
+  <div class="px-4 py-4 sm:py-6 sm:px-0">
+    <div class="mb-6 sm:mb-8">
+      <h1 class="text-2xl sm:text-3xl font-bold text-msit-dark-50 mb-2 font-serif">Code Snippets Library</h1>
+      <p class="text-sm sm:text-base text-msit-dark-200 font-sans">Browse and use ready-to-use Python code templates</p>
+    </div>
 
-      <!-- Categories -->
-      <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="category in categories"
-            :key="category"
-            @click="selectedCategory = selectedCategory === category ? '' : category"
-            :class="[
-              'px-3 py-1 rounded-full text-sm font-medium transition-colors',
-              selectedCategory === category
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-            ]"
-          >
-            {{ category }}
-          </button>
-        </div>
-      </div>
+    <!-- Search -->
+    <div class="mb-6 bg-msit-dark-800 p-4 sm:p-6 rounded-lg shadow border border-msit-dark-700">
+      <label for="search" class="block text-sm font-semibold text-msit-dark-50 mb-2 font-sans">Search Snippets</label>
+      <input
+        id="search"
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search snippets..."
+        class="block w-full rounded-md border-msit-dark-600 bg-msit-dark-700 text-msit-dark-50 placeholder-msit-dark-300 shadow-sm focus:border-msit-accent focus:ring-msit-accent text-sm sm:text-base px-3 py-2.5 border font-sans"
+      />
+    </div>
 
-      <!-- Snippets Grid -->
-      <div class="p-6">
-        <div v-if="filteredSnippets.length === 0" class="text-center py-12">
-          <p class="text-gray-500">No snippets found</p>
-        </div>
-        
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
-            v-for="snippet in filteredSnippets"
-            :key="snippet.id"
-            class="bg-gray-50 border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow"
-          >
-            <div class="flex items-start justify-between mb-3">
-              <div>
-                <h3 class="text-lg font-semibold text-gray-900">{{ snippet.name }}</h3>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mt-1">
-                  {{ snippet.category }}
-                </span>
-              </div>
+    <!-- Categories -->
+    <div class="mb-6">
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="category in categories"
+          :key="category"
+          @click="selectedCategory = selectedCategory === category ? '' : category"
+          :class="[
+            'px-4 py-2 rounded-md text-sm font-medium transition-colors font-sans',
+            selectedCategory === category
+              ? 'bg-msit-accent text-msit-dark'
+              : 'bg-msit-dark-800 text-msit-dark-200 border border-msit-dark-700 hover:border-msit-accent'
+          ]"
+        >
+          {{ category }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Snippets Grid -->
+    <div v-if="filteredSnippets.length === 0" class="text-center py-12">
+      <p class="text-msit-dark-200 font-sans">No snippets found</p>
+    </div>
+    
+    <div v-else class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div
+        v-for="snippet in filteredSnippets"
+        :key="snippet.id"
+        class="bg-msit-dark-800 overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow border border-msit-dark-700 hover:border-msit-accent"
+      >
+        <div class="p-4 sm:p-6">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <h3 class="text-lg font-semibold text-msit-dark-50 font-sans">{{ snippet.name }}</h3>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-msit-accent/20 text-msit-accent mt-2 font-sans">
+                {{ snippet.category }}
+              </span>
             </div>
-            
-            <p class="text-sm text-gray-600 mb-4">{{ snippet.description }}</p>
-            
-            <div class="bg-gray-900 text-green-400 p-3 rounded font-mono text-xs overflow-x-auto mb-4 max-h-40 overflow-y-auto">
-              <pre class="whitespace-pre-wrap">{{ snippet.code }}</pre>
-            </div>
-            
-            <div class="flex items-center gap-2">
-              <button
-                @click="copySnippet(snippet.code)"
-                class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Copy
-              </button>
-              <button
-                @click="useInCompiler(snippet.code)"
-                class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-              >
-                <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                </svg>
-                Use
-              </button>
-            </div>
+          </div>
+          
+          <p class="text-sm text-msit-dark-200 mb-4 font-sans">{{ snippet.description }}</p>
+          
+          <div class="bg-msit-dark-900 text-msit-accent p-3 rounded font-mono text-xs overflow-x-auto mb-4 max-h-40 overflow-y-auto border border-msit-dark-700">
+            <pre class="whitespace-pre-wrap font-sans">{{ snippet.code }}</pre>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <button
+              @click="copySnippet(snippet.code)"
+              class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-msit-dark-600 text-sm font-medium rounded-md text-msit-dark-200 bg-msit-dark-700 hover:bg-msit-dark-600 transition-colors font-sans"
+            >
+              <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              Copy
+            </button>
+            <button
+              @click="useInCompiler(snippet.code)"
+              class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-msit-dark bg-msit-accent hover:bg-msit-accent-500 transition-colors font-sans"
+            >
+              <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              Use
+            </button>
           </div>
         </div>
       </div>

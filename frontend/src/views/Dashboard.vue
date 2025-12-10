@@ -122,6 +122,122 @@
             </router-link>
           </div>
         </div>
+
+        <!-- Practice Problems Feature -->
+        <div class="bg-msit-dark-800 shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow border border-msit-dark-700 hover:border-msit-accent">
+          <div class="p-4 sm:p-6">
+            <div class="flex items-center mb-3">
+              <div class="flex-shrink-0">
+                <svg class="h-8 w-8 text-msit-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 class="ml-3 text-base sm:text-lg font-medium text-msit-dark-50 font-sans">Practice Problems</h3>
+            </div>
+            <p class="text-sm text-msit-dark-200 mb-4 font-sans">
+              Solve coding challenges to improve your Python skills. Filter by difficulty and topic.
+            </p>
+            <ul class="text-xs text-msit-dark-300 space-y-1 mb-4 font-sans">
+              <li>• Beginner to advanced problems</li>
+              <li>• Filter by difficulty and topic</li>
+              <li>• Detailed problem descriptions</li>
+              <li>• Solve directly in compiler</li>
+            </ul>
+            <router-link
+              to="/practice-problems"
+              class="inline-flex items-center text-sm font-medium text-msit-accent hover:text-msit-accent-300 transition-colors font-sans"
+            >
+              View Problems →
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Learning Path Feature -->
+        <div class="bg-msit-dark-800 shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow border border-msit-dark-700 hover:border-msit-accent">
+          <div class="p-4 sm:p-6">
+            <div class="flex items-center mb-3">
+              <div class="flex-shrink-0">
+                <svg class="h-8 w-8 text-msit-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+              </div>
+              <h3 class="ml-3 text-base sm:text-lg font-medium text-msit-dark-50 font-sans">Learning Paths</h3>
+            </div>
+            <p class="text-sm text-msit-dark-200 mb-4 font-sans">
+              Follow structured learning paths to master Python step by step. Track your progress.
+            </p>
+            <ul class="text-xs text-msit-dark-300 space-y-1 mb-4 font-sans">
+              <li>• Structured curriculum</li>
+              <li>• Progress tracking</li>
+              <li>• Multiple skill levels</li>
+              <li>• Comprehensive lessons</li>
+            </ul>
+            <router-link
+              to="/learning-path"
+              class="inline-flex items-center text-sm font-medium text-msit-accent hover:text-msit-accent-300 transition-colors font-sans"
+            >
+              Explore Paths →
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Challenges Feature -->
+        <div class="bg-msit-dark-800 shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow border border-msit-dark-700 hover:border-msit-accent">
+          <div class="p-4 sm:p-6">
+            <div class="flex items-center mb-3">
+              <div class="flex-shrink-0">
+                <svg class="h-8 w-8 text-msit-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                </svg>
+              </div>
+              <h3 class="ml-3 text-base sm:text-lg font-medium text-msit-dark-50 font-sans">Daily Challenges</h3>
+            </div>
+            <p class="text-sm text-msit-dark-200 mb-4 font-sans">
+              Daily and weekly coding challenges to keep your skills sharp. Earn points and track your progress.
+            </p>
+            <ul class="text-xs text-msit-dark-300 space-y-1 mb-4 font-sans">
+              <li>• Daily coding challenges</li>
+              <li>• Weekly advanced problems</li>
+              <li>• Points and achievements</li>
+              <li>• Challenge history</li>
+            </ul>
+            <router-link
+              to="/challenges"
+              class="inline-flex items-center text-sm font-medium text-msit-accent hover:text-msit-accent-300 transition-colors font-sans"
+            >
+              View Challenges →
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Resources Feature -->
+        <div class="bg-msit-dark-800 shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow border border-msit-dark-700 hover:border-msit-accent">
+          <div class="p-4 sm:p-6">
+            <div class="flex items-center mb-3">
+              <div class="flex-shrink-0">
+                <svg class="h-8 w-8 text-msit-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <h3 class="ml-3 text-base sm:text-lg font-medium text-msit-dark-50 font-sans">Resources</h3>
+            </div>
+            <p class="text-sm text-msit-dark-200 mb-4 font-sans">
+              Curated resources, documentation, and tools to enhance your Python learning journey.
+            </p>
+            <ul class="text-xs text-msit-dark-300 space-y-1 mb-4 font-sans">
+              <li>• Official documentation</li>
+              <li>• Tutorials and courses</li>
+              <li>• Practice platforms</li>
+              <li>• Community resources</li>
+            </ul>
+            <router-link
+              to="/resources"
+              class="inline-flex items-center text-sm font-medium text-msit-accent hover:text-msit-accent-300 transition-colors font-sans"
+            >
+              Browse Resources →
+            </router-link>
+          </div>
+        </div>
       </div>
     </div>
   </div>

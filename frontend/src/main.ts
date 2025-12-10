@@ -12,6 +12,12 @@ import MaterialDetail from './views/MaterialDetail.vue'
 import Compiler from './views/Compiler.vue'
 import Dashboard from './views/Dashboard.vue'
 import Snippets from './views/Snippets.vue'
+import Practice from './views/Practice.vue'
+import Resources from './views/Resources.vue'
+import Challenges from './views/Challenges.vue'
+import Tools from './views/Tools.vue'
+import Library from './views/Library.vue'
+import Export from './views/Export.vue'
 
 const routes = [
   { path: '/configuration', component: Configuration },
@@ -21,6 +27,12 @@ const routes = [
   { path: '/materials/:id', component: MaterialDetail },
   { path: '/compiler', component: Compiler },
   { path: '/snippets', component: Snippets },
+  { path: '/practice', component: Practice },
+  { path: '/challenges', component: Challenges },
+  { path: '/library', component: Library },
+  { path: '/resources', component: Resources },
+  { path: '/tools', component: Tools },
+  { path: '/export', component: Export },
 ]
 
 const router = createRouter({

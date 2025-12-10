@@ -2,11 +2,13 @@
   <!-- Landing page for users without character configured -->
   <div v-if="!character" class="min-h-screen">
     <!-- Hero Section -->
-    <div class="relative overflow-hidden bg-msit-dark">
+    <div class="relative overflow-hidden bg-gradient-to-br from-msit-dark via-msit-dark-900 to-msit-dark-800">
       <!-- Background decoration -->
       <div class="absolute inset-0 overflow-hidden">
         <div class="absolute -top-40 -right-40 w-80 h-80 bg-msit-accent opacity-10 rounded-full blur-3xl"></div>
         <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-msit-accent opacity-10 rounded-full blur-3xl"></div>
+        <!-- Subtle pattern overlay -->
+        <div class="absolute inset-0 opacity-5" style="background-image: radial-gradient(circle at 2px 2px, rgba(131, 230, 91, 0.15) 1px, transparent 0); background-size: 40px 40px;"></div>
       </div>
       
       <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-32 lg:pb-28">
@@ -36,6 +38,15 @@
               Get Started Free
               <svg class="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </router-link>
+            <router-link
+              to="/materials"
+              class="group w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 border-2 border-msit-dark-700 text-base font-semibold rounded-lg text-msit-dark-50 bg-transparent hover:border-msit-accent hover:text-msit-accent transition-all duration-200 font-sans"
+            >
+              Browse Materials
+              <svg class="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </router-link>
             <router-link
@@ -91,7 +102,7 @@
                 <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
                 <div class="w-3 h-3 rounded-full bg-green-500"></div>
               </div>
-              <span class="ml-4 text-sm text-msit-dark-300 font-mono font-sans">python_runner.py</span>
+              <span class="ml-4 text-sm text-msit-dark-300 font-mono">python_runner.py</span>
             </div>
             <div class="p-6 font-mono text-sm">
               <div class="space-y-2">
@@ -125,51 +136,51 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div class="group relative bg-msit-dark-800 p-8 rounded-xl border border-msit-dark-700 hover:border-msit-accent transition-all duration-200 hover:shadow-lg hover:shadow-msit-accent/10">
-            <div class="flex items-center justify-center w-14 h-14 rounded-lg bg-msit-accent/20 text-msit-accent mb-6 group-hover:bg-msit-accent group-hover:text-msit-dark transition-colors">
+          <div class="group relative bg-msit-dark-800 p-8 rounded-xl border border-msit-dark-700 hover:border-msit-accent transition-all duration-300 hover:shadow-lg hover:shadow-msit-accent/10 hover:-translate-y-1">
+            <div class="flex items-center justify-center w-14 h-14 rounded-xl bg-msit-accent/20 text-msit-accent mb-6 group-hover:bg-msit-accent group-hover:text-msit-dark transition-all duration-300">
               <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
             <h3 class="text-xl font-semibold text-msit-dark-50 mb-3 font-sans">Course Materials</h3>
             <p class="text-msit-dark-100 font-sans leading-relaxed">
-              Access comprehensive Python course materials and tutorials organized for easy learning and reference.
+              Access comprehensive Python course materials and tutorials organized for easy learning. All content is public and accessible to everyone.
             </p>
           </div>
 
-          <div class="group relative bg-msit-dark-800 p-8 rounded-xl border border-msit-dark-700 hover:border-msit-accent transition-all duration-200 hover:shadow-lg hover:shadow-msit-accent/10">
-            <div class="flex items-center justify-center w-14 h-14 rounded-lg bg-msit-accent/20 text-msit-accent mb-6 group-hover:bg-msit-accent group-hover:text-msit-dark transition-colors">
+          <div class="group relative bg-msit-dark-800 p-8 rounded-xl border border-msit-dark-700 hover:border-msit-accent transition-all duration-300 hover:shadow-lg hover:shadow-msit-accent/10 hover:-translate-y-1">
+            <div class="flex items-center justify-center w-14 h-14 rounded-xl bg-msit-accent/20 text-msit-accent mb-6 group-hover:bg-msit-accent group-hover:text-msit-dark transition-all duration-300">
               <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
               </svg>
             </div>
             <h3 class="text-xl font-semibold text-msit-dark-50 mb-3 font-sans">Python Compiler</h3>
             <p class="text-msit-dark-100 font-sans leading-relaxed">
-              Run Python code directly in your browser. No setup required, just code and execute instantly.
+              Run Python code directly in your browser. No setup required, no installation needed—just code and execute instantly.
             </p>
           </div>
 
-          <div class="group relative bg-msit-dark-800 p-8 rounded-xl border border-msit-dark-700 hover:border-msit-accent transition-all duration-200 hover:shadow-lg hover:shadow-msit-accent/10">
-            <div class="flex items-center justify-center w-14 h-14 rounded-lg bg-msit-accent/20 text-msit-accent mb-6 group-hover:bg-msit-accent group-hover:text-msit-dark transition-colors">
+          <div class="group relative bg-msit-dark-800 p-8 rounded-xl border border-msit-dark-700 hover:border-msit-accent transition-all duration-300 hover:shadow-lg hover:shadow-msit-accent/10 hover:-translate-y-1">
+            <div class="flex items-center justify-center w-14 h-14 rounded-xl bg-msit-accent/20 text-msit-accent mb-6 group-hover:bg-msit-accent group-hover:text-msit-dark transition-all duration-300">
               <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
             <h3 class="text-xl font-semibold text-msit-dark-50 mb-3 font-sans">Export Your Work</h3>
             <p class="text-msit-dark-100 font-sans leading-relaxed">
-              Export your code and work at any time. Keep your learning organized and accessible whenever you need it.
+              Export your code and work at any time. Keep your learning organized and accessible with easy export functionality.
             </p>
           </div>
 
-          <div class="group relative bg-msit-dark-800 p-8 rounded-xl border border-msit-dark-700 hover:border-msit-accent transition-all duration-200 hover:shadow-lg hover:shadow-msit-accent/10">
-            <div class="flex items-center justify-center w-14 h-14 rounded-lg bg-msit-accent/20 text-msit-accent mb-6 group-hover:bg-msit-accent group-hover:text-msit-dark transition-colors">
+          <div class="group relative bg-msit-dark-800 p-8 rounded-xl border border-msit-dark-700 hover:border-msit-accent transition-all duration-300 hover:shadow-lg hover:shadow-msit-accent/10 hover:-translate-y-1">
+            <div class="flex items-center justify-center w-14 h-14 rounded-xl bg-msit-accent/20 text-msit-accent mb-6 group-hover:bg-msit-accent group-hover:text-msit-dark transition-all duration-300">
               <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </div>
             <h3 class="text-xl font-semibold text-msit-dark-50 mb-3 font-sans">Notion Integration</h3>
             <p class="text-msit-dark-100 font-sans leading-relaxed">
-              Sync course materials from your Notion database automatically. Keep everything in sync effortlessly.
+              Sync course materials from your Notion database automatically. Keep everything in sync with seamless integration.
             </p>
           </div>
         </div>
@@ -222,25 +233,38 @@
       </div>
     </div>
 
-    <!-- CTA Section -->
-    <div class="bg-msit-dark-800">
-      <div class="max-w-2xl mx-auto text-center py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8">
-        <h2 class="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-msit-dark-50">
+    <!-- Final CTA Section -->
+    <div class="relative bg-gradient-to-r from-msit-dark-800 via-msit-dark-700 to-msit-dark-800 overflow-hidden py-20">
+      <!-- Background decoration -->
+      <div class="absolute inset-0 opacity-5">
+        <div class="absolute inset-0" style="background-image: radial-gradient(circle at 2px 2px, rgba(131, 230, 91, 0.3) 1px, transparent 0); background-size: 60px 60px;"></div>
+      </div>
+      
+      <div class="relative max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+        <h2 class="text-4xl sm:text-5xl font-serif font-bold text-msit-dark-50 mb-6">
           <span class="block">Ready to start learning?</span>
-          <span class="block mt-2">Join StudyHall today.</span>
+          <span class="block mt-2 text-msit-accent">Join StudyHall today.</span>
         </h2>
-        <p class="mt-4 text-base sm:text-lg leading-6 text-msit-dark-100 font-sans">
-          Start learning Python today. No setup required, just code and practice.
+        <p class="text-xl text-msit-dark-100 font-sans mb-10 max-w-2xl mx-auto">
+          Start learning Python today. No setup required, no complicated installation—just code and practice in your browser.
         </p>
-        <router-link
-          to="/configuration"
-          class="mt-6 sm:mt-8 w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-5 py-2.5 sm:py-3 border border-transparent text-sm sm:text-base font-semibold rounded-md text-msit-dark bg-msit-accent hover:bg-msit-accent-500 transition-colors font-sans"
-        >
-          Get Started
-          <svg class="ml-2 h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </router-link>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <router-link
+            to="/configuration"
+            class="group inline-flex items-center justify-center px-10 py-4 border border-transparent text-lg font-semibold rounded-lg text-msit-dark bg-msit-accent hover:bg-msit-accent-500 shadow-lg shadow-msit-accent/20 hover:shadow-xl hover:shadow-msit-accent/30 transition-all duration-200 font-sans hover:scale-105"
+          >
+            Get Started Free
+            <svg class="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </router-link>
+          <router-link
+            to="/compiler"
+            class="inline-flex items-center justify-center px-10 py-4 border-2 border-msit-dark-600 text-lg font-semibold rounded-lg text-msit-dark-50 bg-transparent hover:border-msit-accent hover:text-msit-accent transition-all duration-200 font-sans"
+          >
+            Try Compiler
+          </router-link>
+        </div>
       </div>
     </div>
   </div>
