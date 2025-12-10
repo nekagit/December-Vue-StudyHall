@@ -1,0 +1,120 @@
+# StudyHall Platform - Cursor Rules
+
+## Architecture Overview
+
+This is a modern SPA application using:
+- **Backend**: Minimal Flask API (Python) - REST endpoints only, no templates
+- **Frontend**: Vue.js 3 SPA + TypeScript + TailwindCSS
+- **Database**: SQLite (MVP)
+- **Pattern**: Full frontend SPA with API backend
+
+## Project Structure
+
+```
+backend/
+  - main.py              # Flask API app (minimal, REST only)
+  - database.py          # SQLAlchemy setup
+  - models/              # Database models (Student, Material)
+  - services/            # Business logic (auth.py, session.py, notion_sync.py)
+  - init_db.py           # Database initialization
+
+frontend/
+  - src/
+    - views/             # Vue pages (Home, Login, Register, Materials, Compiler)
+    - components/        # Vue components (PythonRunner)
+    - App.vue            # Root component with navigation
+    - main.ts            # Entry point with Vue Router
+    - style.scss         # TailwindCSS imports
+  - vite.config.ts       # Build config (proxy to backend)
+  - tailwind.config.js   # TailwindCSS config
+  - index.html           # HTML entry point
+
+manage.py                # Management script
+```
+
+## Code Style & Conventions
+
+### Python (Backend)
+- Use type hints for all function parameters and return types
+- Follow PEP 8 style guide
+- Use Flask for minimal REST API only
+- Database models should inherit from `Base` (SQLAlchemy)
+- Services contain business logic
+- All endpoints return JSON, no HTML rendering
+
+### TypeScript/Vue (Frontend)
+- Use Composition API (`<script setup>`) for all Vue components
+- Use TypeScript strict mode
+- Use TailwindCSS for all styling (no custom SCSS except imports)
+- Use Vue Router for navigation
+- API calls use `/api/*` paths (proxied to backend in dev)
+
+## Frontend Architecture
+
+- **Vue Router**: Client-side routing
+- **TailwindCSS**: Utility-first CSS framework
+- **Components**: Reusable Vue components
+- **Views**: Page-level components (routes)
+- **API**: Fetch calls to `/api/*` endpoints
+
+## Backend Architecture
+
+- **Flask**: Minimal REST API
+- **SQLAlchemy**: ORM for database
+- **Session Management**: In-memory for MVP (upgrade to Redis in production)
+- **CORS**: Enabled for frontend dev server
+
+## API Endpoints
+
+All endpoints are under `/api/*`:
+- `POST /api/auth/login` - Login
+- `POST /api/auth/register` - Register
+- `POST /api/auth/logout` - Logout
+- `GET /api/auth/me` - Get current user
+- `GET /api/materials` - List materials
+- `GET /api/materials/:id` - Get material detail
+- `POST /api/materials/sync-notion` - Sync from Notion
+
+## Database
+
+- SQLite for MVP (can be upgraded to PostgreSQL)
+- Use SQLAlchemy ORM
+- Models in `backend/models/`
+- Migrations handled via manual schema updates or Alembic (future)
+
+## Authentication
+
+- Simple session-based auth for MVP
+- 30 students max (hardcoded limit)
+- Session stored in cookies
+- Auth guard in Vue Router
+
+## Notion Integration
+
+- Service in `backend/services/notion_sync.py`
+- Requires `NOTION_API_KEY` and `NOTION_DATABASE_ID` environment variables
+- Syncs pages to local database
+- Triggered via `/api/materials/sync-notion` endpoint
+
+## Styling
+
+- **TailwindCSS**: Use Tailwind utility classes
+- **Templates**: Use Tailwind UI patterns/components
+- **Responsive**: Mobile-first approach
+- **Colors**: Indigo primary color scheme
+
+## Build & Development
+
+- Use `./manage.py dev` for development (runs both frontend and backend)
+- Frontend dev server: http://localhost:5173 (proxies `/api/*` to backend)
+- Backend API: http://localhost:5000
+- Use `./manage.py build` to build frontend for production
+- Use `./manage.py serve` to serve production build
+
+## Key Principles
+
+1. **Separation of Concerns**: Backend is API-only, frontend handles all UI
+2. **Minimal Backend**: Keep Flask backend as simple as possible
+3. **Modern Frontend**: Vue 3 SPA with TailwindCSS
+4. **Type Safety**: Use TypeScript and Python type hints everywhere
+5. **Simplicity First**: MVP should be functional but not over-engineered
