@@ -17,11 +17,27 @@
               </router-link>
               <router-link
                 v-if="user"
+                to="/dashboard"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                active-class="border-indigo-500 text-gray-900"
+              >
+                Dashboard
+              </router-link>
+              <router-link
+                v-if="user"
                 to="/materials"
                 class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                 active-class="border-indigo-500 text-gray-900"
               >
                 Materials
+              </router-link>
+              <router-link
+                v-if="user"
+                to="/bookmarks"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                active-class="border-indigo-500 text-gray-900"
+              >
+                Bookmarks
               </router-link>
               <router-link
                 v-if="user"
@@ -31,11 +47,24 @@
               >
                 Compiler
               </router-link>
+              <router-link
+                v-if="user"
+                to="/study-sessions"
+                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                active-class="border-indigo-500 text-gray-900"
+              >
+                Study Sessions
+              </router-link>
             </div>
           </div>
           <div class="flex items-center">
             <div v-if="user" class="flex items-center space-x-4">
-              <span class="text-gray-700">Welcome, {{ user.name }}</span>
+              <router-link
+                to="/profile"
+                class="text-gray-700 hover:text-gray-900 font-medium"
+              >
+                {{ user.name }}
+              </router-link>
               <button
                 @click="logout"
                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"

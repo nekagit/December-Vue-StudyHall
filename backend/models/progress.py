@@ -11,6 +11,7 @@ class Progress(Base):
     material_id = Column(Integer, ForeignKey("materials.id"), nullable=False, index=True)
     status = Column(String, default="not_started")  # not_started, in_progress, completed
     progress_percentage = Column(Float, default=0.0)  # 0.0 to 100.0
+    study_time_minutes = Column(Float, default=0.0)  # Total time spent studying this material in minutes
     last_accessed_at = Column(DateTime(timezone=True), server_default=func.now())
     completed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

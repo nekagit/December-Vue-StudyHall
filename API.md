@@ -1,29 +1,30 @@
 # API Documentation
 
-This document describes all API endpoints available in the StudyHall Platform backend.
+Complete API reference for the StudyHall Platform backend.
 
 ## Base URL
 
-- **Development**: `http://localhost:5000`
-- **Production**: Configure based on deployment
+- Development: `http://localhost:5000`
+- Production: Configure based on deployment
 
-All API endpoints are prefixed with `/api/`.
+All endpoints are prefixed with `/api/`.
 
 ## Authentication
 
-The API uses session-based authentication with HTTP-only cookies. After successful login or registration, a `session_token` cookie is set, which should be included in subsequent requests.
+The API uses session-based authentication with HTTP-only cookies. After successful login, a `session_token` cookie is set and must be included in subsequent requests.
 
-### Session Management
+### Authentication Flow
 
-- Sessions are stored in-memory (upgrade to Redis for production)
-- Session tokens expire after 7 days (604800 seconds)
-- Sessions are validated on protected endpoints
+1. User logs in via `POST /api/auth/login`
+2. Server sets `session_token` cookie
+3. Client includes cookie automatically in subsequent requests
+4. Server validates session token on protected endpoints
 
 ## Endpoints
 
 ### Authentication
 
-#### POST `/api/auth/login`
+#### `POST /api/auth/login`
 
 Authenticate a student and create a session.
 
@@ -54,12 +55,9 @@ Authenticate a student and create a session.
 }
 ```
 
-**Cookies Set:**
-- `session_token`: HTTP-only cookie with session token
-
 ---
 
-#### POST `/api/auth/register`
+#### `POST /api/auth/register`
 
 Register a new student account.
 
@@ -91,29 +89,20 @@ Register a new student account.
 }
 ```
 
-or
-
+**Response (400 Bad Request):**
 ```json
 {
   "error": "Maximum of 30 students reached"
 }
 ```
 
-**Notes:**
-- Maximum of 30 students allowed (hardcoded limit)
-- Email must be unique
-- Password is hashed using SHA-256 (upgrade to bcrypt for production)
-
-**Cookies Set:**
-- `session_token`: HTTP-only cookie with session token
+**Note:** The platform has a hard limit of 30 students.
 
 ---
 
-#### POST `/api/auth/logout`
+#### `POST /api/auth/logout`
 
-Logout the current user and invalidate their session.
-
-**Request:** No body required
+Logout the current user and invalidate session.
 
 **Response (200 OK):**
 ```json
@@ -122,16 +111,11 @@ Logout the current user and invalidate their session.
 }
 ```
 
-**Cookies Deleted:**
-- `session_token`: Removed from client
-
 ---
 
-#### GET `/api/auth/me`
+#### `GET /api/auth/me`
 
 Get the current authenticated student's information.
-
-**Request:** No body required (uses session cookie)
 
 **Response (200 OK):**
 ```json
@@ -153,11 +137,18 @@ Get the current authenticated student's information.
 
 ### Materials
 
-#### GET `/api/materials`
+#### `GET /api/materials`
 
-Get a list of all course materials.
+Get all materials with optional filtering and search.
 
-**Request:** No body required (requires authentication)
+**Query Parameters:**
+- `search` (optional): Search term to filter by title or content
+- `category` (optional): Filter by category name
+
+**Example:**
+```
+GET /api/materials?search=python&category=Python
+```
 
 **Response (200 OK):**
 ```json
@@ -165,60 +156,36 @@ Get a list of all course materials.
   {
     "id": 1,
     "title": "Introduction to Python",
-    "content": "Python is a high-level programming language...",
+    "content": "Python is a programming language...",
     "category": "Python",
     "notion_url": "https://notion.so/...",
-    "created_at": "2024-01-15T10:30:00"
-  },
-  {
-    "id": 2,
-    "title": "Variables and Data Types",
-    "content": "Variables store data...",
-    "category": "Python",
-    "notion_url": null,
-    "created_at": "2024-01-16T14:20:00"
+    "created_at": "2024-01-01T00:00:00",
+    "is_bookmarked": true
   }
 ]
 ```
 
-**Response (401 Unauthorized):**
-```json
-{
-  "error": "Not authenticated"
-}
-```
-
-**Notes:**
-- Materials are ordered by `order_index` and `created_at`
-- `notion_url` may be `null` if material was created manually
-
 ---
 
-#### GET `/api/materials/<material_id>`
+#### `GET /api/materials/:id`
 
 Get detailed information about a specific material.
-
-**URL Parameters:**
-- `material_id` (integer): The ID of the material
-
-**Request:** No body required (requires authentication)
 
 **Response (200 OK):**
 ```json
 {
   "id": 1,
   "title": "Introduction to Python",
-  "content": "Python is a high-level programming language...",
+  "content": "Python is a programming language...",
   "category": "Python",
   "notion_url": "https://notion.so/...",
-  "created_at": "2024-01-15T10:30:00"
-}
-```
-
-**Response (401 Unauthorized):**
-```json
-{
-  "error": "Not authenticated"
+  "created_at": "2024-01-01T00:00:00",
+  "is_bookmarked": true,
+  "bookmark_id": 5,
+  "progress": {
+    "status": "in_progress",
+    "progress_percentage": 45.0
+  }
 }
 ```
 
@@ -231,11 +198,25 @@ Get detailed information about a specific material.
 
 ---
 
-#### POST `/api/materials/sync-notion`
+#### `GET /api/materials/categories`
 
-Sync materials from a Notion database.
+Get all available material categories.
 
-**Request:** No body required (requires authentication)
+**Response (200 OK):**
+```json
+["Python", "Web Development", "Data Science"]
+```
+
+---
+
+#### `POST /api/materials/sync-notion`
+
+Sync materials from Notion database.
+
+**Requirements:**
+- `NOTION_API_KEY` environment variable must be set
+- `NOTION_DATABASE_ID` environment variable must be set
+- Notion database must be shared with the integration
 
 **Response (200 OK):**
 ```json
@@ -245,31 +226,237 @@ Sync materials from a Notion database.
 }
 ```
 
-**Response (401 Unauthorized):**
-```json
-{
-  "error": "Not authenticated"
-}
-```
-
 **Response (500 Internal Server Error):**
 ```json
 {
-  "error": "Error message describing what went wrong"
+  "error": "Error message"
 }
 ```
 
-**Notes:**
-- Requires `NOTION_API_KEY` and `NOTION_DATABASE_ID` environment variables
-- Fetches pages from the configured Notion database
-- Only creates new materials (does not update existing ones)
-- Uses `notion_page_id` to prevent duplicates
-- If a page already exists (by `notion_page_id`), it is skipped
+---
 
-**Environment Variables Required:**
-```bash
-export NOTION_API_KEY="secret_..."
-export NOTION_DATABASE_ID="..."
+### Bookmarks
+
+#### `GET /api/bookmarks`
+
+Get all bookmarks for the current student.
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": 1,
+    "material_id": 5,
+    "material": {
+      "id": 5,
+      "title": "Introduction to Python",
+      "category": "Python",
+      "created_at": "2024-01-01T00:00:00"
+    },
+    "created_at": "2024-01-02T00:00:00"
+  }
+]
+```
+
+---
+
+#### `POST /api/bookmarks`
+
+Create a new bookmark for a material.
+
+**Request Body:**
+```json
+{
+  "material_id": 5
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "bookmark": {
+    "id": 1,
+    "material_id": 5,
+    "created_at": "2024-01-02T00:00:00"
+  }
+}
+```
+
+**Response (400 Bad Request):**
+```json
+{
+  "error": "Bookmark already exists"
+}
+```
+
+---
+
+#### `DELETE /api/bookmarks/:id`
+
+Delete a bookmark by ID.
+
+**Response (200 OK):**
+```json
+{
+  "success": true
+}
+```
+
+---
+
+#### `DELETE /api/bookmarks/material/:material_id`
+
+Delete a bookmark by material ID.
+
+**Response (200 OK):**
+```json
+{
+  "success": true
+}
+```
+
+---
+
+### Progress
+
+#### `GET /api/progress`
+
+Get all progress records for the current student.
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": 1,
+    "material_id": 5,
+    "material": {
+      "id": 5,
+      "title": "Introduction to Python",
+      "category": "Python"
+    },
+    "status": "in_progress",
+    "progress_percentage": 45.0,
+    "last_accessed_at": "2024-01-02T10:00:00",
+    "completed_at": null
+  }
+]
+```
+
+---
+
+#### `GET /api/progress/material/:material_id`
+
+Get progress for a specific material.
+
+**Response (200 OK):**
+```json
+{
+  "id": 1,
+  "material_id": 5,
+  "status": "in_progress",
+  "progress_percentage": 45.0,
+  "last_accessed_at": "2024-01-02T10:00:00",
+  "completed_at": null
+}
+```
+
+**Response (200 OK) - No progress record:**
+```json
+{
+  "material_id": 5,
+  "status": "not_started",
+  "progress_percentage": 0.0,
+  "last_accessed_at": null,
+  "completed_at": null
+}
+```
+
+---
+
+#### `POST /api/progress/material/:material_id`
+#### `PUT /api/progress/material/:material_id`
+
+Create or update progress for a material.
+
+**Request Body:**
+```json
+{
+  "status": "in_progress",
+  "progress_percentage": 75.0
+}
+```
+
+**Status Values:**
+- `not_started`
+- `in_progress`
+- `completed`
+
+**Progress Percentage:**
+- Must be between 0 and 100
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "progress": {
+    "id": 1,
+    "material_id": 5,
+    "status": "in_progress",
+    "progress_percentage": 75.0,
+    "last_accessed_at": "2024-01-02T10:00:00",
+    "completed_at": null
+  }
+}
+```
+
+**Response (400 Bad Request):**
+```json
+{
+  "error": "Invalid status"
+}
+```
+
+---
+
+### Dashboard
+
+#### `GET /api/dashboard/stats`
+
+Get dashboard statistics for the current student.
+
+**Response (200 OK):**
+```json
+{
+  "total_materials": 50,
+  "total_bookmarks": 10,
+  "completed_materials": 5,
+  "in_progress_materials": 8,
+  "recent_bookmarks": [
+    {
+      "id": 1,
+      "material": {
+        "id": 5,
+        "title": "Introduction to Python",
+        "category": "Python"
+      },
+      "created_at": "2024-01-02T00:00:00"
+    }
+  ],
+  "recent_progress": [
+    {
+      "id": 1,
+      "material": {
+        "id": 5,
+        "title": "Introduction to Python",
+        "category": "Python"
+      },
+      "status": "in_progress",
+      "progress_percentage": 45.0,
+      "last_accessed_at": "2024-01-02T10:00:00"
+    }
+  ]
+}
 ```
 
 ---
@@ -279,17 +466,13 @@ export NOTION_DATABASE_ID="..."
 All endpoints may return the following error responses:
 
 ### 400 Bad Request
-Invalid request data or validation errors.
-
 ```json
 {
-  "error": "Error message"
+  "error": "Error message describing what went wrong"
 }
 ```
 
 ### 401 Unauthorized
-Authentication required or invalid session.
-
 ```json
 {
   "error": "Not authenticated"
@@ -297,8 +480,6 @@ Authentication required or invalid session.
 ```
 
 ### 404 Not Found
-Resource not found.
-
 ```json
 {
   "error": "Resource not found"
@@ -306,23 +487,21 @@ Resource not found.
 ```
 
 ### 500 Internal Server Error
-Server-side error.
-
 ```json
 {
-  "error": "Error message"
+  "error": "Internal server error message"
 }
 ```
 
 ---
 
-## CORS Configuration
+## CORS
 
-The API is configured to accept requests from:
+The API supports CORS for the following origins:
 - `http://localhost:5173` (Frontend dev server)
 - `http://localhost:5000` (Backend)
 
-For production, update CORS origins in `backend/main.py`.
+Credentials are supported via cookies.
 
 ---
 
@@ -332,42 +511,9 @@ Currently, there is no rate limiting implemented. Consider adding rate limiting 
 
 ---
 
-## Security Considerations
+## Notes
 
-1. **Password Hashing**: Currently uses SHA-256. **Upgrade to bcrypt** for production.
-2. **Session Storage**: In-memory sessions. **Upgrade to Redis** for production scalability.
-3. **CORS**: Configure appropriate origins for production.
-4. **Secret Key**: Change `SECRET_KEY` environment variable in production.
-5. **HTTPS**: Always use HTTPS in production.
-
----
-
-## Testing
-
-API endpoints can be tested using:
-
-- **cURL**:
-```bash
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"student@studyhall.com","password":"password123"}' \
-  -c cookies.txt
-
-curl http://localhost:5000/api/materials -b cookies.txt
-```
-
-- **Postman**: Import the endpoints and configure cookie handling
-- **Frontend**: Use `fetch()` with `credentials: 'include'` to handle cookies automatically
-
----
-
-## Future Enhancements
-
-- [ ] Add pagination for materials list
-- [ ] Add filtering and search for materials
-- [ ] Add bookmark endpoints
-- [ ] Add progress tracking endpoints
-- [ ] Add material update/delete endpoints
-- [ ] Add rate limiting
-- [ ] Add request validation middleware
-- [ ] Add API versioning
+- All timestamps are in ISO 8601 format
+- All endpoints require authentication except `/api/auth/login` and `/api/auth/register`
+- Session tokens expire after 7 days (604800 seconds)
+- The platform has a hard limit of 30 students

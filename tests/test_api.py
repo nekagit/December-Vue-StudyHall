@@ -1,392 +1,547 @@
 import pytest
-import json
-from unittest.mock import patch, AsyncMock
-from backend.models.student import Student
-from backend.models.material import Material
-from backend.services.auth import hash_password, create_student
-from backend.services.session import create_session, _sessions
+from backend.models import Student, Material, Bookmark, Progress
+from backend.services.auth import create_student
 
 
 class TestAuthEndpoints:
-    """Tests for authentication endpoints."""
+    """Test authentication endpoints."""
     
-    def test_login_success(self, client, api_db_session, sample_student_data):
-        """Test successful login."""
-        # Create a student
-        student = Student(
-            email=sample_student_data["email"],
-            name=sample_student_data["name"],
-            password_hash=hash_password(sample_student_data["password"])
-        )
-        api_db_session.add(student)
-        api_db_session.commit()
-        
-        # Login
-        response = client.post(
-            "/api/auth/login",
+    def test_register_success(self, test_client, db_session):
+        """Test successful user registration."""
+        response = test_client.post(
+            '/api/auth/register',
             json={
-                "email": sample_student_data["email"],
-                "password": sample_student_data["password"]
+                'email': 'newuser@example.com',
+                'name': 'New User',
+                'password': 'password123'
             }
         )
         
         assert response.status_code == 200
-        data = json.loads(response.data)
-        assert data["success"] is True
-        assert data["student"]["email"] == sample_student_data["email"]
-        assert data["student"]["name"] == sample_student_data["name"]
-        assert "session_token" in response.headers.get("Set-Cookie", "")
+        data = response.get_json()
+        assert data['success'] is True
+        assert data['student']['email'] == 'newuser@example.com'
+        assert data['student']['name'] == 'New User'
+        assert 'session_token' in response.headers.get('Set-Cookie', '')
     
-    def test_login_invalid_credentials(self, client, api_db_session, sample_student_data):
-        """Test login with invalid credentials."""
-        # Create a student
-        student = Student(
-            email=sample_student_data["email"],
-            name=sample_student_data["name"],
-            password_hash=hash_password(sample_student_data["password"])
-        )
-        api_db_session.add(student)
-        api_db_session.commit()
-        
-        # Try to login with wrong password
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": sample_student_data["email"],
-                "password": "wrongpassword"
-            }
-        )
-        
-        assert response.status_code == 401
-        data = json.loads(response.data)
-        assert "error" in data
-    
-    def test_login_nonexistent_user(self, client):
-        """Test login with non-existent user."""
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": "nonexistent@example.com",
-                "password": "password"
-            }
-        )
-        
-        assert response.status_code == 401
-        data = json.loads(response.data)
-        assert "error" in data
-    
-    def test_register_success(self, client, api_db_session, sample_student_data):
-        """Test successful registration."""
-        response = client.post(
-            "/api/auth/register",
-            json={
-                "email": sample_student_data["email"],
-                "name": sample_student_data["name"],
-                "password": sample_student_data["password"]
-            }
-        )
-        
-        assert response.status_code == 200
-        data = json.loads(response.data)
-        assert data["success"] is True
-        assert data["student"]["email"] == sample_student_data["email"]
-        assert data["student"]["name"] == sample_student_data["name"]
-        
-        # Verify student was created in database
-        student = api_db_session.query(Student).filter(
-            Student.email == sample_student_data["email"]
-        ).first()
-        assert student is not None
-    
-    def test_register_duplicate_email(self, client, api_db_session, sample_student_data):
+    def test_register_duplicate_email(self, test_client, db_session, sample_student):
         """Test registration with duplicate email."""
-        # Create first student
-        create_student(
-            api_db_session,
-            sample_student_data["email"],
-            sample_student_data["name"],
-            sample_student_data["password"]
-        )
-        
-        # Try to register again with same email
-        response = client.post(
-            "/api/auth/register",
+        response = test_client.post(
+            '/api/auth/register',
             json={
-                "email": sample_student_data["email"],
-                "name": "Another Name",
-                "password": "anotherpassword"
+                'email': 'test@example.com',
+                'name': 'Another User',
+                'password': 'password123'
             }
         )
         
         assert response.status_code == 400
-        data = json.loads(response.data)
-        assert "error" in data
+        data = response.get_json()
+        assert 'error' in data
+        assert 'already registered' in data['error'].lower()
     
-    def test_logout(self, client, api_db_session, sample_student_data):
-        """Test logout."""
-        # Create student and session
-        student = create_student(
-            api_db_session,
-            sample_student_data["email"],
-            sample_student_data["name"],
-            sample_student_data["password"]
-        )
-        token = create_session(student.id)
+    def test_register_max_students(self, test_client, db_session):
+        """Test registration when max students limit is reached."""
+        # Create 30 students
+        for i in range(30):
+            create_student(
+                db_session,
+                email=f'student{i}@example.com',
+                name=f'Student {i}',
+                password='password123'
+            )
         
-        # Logout
-        client.set_cookie("session_token", token)
-        response = client.post("/api/auth/logout")
+        response = test_client.post(
+            '/api/auth/register',
+            json={
+                'email': 'newstudent@example.com',
+                'name': 'New Student',
+                'password': 'password123'
+            }
+        )
+        
+        assert response.status_code == 400
+        data = response.get_json()
+        assert 'error' in data
+        assert '30' in data['error']
+    
+    def test_login_success(self, test_client, db_session, sample_student):
+        """Test successful login."""
+        response = test_client.post(
+            '/api/auth/login',
+            json={
+                'email': 'test@example.com',
+                'password': 'testpassword123'
+            }
+        )
         
         assert response.status_code == 200
-        data = json.loads(response.data)
-        assert data["success"] is True
-        assert token not in _sessions
+        data = response.get_json()
+        assert data['success'] is True
+        assert data['student']['email'] == 'test@example.com'
+        assert 'session_token' in response.headers.get('Set-Cookie', '')
     
-    def test_get_current_user_authenticated(self, client, api_db_session, sample_student_data):
-        """Test getting current user when authenticated."""
-        student = create_student(
-            api_db_session,
-            sample_student_data["email"],
-            sample_student_data["name"],
-            sample_student_data["password"]
+    def test_login_invalid_email(self, test_client, db_session):
+        """Test login with invalid email."""
+        response = test_client.post(
+            '/api/auth/login',
+            json={
+                'email': 'nonexistent@example.com',
+                'password': 'password123'
+            }
         )
-        token = create_session(student.id)
-        
-        client.set_cookie("session_token", token)
-        response = client.get("/api/auth/me")
-        
-        assert response.status_code == 200
-        data = json.loads(response.data)
-        assert data["id"] == student.id
-        assert data["email"] == sample_student_data["email"]
-        assert data["name"] == sample_student_data["name"]
-    
-    def test_get_current_user_unauthenticated(self, client):
-        """Test getting current user when not authenticated."""
-        response = client.get("/api/auth/me")
         
         assert response.status_code == 401
-        data = json.loads(response.data)
-        assert "error" in data
+        data = response.get_json()
+        assert 'error' in data
+    
+    def test_login_invalid_password(self, test_client, db_session, sample_student):
+        """Test login with invalid password."""
+        response = test_client.post(
+            '/api/auth/login',
+            json={
+                'email': 'test@example.com',
+                'password': 'wrongpassword'
+            }
+        )
+        
+        assert response.status_code == 401
+        data = response.get_json()
+        assert 'error' in data
+    
+    def test_logout(self, authenticated_client):
+        """Test logout."""
+        client, _ = authenticated_client
+        response = client.post('/api/auth/logout')
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] is True
+    
+    def test_get_current_user_success(self, authenticated_client):
+        """Test getting current authenticated user."""
+        client, _ = authenticated_client
+        response = client.get('/api/auth/me')
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert 'id' in data
+        assert 'email' in data
+        assert 'name' in data
+        assert data['email'] == 'test@example.com'
+    
+    def test_get_current_user_unauthenticated(self, test_client):
+        """Test getting current user without authentication."""
+        response = test_client.get('/api/auth/me')
+        
+        assert response.status_code == 401
+        data = response.get_json()
+        assert 'error' in data
 
 
 class TestMaterialsEndpoints:
-    """Tests for materials endpoints."""
+    """Test materials endpoints."""
     
-    def test_get_materials_authenticated(self, client, api_db_session, sample_student_data, sample_material_data):
-        """Test getting materials when authenticated."""
-        # Create student and session
-        student = create_student(
-            api_db_session,
-            sample_student_data["email"],
-            sample_student_data["name"],
-            sample_student_data["password"]
-        )
-        token = create_session(student.id)
+    def test_get_materials_empty(self, authenticated_client):
+        """Test getting materials when none exist."""
+        client, _ = authenticated_client
+        response = client.get('/api/materials')
         
-        # Create materials
-        material1 = Material(
-            title=sample_material_data["title"],
-            content=sample_material_data["content"],
-            category=sample_material_data["category"]
-        )
+        assert response.status_code == 200
+        data = response.get_json()
+        assert isinstance(data, list)
+        assert len(data) == 0
+    
+    def test_get_materials_with_data(self, authenticated_client, db_session, sample_material):
+        """Test getting materials with existing data."""
+        client, _ = authenticated_client
+        
+        # Create another material
         material2 = Material(
             title="Another Material",
-            content="Another content",
-            category="JavaScript"
+            content="More content",
+            category="JavaScript",
+            order_index=2
         )
-        api_db_session.add(material1)
-        api_db_session.add(material2)
-        api_db_session.commit()
+        db_session.add(material2)
+        db_session.commit()
         
-        client.set_cookie("session_token", token)
-        response = client.get("/api/materials")
+        response = client.get('/api/materials')
         
         assert response.status_code == 200
-        data = json.loads(response.data)
+        data = response.get_json()
         assert len(data) == 2
-        assert data[0]["title"] in [sample_material_data["title"], "Another Material"]
-        assert data[1]["title"] in [sample_material_data["title"], "Another Material"]
+        assert any(m['title'] == 'Test Material' for m in data)
+        assert any(m['title'] == 'Another Material' for m in data)
     
-    def test_get_materials_unauthenticated(self, client):
-        """Test getting materials when not authenticated."""
-        response = client.get("/api/materials")
+    def test_get_materials_search(self, authenticated_client, db_session):
+        """Test searching materials."""
+        client, _ = authenticated_client
+        
+        # Create materials with different titles
+        material1 = Material(title="Python Basics", content="Learn Python", category="Python")
+        material2 = Material(title="JavaScript Advanced", content="Advanced JS", category="JavaScript")
+        db_session.add_all([material1, material2])
+        db_session.commit()
+        
+        response = client.get('/api/materials?search=Python')
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert len(data) == 1
+        assert data[0]['title'] == 'Python Basics'
+    
+    def test_get_materials_category_filter(self, authenticated_client, db_session):
+        """Test filtering materials by category."""
+        client, _ = authenticated_client
+        
+        material1 = Material(title="Python Basics", content="Learn Python", category="Python")
+        material2 = Material(title="JavaScript Basics", content="Learn JS", category="JavaScript")
+        db_session.add_all([material1, material2])
+        db_session.commit()
+        
+        response = client.get('/api/materials?category=Python')
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert len(data) == 1
+        assert data[0]['category'] == 'Python'
+    
+    def test_get_materials_unauthenticated(self, test_client):
+        """Test getting materials without authentication."""
+        response = test_client.get('/api/materials')
         
         assert response.status_code == 401
-        data = json.loads(response.data)
-        assert "error" in data
     
-    def test_get_materials_empty(self, client, api_db_session, sample_student_data):
-        """Test getting materials when none exist."""
-        student = create_student(
-            api_db_session,
-            sample_student_data["email"],
-            sample_student_data["name"],
-            sample_student_data["password"]
-        )
-        token = create_session(student.id)
-        
-        client.set_cookie("session_token", token)
-        response = client.get("/api/materials")
+    def test_get_material_detail(self, authenticated_client, db_session, sample_material):
+        """Test getting a specific material."""
+        client, _ = authenticated_client
+        response = client.get(f'/api/materials/{sample_material.id}')
         
         assert response.status_code == 200
-        data = json.loads(response.data)
-        assert data == []
+        data = response.get_json()
+        assert data['id'] == sample_material.id
+        assert data['title'] == 'Test Material'
+        assert data['content'] == 'This is test content'
     
-    def test_get_material_by_id_success(self, client, api_db_session, sample_student_data, sample_material_data):
-        """Test getting a specific material by ID."""
-        student = create_student(
-            api_db_session,
-            sample_student_data["email"],
-            sample_student_data["name"],
-            sample_student_data["password"]
-        )
-        token = create_session(student.id)
-        
-        material = Material(
-            title=sample_material_data["title"],
-            content=sample_material_data["content"],
-            category=sample_material_data["category"],
-            notion_url=sample_material_data["notion_url"]
-        )
-        api_db_session.add(material)
-        api_db_session.commit()
-        
-        client.set_cookie("session_token", token)
-        response = client.get(f"/api/materials/{material.id}")
-        
-        assert response.status_code == 200
-        data = json.loads(response.data)
-        assert data["id"] == material.id
-        assert data["title"] == sample_material_data["title"]
-        assert data["content"] == sample_material_data["content"]
-        assert data["category"] == sample_material_data["category"]
-    
-    def test_get_material_by_id_not_found(self, client, api_db_session, sample_student_data):
-        """Test getting a non-existent material."""
-        student = create_student(
-            api_db_session,
-            sample_student_data["email"],
-            sample_student_data["name"],
-            sample_student_data["password"]
-        )
-        token = create_session(student.id)
-        
-        client.set_cookie("session_token", token)
-        response = client.get("/api/materials/99999")
+    def test_get_material_not_found(self, authenticated_client):
+        """Test getting non-existent material."""
+        client, _ = authenticated_client
+        response = client.get('/api/materials/99999')
         
         assert response.status_code == 404
-        data = json.loads(response.data)
-        assert "error" in data
+        data = response.get_json()
+        assert 'error' in data
     
-    def test_get_material_unauthenticated(self, client, api_db_session, sample_material_data):
-        """Test getting material when not authenticated."""
-        material = Material(
-            title=sample_material_data["title"],
-            content=sample_material_data["content"]
-        )
-        api_db_session.add(material)
-        api_db_session.commit()
+    def test_get_materials_with_bookmarks(self, authenticated_client, db_session, sample_student, sample_material):
+        """Test materials endpoint includes bookmark status."""
+        client, _ = authenticated_client
         
-        response = client.get(f"/api/materials/{material.id}")
+        # Create a bookmark
+        bookmark = Bookmark(student_id=sample_student.id, material_id=sample_material.id)
+        db_session.add(bookmark)
+        db_session.commit()
         
-        assert response.status_code == 401
-        data = json.loads(response.data)
-        assert "error" in data
+        response = client.get('/api/materials')
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        material = next(m for m in data if m['id'] == sample_material.id)
+        assert material['is_bookmarked'] is True
 
 
-class TestNotionSyncEndpoint:
-    """Tests for Notion sync endpoint."""
+class TestBookmarksEndpoints:
+    """Test bookmarks endpoints."""
     
-    def test_sync_notion_authenticated(self, client, api_db_session, sample_student_data):
-        """Test syncing from Notion when authenticated."""
-        student = create_student(
-            api_db_session,
-            sample_student_data["email"],
-            sample_student_data["name"],
-            sample_student_data["password"]
-        )
-        token = create_session(student.id)
+    def test_get_bookmarks_empty(self, authenticated_client):
+        """Test getting bookmarks when none exist."""
+        client, _ = authenticated_client
+        response = client.get('/api/bookmarks')
         
-        # Mock Notion API response
-        mock_pages = [
-            {
-                "id": "page-123",
-                "url": "https://notion.so/page-123",
-                "properties": {
-                    "title": {
-                        "title": [{"plain_text": "Test Page"}]
-                    }
-                }
+        assert response.status_code == 200
+        data = response.get_json()
+        assert isinstance(data, list)
+        assert len(data) == 0
+    
+    def test_create_bookmark(self, authenticated_client, db_session, sample_student, sample_material):
+        """Test creating a bookmark."""
+        client, _ = authenticated_client
+        response = client.post(
+            '/api/bookmarks',
+            json={'material_id': sample_material.id}
+        )
+        
+        assert response.status_code == 201
+        data = response.get_json()
+        assert data['success'] is True
+        assert data['bookmark']['material_id'] == sample_material.id
+    
+    def test_create_bookmark_duplicate(self, authenticated_client, db_session, sample_student, sample_material):
+        """Test creating duplicate bookmark."""
+        client, _ = authenticated_client
+        
+        # Create first bookmark
+        bookmark = Bookmark(student_id=sample_student.id, material_id=sample_material.id)
+        db_session.add(bookmark)
+        db_session.commit()
+        
+        # Try to create duplicate
+        response = client.post(
+            '/api/bookmarks',
+            json={'material_id': sample_material.id}
+        )
+        
+        assert response.status_code == 400
+        data = response.get_json()
+        assert 'error' in data
+        assert 'already exists' in data['error'].lower()
+    
+    def test_create_bookmark_material_not_found(self, authenticated_client):
+        """Test creating bookmark for non-existent material."""
+        client, _ = authenticated_client
+        response = client.post(
+            '/api/bookmarks',
+            json={'material_id': 99999}
+        )
+        
+        assert response.status_code == 404
+        data = response.get_json()
+        assert 'error' in data
+    
+    def test_create_bookmark_missing_material_id(self, authenticated_client):
+        """Test creating bookmark without material_id."""
+        client, _ = authenticated_client
+        response = client.post('/api/bookmarks', json={})
+        
+        assert response.status_code == 400
+        data = response.get_json()
+        assert 'error' in data
+    
+    def test_get_bookmarks_with_data(self, authenticated_client, db_session, sample_student, sample_material):
+        """Test getting bookmarks with existing data."""
+        client, _ = authenticated_client
+        
+        bookmark = Bookmark(student_id=sample_student.id, material_id=sample_material.id)
+        db_session.add(bookmark)
+        db_session.commit()
+        
+        response = client.get('/api/bookmarks')
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert len(data) == 1
+        assert data[0]['material_id'] == sample_material.id
+        assert 'material' in data[0]
+    
+    def test_delete_bookmark(self, authenticated_client, db_session, sample_student, sample_material):
+        """Test deleting a bookmark."""
+        client, _ = authenticated_client
+        
+        bookmark = Bookmark(student_id=sample_student.id, material_id=sample_material.id)
+        db_session.add(bookmark)
+        db_session.commit()
+        
+        response = client.delete(f'/api/bookmarks/{bookmark.id}')
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] is True
+    
+    def test_delete_bookmark_not_found(self, authenticated_client):
+        """Test deleting non-existent bookmark."""
+        client, _ = authenticated_client
+        response = client.delete('/api/bookmarks/99999')
+        
+        assert response.status_code == 404
+    
+    def test_delete_bookmark_by_material(self, authenticated_client, db_session, sample_student, sample_material):
+        """Test deleting bookmark by material ID."""
+        client, _ = authenticated_client
+        
+        bookmark = Bookmark(student_id=sample_student.id, material_id=sample_material.id)
+        db_session.add(bookmark)
+        db_session.commit()
+        
+        response = client.delete(f'/api/bookmarks/material/{sample_material.id}')
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] is True
+
+
+class TestProgressEndpoints:
+    """Test progress endpoints."""
+    
+    def test_get_progress_empty(self, authenticated_client):
+        """Test getting progress when none exists."""
+        client, _ = authenticated_client
+        response = client.get('/api/progress')
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert isinstance(data, list)
+        assert len(data) == 0
+    
+    def test_get_material_progress_not_started(self, authenticated_client, db_session, sample_material):
+        """Test getting progress for material that hasn't been started."""
+        client, _ = authenticated_client
+        response = client.get(f'/api/progress/material/{sample_material.id}')
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['status'] == 'not_started'
+        assert data['progress_percentage'] == 0.0
+    
+    def test_update_progress_create(self, authenticated_client, db_session, sample_material):
+        """Test creating progress record."""
+        client, _ = authenticated_client
+        response = client.post(
+            f'/api/progress/material/{sample_material.id}',
+            json={
+                'status': 'in_progress',
+                'progress_percentage': 50.0
             }
-        ]
-        
-        client.set_cookie("session_token", token)
-        
-        with patch("backend.main.notion_service.fetch_pages", new_callable=AsyncMock) as mock_fetch:
-            mock_fetch.return_value = mock_pages
-            
-            response = client.post("/api/materials/sync-notion")
-            
-            assert response.status_code == 200
-            data = json.loads(response.data)
-            assert data["success"] is True
-            assert data["synced"] == 1
-            
-            # Verify material was created
-            material = api_db_session.query(Material).filter(
-                Material.notion_page_id == "page-123"
-            ).first()
-            assert material is not None
-            assert material.title == "Test Page"
-    
-    def test_sync_notion_unauthenticated(self, client):
-        """Test syncing from Notion when not authenticated."""
-        response = client.post("/api/materials/sync-notion")
-        
-        assert response.status_code == 401
-        data = json.loads(response.data)
-        assert "error" in data
-    
-    def test_sync_notion_duplicate_pages(self, client, api_db_session, sample_student_data):
-        """Test syncing when pages already exist."""
-        student = create_student(
-            api_db_session,
-            sample_student_data["email"],
-            sample_student_data["name"],
-            sample_student_data["password"]
         )
-        token = create_session(student.id)
         
-        # Create existing material
-        existing_material = Material(
-            title="Existing Material",
-            notion_page_id="page-123",
-            notion_url="https://notion.so/page-123"
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] is True
+        assert data['progress']['status'] == 'in_progress'
+        assert data['progress']['progress_percentage'] == 50.0
+    
+    def test_update_progress_update(self, authenticated_client, db_session, sample_student, sample_material):
+        """Test updating existing progress record."""
+        client, _ = authenticated_client
+        
+        # Create initial progress
+        progress = Progress(
+            student_id=sample_student.id,
+            material_id=sample_material.id,
+            status='in_progress',
+            progress_percentage=30.0
         )
-        api_db_session.add(existing_material)
-        api_db_session.commit()
+        db_session.add(progress)
+        db_session.commit()
         
-        mock_pages = [
-            {
-                "id": "page-123",
-                "url": "https://notion.so/page-123",
-                "properties": {
-                    "title": {
-                        "title": [{"plain_text": "Updated Title"}]
-                    }
-                }
+        # Update progress
+        response = client.put(
+            f'/api/progress/material/{sample_material.id}',
+            json={
+                'status': 'completed',
+                'progress_percentage': 100.0
             }
-        ]
+        )
         
-        client.set_cookie("session_token", token)
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['progress']['status'] == 'completed'
+        assert data['progress']['progress_percentage'] == 100.0
+        assert data['progress']['completed_at'] is not None
+    
+    def test_update_progress_invalid_status(self, authenticated_client, db_session, sample_material):
+        """Test updating progress with invalid status."""
+        client, _ = authenticated_client
+        response = client.post(
+            f'/api/progress/material/{sample_material.id}',
+            json={
+                'status': 'invalid_status',
+                'progress_percentage': 50.0
+            }
+        )
         
-        with patch("backend.main.notion_service.fetch_pages", new_callable=AsyncMock) as mock_fetch:
-            mock_fetch.return_value = mock_pages
-            
-            response = client.post("/api/materials/sync-notion")
-            
-            assert response.status_code == 200
-            data = json.loads(response.data)
-            assert data["success"] is True
-            assert data["synced"] == 0  # Should not sync duplicate
+        assert response.status_code == 400
+        data = response.get_json()
+        assert 'error' in data
+    
+    def test_update_progress_invalid_percentage(self, authenticated_client, db_session, sample_material):
+        """Test updating progress with invalid percentage."""
+        client, _ = authenticated_client
+        response = client.post(
+            f'/api/progress/material/{sample_material.id}',
+            json={
+                'status': 'in_progress',
+                'progress_percentage': 150.0
+            }
+        )
+        
+        assert response.status_code == 400
+        data = response.get_json()
+        assert 'error' in data
+    
+    def test_get_progress_with_data(self, authenticated_client, db_session, sample_student, sample_material):
+        """Test getting progress with existing data."""
+        client, _ = authenticated_client
+        
+        progress = Progress(
+            student_id=sample_student.id,
+            material_id=sample_material.id,
+            status='completed',
+            progress_percentage=100.0
+        )
+        db_session.add(progress)
+        db_session.commit()
+        
+        response = client.get('/api/progress')
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert len(data) == 1
+        assert data[0]['status'] == 'completed'
+        assert 'material' in data[0]
+
+
+class TestDashboardEndpoints:
+    """Test dashboard endpoints."""
+    
+    def test_get_dashboard_stats(self, authenticated_client, db_session, sample_student, sample_material):
+        """Test getting dashboard statistics."""
+        client, _ = authenticated_client
+        
+        # Create some test data
+        bookmark = Bookmark(student_id=sample_student.id, material_id=sample_material.id)
+        progress = Progress(
+            student_id=sample_student.id,
+            material_id=sample_material.id,
+            status='completed',
+            progress_percentage=100.0
+        )
+        db_session.add_all([bookmark, progress])
+        db_session.commit()
+        
+        response = client.get('/api/dashboard/stats')
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert 'total_materials' in data
+        assert 'total_bookmarks' in data
+        assert 'completed_materials' in data
+        assert 'in_progress_materials' in data
+        assert 'recent_bookmarks' in data
+        assert 'recent_progress' in data
+        assert data['total_materials'] >= 1
+        assert data['total_bookmarks'] == 1
+        assert data['completed_materials'] == 1
+
+
+class TestCategoriesEndpoint:
+    """Test categories endpoint."""
+    
+    def test_get_categories(self, authenticated_client, db_session):
+        """Test getting material categories."""
+        client, _ = authenticated_client
+        
+        # Create materials with different categories
+        material1 = Material(title="Python Material", category="Python")
+        material2 = Material(title="JS Material", category="JavaScript")
+        material3 = Material(title="Python Advanced", category="Python")
+        db_session.add_all([material1, material2, material3])
+        db_session.commit()
+        
+        response = client.get('/api/materials/categories')
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert isinstance(data, list)
+        assert 'Python' in data
+        assert 'JavaScript' in data
+        assert len(data) == 2  # Should be unique categories

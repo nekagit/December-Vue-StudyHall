@@ -1,99 +1,230 @@
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
-from backend.services.notion_sync import NotionSyncService
 import os
+from unittest.mock import Mock, patch, AsyncMock
+from backend.services.notion_sync import NotionSyncService, notion_service
 
 
 class TestNotionSyncService:
-    """Tests for Notion sync service."""
+    """Test NotionSyncService."""
     
-    @pytest.fixture
-    def notion_service(self):
-        """Create a NotionSyncService instance."""
-        return NotionSyncService()
-    
-    def test_notion_service_initialization(self, notion_service):
-        """Test that NotionSyncService initializes correctly."""
-        assert notion_service.client is not None
-        assert notion_service.headers is not None
-        assert "Authorization" in notion_service.headers
-        assert "Content-Type" in notion_service.headers
-        assert "Notion-Version" in notion_service.headers
-    
-    @pytest.mark.asyncio
-    async def test_fetch_pages_no_api_key(self, notion_service):
-        """Test fetch_pages when API key is missing."""
-        with patch.dict(os.environ, {"NOTION_API_KEY": ""}):
-            pages = await notion_service.fetch_pages()
-            assert pages == []
+    def test_init(self):
+        """Test service initialization."""
+        service = NotionSyncService()
+        
+        assert service.client is not None
+        assert 'Authorization' in service.headers
+        assert 'Content-Type' in service.headers
+        assert 'Notion-Version' in service.headers
     
     @pytest.mark.asyncio
     async def test_fetch_pages_success(self):
-        """Test successful fetch_pages."""
-        # Create a new service instance after patching
+        """Test successful page fetching."""
         mock_response = Mock()
         mock_response.json.return_value = {
             "results": [
-                {"id": "page1", "url": "https://notion.so/page1"},
-                {"id": "page2", "url": "https://notion.so/page2"}
+                {
+                    "id": "page_1",
+                    "url": "https://notion.so/page1",
+                    "properties": {
+                        "title": {
+                            "title": [{"plain_text": "Page 1"}]
+                        }
+                    }
+                },
+                {
+                    "id": "page_2",
+                    "url": "https://notion.so/page2",
+                    "properties": {
+                        "Name": {
+                            "title": [{"plain_text": "Page 2"}]
+                        }
+                    }
+                }
             ]
         }
         mock_response.raise_for_status = Mock()
         
-        # Patch the module-level constants
-        with patch('backend.services.notion_sync.NOTION_API_KEY', "test-key"):
-            with patch('backend.services.notion_sync.DATABASE_ID', "test-db-id"):
-                # Create a new service instance with patched values
-                service = NotionSyncService()
-                with patch.object(service.client, 'post', new_callable=AsyncMock) as mock_post:
-                    mock_post.return_value = mock_response
-                    
-                    pages = await service.fetch_pages()
-                    
-                    assert len(pages) == 2
-                    assert pages[0]["id"] == "page1"
-                    assert pages[1]["id"] == "page2"
-                    mock_post.assert_called_once()
+        service = NotionSyncService()
+        
+        with patch.dict(os.environ, {'NOTION_API_KEY': 'test_key', 'NOTION_DATABASE_ID': 'test_db'}):
+            with patch.object(service.client, 'post', new_callable=AsyncMock) as mock_post:
+                mock_post.return_value = mock_response
+                
+                pages = await service.fetch_pages()
+                
+                assert len(pages) == 2
+                assert pages[0]['id'] == 'page_1'
+                assert pages[1]['id'] == 'page_2'
+                mock_post.assert_called_once()
     
     @pytest.mark.asyncio
-    async def test_fetch_pages_error(self, notion_service):
-        """Test fetch_pages when API call fails."""
-        with patch.dict(os.environ, {"NOTION_API_KEY": "test-key", "NOTION_DATABASE_ID": "test-db-id"}):
-            with patch.object(notion_service.client, 'post', new_callable=AsyncMock) as mock_post:
-                mock_post.side_effect = Exception("API Error")
-                
-                pages = await notion_service.fetch_pages()
-                
-                assert pages == []
+    async def test_fetch_pages_no_api_key(self):
+        """Test fetching pages without API key."""
+        with patch.dict(os.environ, {'NOTION_API_KEY': '', 'NOTION_DATABASE_ID': 'test_db'}, clear=False):
+            service = NotionSyncService()
+            pages = await service.fetch_pages()
+            
+            assert pages == []
     
     @pytest.mark.asyncio
-    async def test_fetch_pages_empty_results(self, notion_service):
-        """Test fetch_pages when API returns empty results."""
+    async def test_fetch_pages_empty_results(self):
+        """Test fetching pages with empty results."""
         mock_response = Mock()
         mock_response.json.return_value = {"results": []}
         mock_response.raise_for_status = Mock()
         
-        with patch.dict(os.environ, {"NOTION_API_KEY": "test-key", "NOTION_DATABASE_ID": "test-db-id"}):
-            with patch.object(notion_service.client, 'post', new_callable=AsyncMock) as mock_post:
+        service = NotionSyncService()
+        
+        with patch.dict(os.environ, {'NOTION_API_KEY': 'test_key', 'NOTION_DATABASE_ID': 'test_db'}):
+            with patch.object(service.client, 'post', new_callable=AsyncMock) as mock_post:
                 mock_post.return_value = mock_response
                 
-                pages = await notion_service.fetch_pages()
+                pages = await service.fetch_pages()
                 
                 assert pages == []
     
     @pytest.mark.asyncio
-    async def test_sync_materials(self, notion_service):
-        """Test sync_materials method."""
+    async def test_fetch_pages_error(self):
+        """Test error handling when fetching pages."""
+        service = NotionSyncService()
+        
+        with patch.dict(os.environ, {'NOTION_API_KEY': 'test_key', 'NOTION_DATABASE_ID': 'test_db'}):
+            with patch.object(service.client, 'post', new_callable=AsyncMock) as mock_post:
+                mock_post.side_effect = Exception("API Error")
+                
+                pages = await service.fetch_pages()
+                
+                assert pages == []
+    
+    @pytest.mark.asyncio
+    async def test_fetch_pages_http_error(self):
+        """Test HTTP error handling."""
+        mock_response = Mock()
+        mock_response.raise_for_status.side_effect = Exception("HTTP 401")
+        
+        service = NotionSyncService()
+        
+        with patch.dict(os.environ, {'NOTION_API_KEY': 'test_key', 'NOTION_DATABASE_ID': 'test_db'}):
+            with patch.object(service.client, 'post', new_callable=AsyncMock) as mock_post:
+                mock_post.return_value = mock_response
+                
+                pages = await service.fetch_pages()
+                
+                assert pages == []
+    
+    @pytest.mark.asyncio
+    async def test_sync_materials(self):
+        """Test syncing materials."""
         mock_pages = [
-            {"id": "page1", "url": "https://notion.so/page1"},
-            {"id": "page2", "url": "https://notion.so/page2"}
+            {"id": "page_1"},
+            {"id": "page_2"},
+            {"id": "page_3"}
         ]
         
-        with patch.object(notion_service, 'fetch_pages', new_callable=AsyncMock) as mock_fetch:
+        service = NotionSyncService()
+        
+        with patch.object(service, 'fetch_pages', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = mock_pages
             
-            page_ids = await notion_service.sync_materials()
+            page_ids = await service.sync_materials()
             
-            assert len(page_ids) == 2
-            assert "page1" in page_ids
-            assert "page2" in page_ids
+            assert len(page_ids) == 3
+            assert 'page_1' in page_ids
+            assert 'page_2' in page_ids
+            assert 'page_3' in page_ids
+    
+    @pytest.mark.asyncio
+    async def test_sync_materials_empty(self):
+        """Test syncing with no materials."""
+        service = NotionSyncService()
+        
+        with patch.object(service, 'fetch_pages', new_callable=AsyncMock) as mock_fetch:
+            mock_fetch.return_value = []
+            
+            page_ids = await service.sync_materials()
+            
+            assert page_ids == []
+
+
+class TestNotionServiceIntegration:
+    """Integration tests for notion service."""
+    
+    def test_notion_service_instance(self):
+        """Test that notion_service is an instance of NotionSyncService."""
+        assert isinstance(notion_service, NotionSyncService)
+    
+    @pytest.mark.asyncio
+    async def test_fetch_pages_with_different_property_names(self):
+        """Test fetching pages with different title property names."""
+        mock_response = Mock()
+        mock_response.json.return_value = {
+            "results": [
+                {
+                    "id": "page_1",
+                    "properties": {
+                        "Title": {
+                            "title": [{"plain_text": "Title Property"}]
+                        }
+                    }
+                },
+                {
+                    "id": "page_2",
+                    "properties": {
+                        "Name": {
+                            "title": [{"plain_text": "Name Property"}]
+                        }
+                    }
+                },
+                {
+                    "id": "page_3",
+                    "properties": {
+                        "title": {
+                            "title": [{"plain_text": "Lowercase Title"}]
+                        }
+                    }
+                }
+            ]
+        }
+        mock_response.raise_for_status = Mock()
+        
+        service = NotionSyncService()
+        
+        with patch.dict(os.environ, {'NOTION_API_KEY': 'test_key', 'NOTION_DATABASE_ID': 'test_db'}):
+            with patch.object(service.client, 'post', new_callable=AsyncMock) as mock_post:
+                mock_post.return_value = mock_response
+                
+                pages = await service.fetch_pages()
+                
+                assert len(pages) == 3
+                # All pages should be returned regardless of property name
+                assert all('id' in page for page in pages)
+    
+    @pytest.mark.asyncio
+    async def test_fetch_pages_missing_properties(self):
+        """Test fetching pages with missing properties."""
+        mock_response = Mock()
+        mock_response.json.return_value = {
+            "results": [
+                {
+                    "id": "page_1",
+                    "url": "https://notion.so/page1"
+                    # Missing properties
+                },
+                {
+                    "id": "page_2",
+                    "properties": {}
+                }
+            ]
+        }
+        mock_response.raise_for_status = Mock()
+        
+        service = NotionSyncService()
+        
+        with patch.dict(os.environ, {'NOTION_API_KEY': 'test_key', 'NOTION_DATABASE_ID': 'test_db'}):
+            with patch.object(service.client, 'post', new_callable=AsyncMock) as mock_post:
+                mock_post.return_value = mock_response
+                
+                pages = await service.fetch_pages()
+                
+                assert len(pages) == 2
+                # Pages should still be returned even without properties

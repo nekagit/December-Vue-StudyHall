@@ -1,128 +1,200 @@
 # Architecture Documentation
 
-This document provides an overview of the StudyHall Platform architecture, design decisions, and technical stack.
+Comprehensive architecture overview of the StudyHall Platform.
 
-## Overview
+## System Overview
 
-StudyHall is a modern Single Page Application (SPA) learning platform designed to manage course materials for up to 30 students. It features a clean separation between frontend and backend, with a RESTful API architecture.
+StudyHall is a modern Single Page Application (SPA) learning platform designed for managing course materials for up to 30 students. It features Python course content, a browser-based Python compiler, and Notion integration.
 
-## System Architecture
+## High-Level Architecture
 
 ```
 ┌─────────────────┐
-│   Vue.js SPA    │  Frontend (Port 5173)
-│   TypeScript    │
-│   TailwindCSS   │
+│   Web Browser   │
+│   (Vue.js SPA)  │
 └────────┬────────┘
-         │ HTTP/REST
-         │ (with CORS)
+         │ HTTP/HTTPS
+         │ (REST API)
          ▼
 ┌─────────────────┐
-│   Flask API     │  Backend (Port 5000)
-│   Python        │
+│  Flask Backend  │
+│   (Python API)  │
 └────────┬────────┘
          │
-         ▼
-┌─────────────────┐
-│   SQLite DB     │  Database (MVP)
-│   SQLAlchemy    │
-└─────────────────┘
+    ┌────┴────┐
+    │         │
+    ▼         ▼
+┌────────┐ ┌──────────┐
+│ SQLite │ │  Notion  │
+│   DB   │ │    API   │
+└────────┘ └──────────┘
 ```
 
 ## Technology Stack
 
-### Frontend
+### Backend
+- **Framework**: Flask (minimal REST API)
+- **ORM**: SQLAlchemy
+- **Database**: SQLite (MVP, upgradeable to PostgreSQL)
+- **Authentication**: Session-based with HTTP-only cookies
+- **CORS**: Enabled for frontend development
 
+### Frontend
 - **Framework**: Vue.js 3 (Composition API)
 - **Language**: TypeScript
-- **Styling**: TailwindCSS 4.x
-- **Routing**: Vue Router 4
-- **Build Tool**: Vite 7
-- **Python Execution**: Pyodide (browser-based Python compiler)
-
-### Backend
-
-- **Framework**: Flask (minimal REST API)
-- **Language**: Python 3.9+
-- **ORM**: SQLAlchemy
-- **Database**: SQLite (MVP)
-- **HTTP Client**: httpx (for Notion API)
-- **Testing**: pytest
-
-### Development Tools
-
-- **Package Manager**: npm (frontend), pip (backend)
-- **Management Script**: `manage.py` (Python script for dev/build/serve)
-- **Version Control**: Git
+- **Styling**: TailwindCSS
+- **Build Tool**: Vite
+- **Routing**: Vue Router
+- **Python Execution**: Pyodide (browser-based)
 
 ## Project Structure
 
 ```
 December-Vue-StudyHall/
-├── backend/                 # Flask API backend
-│   ├── main.py             # Flask app and routes
-│   ├── database.py         # SQLAlchemy setup
-│   ├── init_db.py          # Database initialization
-│   ├── models/             # Database models
-│   │   ├── student.py      # Student model
-│   │   ├── material.py     # Material model
-│   │   └── bookmark.py     # Bookmark model (future)
-│   └── services/           # Business logic
-│       ├── auth.py         # Authentication logic
-│       ├── session.py      # Session management
-│       └── notion_sync.py  # Notion integration
-├── frontend/               # Vue.js SPA
+├── backend/
+│   ├── main.py              # Flask application entry point
+│   ├── database.py          # SQLAlchemy database configuration
+│   ├── init_db.py           # Database initialization script
+│   ├── requirements.txt     # Python dependencies
+│   ├── models/              # Database models
+│   │   ├── __init__.py
+│   │   ├── student.py       # Student model
+│   │   ├── material.py      # Material model
+│   │   ├── bookmark.py      # Bookmark model
+│   │   └── progress.py      # Progress tracking model
+│   └── services/            # Business logic layer
+│       ├── auth.py          # Authentication service
+│       ├── session.py       # Session management
+│       └── notion_sync.py   # Notion integration service
+│
+├── frontend/
 │   ├── src/
-│   │   ├── views/          # Page components
+│   │   ├── main.ts          # Application entry point
+│   │   ├── App.vue          # Root component
+│   │   ├── style.scss       # TailwindCSS imports
+│   │   ├── views/           # Page-level components
 │   │   │   ├── Home.vue
 │   │   │   ├── Login.vue
 │   │   │   ├── Register.vue
 │   │   │   ├── Materials.vue
 │   │   │   ├── MaterialDetail.vue
 │   │   │   └── Compiler.vue
-│   │   ├── components/     # Reusable components
-│   │   │   └── PythonRunner.vue
-│   │   ├── App.vue         # Root component
-│   │   ├── main.ts         # Entry point + router
-│   │   └── style.scss      # TailwindCSS imports
-│   ├── vite.config.ts      # Vite configuration
-│   └── tailwind.config.js  # TailwindCSS config
-├── tests/                  # Test suite
-│   ├── conftest.py         # pytest configuration
-│   └── test_*.py           # Test files
-├── manage.py               # Management script
-└── README.md               # Project documentation
+│   │   ├── components/      # Reusable components
+│   │   │   ├── PythonRunner.vue
+│   │   │   └── HelloWorld.vue
+│   │   └── utils/           # Utility functions
+│   │       └── mount.ts
+│   ├── vite.config.ts       # Vite configuration
+│   ├── package.json         # Node.js dependencies
+│   └── index.html           # HTML entry point
+│
+├── manage.py                # Management script
+└── README.md                # Project documentation
 ```
 
-## Design Principles
+## Backend Architecture
 
-### 1. Separation of Concerns
+### Flask Application (`backend/main.py`)
 
-- **Backend**: Pure REST API, no HTML rendering
-- **Frontend**: Complete SPA, handles all UI/UX
-- **API**: JSON-only communication
+The Flask application follows a minimal REST API pattern:
 
-### 2. Minimal Backend
+- **No templates**: Backend only serves JSON responses
+- **Session management**: Uses Flask sessions and HTTP-only cookies
+- **Database sessions**: Uses SQLAlchemy session management
+- **CORS**: Configured for frontend development
 
-The Flask backend is intentionally minimal:
-- No templates or HTML rendering
-- No frontend asset serving (handled by Vite)
-- Focus on API endpoints only
-- Business logic in service layer
+### Database Layer (`backend/database.py`)
 
-### 3. Modern Frontend
+- Uses SQLAlchemy ORM
+- SQLite database for MVP
+- Session management via `SessionLocal`
+- Base class for all models
 
-- Vue 3 Composition API (`<script setup>`)
-- TypeScript for type safety
-- TailwindCSS for utility-first styling
+### Models (`backend/models/`)
+
+#### Student Model
+- Stores student information
+- Email uniqueness constraint
+- Password hashing (SHA-256 for MVP, should use bcrypt in production)
+- Active status flag
+
+#### Material Model
+- Course content storage
+- Notion integration fields (`notion_page_id`, `notion_url`)
+- Category and ordering support
+- Timestamps for creation and updates
+
+#### Bookmark Model
+- Many-to-one relationship with Student
+- Many-to-one relationship with Material
+- Tracks when materials are bookmarked
+
+#### Progress Model
+- Tracks student progress through materials
+- Status: `not_started`, `in_progress`, `completed`
+- Progress percentage (0-100)
+- Timestamps for access and completion
+
+### Services Layer (`backend/services/`)
+
+#### Auth Service (`auth.py`)
+- Password hashing and verification
+- Student authentication
+- Student creation with validation (30 student limit)
+
+#### Session Service (`session.py`)
+- In-memory session storage (MVP)
+- Session token generation
+- Session validation and deletion
+- **Note**: Should be upgraded to Redis for production
+
+#### Notion Sync Service (`notion_sync.py`)
+- Async Notion API integration
+- Fetches pages from Notion database
+- Syncs content to local database
+
+## Frontend Architecture
+
+### Vue.js Application Structure
+
+#### Entry Point (`main.ts`)
+- Initializes Vue app
+- Configures Vue Router
+- Sets up authentication guards
+- Mounts root component
+
+#### Routing (`main.ts`)
 - Client-side routing with Vue Router
+- Protected routes with `requiresAuth` meta
+- Authentication guard checks for session token
 
-### 4. MVP-First Approach
+#### Components
 
-- SQLite for simplicity (easy to upgrade to PostgreSQL)
-- In-memory sessions (upgrade to Redis later)
-- Simple password hashing (upgrade to bcrypt)
-- Hardcoded student limit (30 students)
+**Views (Pages):**
+- `Home.vue`: Landing page
+- `Login.vue`: Authentication form
+- `Register.vue`: Registration form
+- `Materials.vue`: Material listing with search/filter
+- `MaterialDetail.vue`: Individual material view
+- `Compiler.vue`: Python code execution interface
+
+**Reusable Components:**
+- `PythonRunner.vue`: Pyodide-based Python execution component
+
+### Styling
+
+- **TailwindCSS**: Utility-first CSS framework
+- **Responsive Design**: Mobile-first approach
+- **Color Scheme**: Indigo primary colors
+
+### State Management
+
+Currently uses:
+- Component-level state (Composition API `ref`/`reactive`)
+- Cookie-based session storage
+- API calls for data fetching
+
+**Future Consideration**: May benefit from Pinia for global state management as the app grows.
 
 ## Data Flow
 
@@ -130,292 +202,170 @@ The Flask backend is intentionally minimal:
 
 ```
 1. User submits login form
-   ↓
-2. Frontend POST /api/auth/login
-   ↓
+2. Frontend sends POST /api/auth/login
 3. Backend validates credentials
-   ↓
 4. Backend creates session token
-   ↓
 5. Backend sets HTTP-only cookie
-   ↓
-6. Frontend stores user info in component state
-   ↓
-7. Router guard checks session for protected routes
+6. Frontend receives success response
+7. Frontend redirects to protected route
+8. Router guard validates cookie on route changes
 ```
 
 ### Material Fetching Flow
 
 ```
 1. User navigates to /materials
-   ↓
-2. Router guard validates session
-   ↓
-3. Frontend GET /api/materials
-   ↓
-4. Backend queries database
-   ↓
-5. Backend returns JSON array
-   ↓
-6. Frontend renders materials list
+2. Component mounts and calls GET /api/materials
+3. Backend queries database
+4. Backend includes bookmark status for current user
+5. Frontend receives and displays materials
+6. User can search/filter (client-side or server-side)
 ```
 
 ### Notion Sync Flow
 
 ```
 1. User clicks "Sync from Notion"
-   ↓
-2. Frontend POST /api/materials/sync-notion
-   ↓
+2. Frontend sends POST /api/materials/sync-notion
 3. Backend calls Notion API (async)
-   ↓
 4. Backend processes pages
-   ↓
-5. Backend creates Material records
-   ↓
-6. Backend returns sync count
-   ↓
-7. Frontend refreshes materials list
+5. Backend creates/updates materials in database
+6. Frontend receives sync count
+7. Frontend refreshes material list
 ```
-
-## Database Schema
-
-### Students Table
-
-```sql
-CREATE TABLE students (
-    id INTEGER PRIMARY KEY,
-    email VARCHAR UNIQUE NOT NULL,
-    name VARCHAR NOT NULL,
-    password_hash VARCHAR NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### Materials Table
-
-```sql
-CREATE TABLE materials (
-    id INTEGER PRIMARY KEY,
-    title VARCHAR NOT NULL,
-    content TEXT,
-    notion_page_id VARCHAR UNIQUE,
-    notion_url VARCHAR,
-    category VARCHAR,
-    order_index INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP
-);
-```
-
-## Authentication & Authorization
-
-### Session Management
-
-- **Storage**: In-memory dictionary (upgrade to Redis)
-- **Token Format**: Random UUID string
-- **Expiration**: 7 days (604800 seconds)
-- **Transport**: HTTP-only cookies (secure, not accessible via JavaScript)
-
-### Authorization
-
-- **Route Guards**: Vue Router `beforeEach` hook
-- **API Guards**: Session validation in Flask endpoints
-- **Student Limit**: Hardcoded 30-student maximum
 
 ## API Design
 
 ### RESTful Principles
 
-- **GET**: Retrieve resources
-- **POST**: Create resources or perform actions
-- **PUT/PATCH**: Update resources (future)
-- **DELETE**: Remove resources (future)
+- **Resources**: Materials, Bookmarks, Progress, Students
+- **HTTP Methods**: GET (read), POST (create), PUT (update), DELETE (delete)
+- **Status Codes**: 200 (success), 201 (created), 400 (bad request), 401 (unauthorized), 404 (not found), 500 (server error)
+- **JSON**: All requests and responses use JSON
 
-### Endpoint Naming
+### Endpoint Patterns
 
 - `/api/auth/*` - Authentication endpoints
-- `/api/materials/*` - Material management endpoints
-- Consistent use of plural nouns
-- Resource IDs in URL path
+- `/api/materials/*` - Material management
+- `/api/bookmarks/*` - Bookmark management
+- `/api/progress/*` - Progress tracking
+- `/api/dashboard/*` - Dashboard data
 
-### Response Format
+## Security Considerations
 
-All responses are JSON:
-- **Success**: `{ "success": true, ... }` or direct resource data
-- **Error**: `{ "error": "Error message" }`
-- **Status Codes**: Standard HTTP status codes (200, 400, 401, 404, 500)
+### Current Implementation (MVP)
 
-## Frontend Architecture
+- **Password Hashing**: SHA-256 (should upgrade to bcrypt)
+- **Session Management**: In-memory (should upgrade to Redis)
+- **CORS**: Configured for development origins
+- **HTTP-only Cookies**: Prevents XSS attacks
+- **SQL Injection**: Protected by SQLAlchemy ORM
 
-### Component Structure
+### Production Recommendations
 
-- **Views**: Page-level components (routes)
-- **Components**: Reusable UI components
-- **App.vue**: Root component with navigation
-- **main.ts**: Application entry point + router setup
+1. **Password Security**: Use bcrypt with salt rounds
+2. **Session Storage**: Redis or database-backed sessions
+3. **HTTPS**: Enforce HTTPS in production
+4. **Rate Limiting**: Add rate limiting to prevent abuse
+5. **Input Validation**: Add comprehensive input validation
+6. **SQL Injection**: Already protected by ORM, but validate all inputs
+7. **XSS Protection**: Vue.js automatically escapes content
+8. **CSRF Protection**: Consider adding CSRF tokens
 
-### State Management
+## Database Schema
 
-Currently using component-level state (`ref`, `reactive`). For future scaling, consider:
-- Pinia (Vue's official state management)
-- Vuex (legacy, but still supported)
+### Relationships
 
-### Styling Approach
+```
+Student (1) ──< (Many) Bookmark
+Student (1) ──< (Many) Progress
+Material (1) ──< (Many) Bookmark
+Material (1) ──< (Many) Progress
+```
 
-- **TailwindCSS**: Utility-first CSS framework
-- **No Custom CSS**: Except Tailwind imports
-- **Responsive Design**: Mobile-first approach
-- **Design System**: Indigo color scheme
+### Key Constraints
 
-## Backend Architecture
-
-### Service Layer Pattern
-
-Business logic is separated into service modules:
-- `auth.py`: Authentication and user management
-- `session.py`: Session token management
-- `notion_sync.py`: Notion API integration
-
-### Database Layer
-
-- **ORM**: SQLAlchemy for type-safe database operations
-- **Models**: Defined in `backend/models/`
-- **Migrations**: Manual schema updates (consider Alembic for production)
-
-### Error Handling
-
-- **Validation**: Service layer validates input
-- **Exceptions**: Caught and returned as JSON errors
-- **Database**: Transactions with rollback on errors
-
-## External Integrations
-
-### Notion API
-
-- **Purpose**: Sync course materials from Notion
-- **Authentication**: API key via environment variable
-- **Database**: Requires shared Notion database
-- **Async**: Uses `asyncio` for async API calls
-
-### Pyodide
-
-- **Purpose**: Browser-based Python execution
-- **Location**: Frontend component (`PythonRunner.vue`)
-- **Isolation**: Runs in Web Worker for security
+- Student email must be unique
+- Material notion_page_id must be unique
+- Bookmark (student_id, material_id) should be unique (enforced in application logic)
 
 ## Development Workflow
 
 ### Local Development
 
-1. **Backend**: Flask dev server (auto-reload)
-2. **Frontend**: Vite dev server (HMR)
-3. **Proxy**: Vite proxies `/api/*` to backend
-4. **Database**: SQLite file in project root
+1. Backend runs on `http://localhost:5000`
+2. Frontend dev server runs on `http://localhost:5173`
+3. Frontend proxies `/api/*` requests to backend
+4. Use `./manage.py dev` to run both servers
 
 ### Build Process
 
-1. **Frontend**: `npm run build` → `dist/` folder
-2. **Backend**: No build step (Python interpreted)
-3. **Production**: Serve static files + Flask API
-
-## Scalability Considerations
-
-### Current Limitations (MVP)
-
-- **Database**: SQLite (single file, no concurrent writes)
-- **Sessions**: In-memory (lost on restart)
-- **Password Security**: SHA-256 (not secure)
-- **Student Limit**: Hardcoded 30
-
-### Production Upgrades
-
-1. **Database**: PostgreSQL with connection pooling
-2. **Sessions**: Redis or database-backed sessions
-3. **Password**: bcrypt with salt rounds
-4. **Caching**: Redis for frequently accessed data
-5. **CDN**: Serve static assets via CDN
-6. **Load Balancer**: Multiple backend instances
-7. **Monitoring**: Application performance monitoring
-8. **Logging**: Structured logging (e.g., ELK stack)
-
-## Security Considerations
-
-### Current Security Measures
-
-- HTTP-only cookies (XSS protection)
-- CORS configuration
-- Session-based authentication
-- Password hashing (basic)
-
-### Security Improvements Needed
-
-1. **HTTPS**: Always use HTTPS in production
-2. **Password Hashing**: Upgrade to bcrypt
-3. **CSRF Protection**: Add CSRF tokens
-4. **Rate Limiting**: Prevent brute force attacks
-5. **Input Validation**: Sanitize all inputs
-6. **SQL Injection**: Use parameterized queries (already using SQLAlchemy)
-7. **XSS Protection**: Vue automatically escapes content
-8. **Secret Management**: Use environment variables, not hardcoded secrets
-
-## Testing Strategy
-
-### Backend Tests
-
-- **Framework**: pytest
-- **Location**: `tests/` directory
-- **Coverage**: Unit tests for services, integration tests for API
-
-### Frontend Tests
-
-- **Framework**: Not yet implemented (consider Vitest)
-- **Types**: Unit tests for components, E2E tests for flows
+1. Frontend TypeScript compilation (`vue-tsc`)
+2. Vite build process
+3. Static assets generation
+4. Backend serves static files in production
 
 ## Deployment Architecture
 
-### Development
+### MVP Deployment
 
-- Local development servers
-- SQLite database file
-- Environment variables in shell
+- **Backend**: Single Flask server
+- **Frontend**: Static files served by Flask
+- **Database**: SQLite file
+- **Session Storage**: In-memory
 
-### Production (Recommended)
+### Production Deployment Recommendations
 
-```
-┌─────────────┐
-│   Nginx     │  Reverse proxy + static files
-└──────┬──────┘
-       │
-       ├──► /api/* → Flask (Gunicorn)
-       │
-       └──► /* → Static files (Vite build)
-```
+- **Backend**: WSGI server (Gunicorn) behind reverse proxy (Nginx)
+- **Frontend**: CDN or Nginx static file serving
+- **Database**: PostgreSQL with connection pooling
+- **Session Storage**: Redis
+- **Load Balancing**: Multiple backend instances
+- **Monitoring**: Application performance monitoring
+- **Logging**: Centralized logging system
 
-- **Web Server**: Nginx
-- **Application Server**: Gunicorn (Flask)
-- **Database**: PostgreSQL
-- **Session Store**: Redis
-- **Static Assets**: Served by Nginx or CDN
+## Scalability Considerations
+
+### Current Limitations
+
+- 30 student hard limit
+- In-memory session storage
+- SQLite database (single writer)
+- Single-threaded Flask development server
+
+### Scaling Strategies
+
+1. **Remove Student Limit**: Make configurable or remove entirely
+2. **Database**: Migrate to PostgreSQL for concurrent access
+3. **Session Storage**: Use Redis cluster
+4. **Backend**: Use Gunicorn with multiple workers
+5. **Caching**: Add Redis caching layer
+6. **CDN**: Use CDN for static assets
+7. **Horizontal Scaling**: Multiple backend instances with load balancer
+
+## Integration Points
+
+### Notion API Integration
+
+- **Authentication**: API key via environment variable
+- **Database ID**: Notion database ID via environment variable
+- **Sync Process**: Manual trigger via API endpoint
+- **Future**: Could add scheduled syncs or webhooks
+
+### Pyodide Integration
+
+- **Browser-based**: Runs entirely in browser
+- **No Backend**: Python execution happens client-side
+- **Limitations**: No file system access, network restrictions
+- **Use Case**: Educational Python code execution
 
 ## Future Enhancements
 
-- [ ] User bookmarks
-- [ ] Progress tracking
-- [ ] Material categories/filtering
-- [ ] Search functionality
-- [ ] Admin dashboard
-- [ ] Email notifications
-- [ ] File uploads
-- [ ] Material versioning
-- [ ] Comments/discussions
-- [ ] Real-time updates (WebSockets)
-
-## References
-
-- [Vue.js Documentation](https://vuejs.org/)
-- [Flask Documentation](https://flask.palletsprojects.com/)
-- [SQLAlchemy Documentation](https://www.sqlalchemy.org/)
-- [TailwindCSS Documentation](https://tailwindcss.com/)
-- [Notion API Documentation](https://developers.notion.com/)
+1. **Real-time Updates**: WebSocket support for live updates
+2. **File Uploads**: Support for material file attachments
+3. **Rich Text Editor**: WYSIWYG editor for material content
+4. **Comments/Discussions**: Student discussion threads
+5. **Analytics**: Learning analytics and progress tracking
+6. **Mobile App**: Native mobile application
+7. **Offline Support**: Service workers for offline access
+8. **Multi-tenancy**: Support for multiple courses/organizations

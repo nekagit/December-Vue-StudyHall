@@ -1,261 +1,217 @@
 # Deployment Guide
 
-This guide covers deploying the StudyHall Platform to production environments.
+Complete guide for deploying the StudyHall Platform to production.
 
 ## Overview
 
-The StudyHall Platform consists of:
-- **Frontend**: Vue.js SPA (static files)
-- **Backend**: Flask REST API (Python application)
-- **Database**: SQLite (MVP) or PostgreSQL (recommended for production)
+This guide covers deploying both the backend Flask API and frontend Vue.js application. The MVP uses SQLite, but production deployments should use PostgreSQL.
 
-## Pre-Deployment Checklist
+## Prerequisites
 
-- [ ] Update `SECRET_KEY` environment variable
-- [ ] Change default student password
-- [ ] Configure production database (PostgreSQL recommended)
-- [ ] Set up HTTPS/SSL certificates
-- [ ] Configure CORS for production domain
-- [ ] Set up session storage (Redis recommended)
-- [ ] Configure logging
-- [ ] Set up monitoring/alerting
-- [ ] Review security settings
-- [ ] Test production build locally
-
-## Production Architecture
-
-### Recommended Setup
-
-```
-┌─────────────────┐
-│   Nginx         │  Reverse Proxy + Static Files
-│   (Port 80/443) │
-└────────┬────────┘
-         │
-         ├──► /api/* → Gunicorn (Flask API)
-         │
-         └──► /* → Static Files (Vite build)
-```
-
-### Components
-
-1. **Nginx**: Reverse proxy and static file server
-2. **Gunicorn**: WSGI HTTP Server for Flask
-3. **PostgreSQL**: Production database (or keep SQLite for small deployments)
-4. **Redis**: Session storage (optional but recommended)
-5. **SSL/TLS**: HTTPS certificates (Let's Encrypt)
+- Server with Python 3.9+ and Node.js 18+
+- Domain name (optional but recommended)
+- SSL certificate (Let's Encrypt recommended)
+- PostgreSQL database (for production)
+- Redis (optional, for session storage)
 
 ## Deployment Options
 
-### Option 1: Single Server (Simple)
+### Option 1: Traditional Server (VPS/Cloud)
 
-Good for small deployments (< 100 users).
+Recommended for most deployments.
 
-**Requirements:**
-- Linux server (Ubuntu 20.04+ recommended)
-- Python 3.9+
-- Node.js 18+
-- Nginx
-- PostgreSQL (optional, SQLite works for small scale)
+### Option 2: Platform as a Service (PaaS)
 
-### Option 2: Containerized (Docker)
-
-Good for scalability and consistency.
-
-**Requirements:**
-- Docker and Docker Compose
-- Or Kubernetes (for advanced setups)
-
-### Option 3: Platform as a Service (PaaS)
-
-Good for quick deployment without server management.
-
-**Options:**
 - Heroku
 - Railway
 - Render
 - Fly.io
-- DigitalOcean App Platform
 
-## Single Server Deployment
+### Option 3: Containerized (Docker)
 
-### 1. Server Setup
+See Docker section below.
 
-**Update system:**
+## Pre-Deployment Checklist
+
+- [ ] Update `SECRET_KEY` environment variable
+- [ ] Configure production database (PostgreSQL recommended)
+- [ ] Set up SSL/HTTPS
+- [ ] Configure CORS for production domain
+- [ ] Set up environment variables
+- [ ] Test production build locally
+- [ ] Set up monitoring and logging
+- [ ] Configure backup strategy
+
+## Environment Variables
+
+Create a `.env` file or set environment variables:
+
 ```bash
-sudo apt update
-sudo apt upgrade -y
+# Required
+SECRET_KEY=your-secret-key-here-min-32-chars
+
+# Database (if using PostgreSQL)
+DATABASE_URL=postgresql://user:password@localhost/studyhall
+
+# Notion Integration (optional)
+NOTION_API_KEY=your_notion_api_key
+NOTION_DATABASE_ID=your_notion_database_id
+
+# Flask
+FLASK_ENV=production
+FLASK_DEBUG=False
+
+# Server
+HOST=0.0.0.0
+PORT=5000
 ```
 
-**Install dependencies:**
+## Backend Deployment
+
+### 1. Install Dependencies
+
 ```bash
-# Python
-sudo apt install python3 python3-pip python3-venv -y
-
-# Node.js (using NodeSource)
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# PostgreSQL (optional)
-sudo apt install postgresql postgresql-contrib -y
-
-# Nginx
-sudo apt install nginx -y
-
-# Redis (optional, for sessions)
-sudo apt install redis-server -y
-```
-
-### 2. Application Setup
-
-**Clone repository:**
-```bash
-cd /var/www
-sudo git clone https://github.com/your-org/December-Vue-StudyHall.git studyhall
-sudo chown -R $USER:$USER studyhall
-cd studyhall
-```
-
-**Backend setup:**
-```bash
-cd backend
+# On server
+cd /path/to/December-Vue-StudyHall/backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-pip install gunicorn  # Add to requirements.txt for production
-cd ..
+pip install gunicorn  # Production WSGI server
 ```
 
-**Frontend build:**
-```bash
-cd frontend
-npm install
-npm run build
-cd ..
-```
+### 2. Database Setup
 
-**Initialize database:**
+#### SQLite (MVP - Not Recommended for Production)
+
 ```bash
-source backend/.venv/bin/activate
 python backend/init_db.py
 ```
 
-### 3. Environment Configuration
+#### PostgreSQL (Recommended)
 
-**Create `.env` file:**
+1. Install PostgreSQL:
 ```bash
-cd /var/www/studyhall
-nano .env
+# Ubuntu/Debian
+sudo apt-get install postgresql postgresql-contrib
+
+# macOS
+brew install postgresql
 ```
 
-**Contents:**
-```bash
-# Flask
-SECRET_KEY=your-super-secret-key-change-this-in-production
-FLASK_ENV=production
-
-# Database (PostgreSQL example)
-DATABASE_URL=postgresql://studyhall:password@localhost/studyhall
-
-# Or SQLite (simpler, less scalable)
-# DATABASE_URL=sqlite:///studyhall.db
-
-# Notion (optional)
-NOTION_API_KEY=secret_...
-NOTION_DATABASE_ID=...
-
-# CORS (your domain)
-ALLOWED_ORIGINS=https://yourdomain.com
-```
-
-**Update `backend/main.py` to use environment variables:**
-```python
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-app.secret_key = os.getenv("SECRET_KEY")
-CORS(app, supports_credentials=True, origins=os.getenv("ALLOWED_ORIGINS", "").split(","))
-```
-
-### 4. PostgreSQL Setup (Optional)
-
-**Create database:**
-```bash
-sudo -u postgres psql
-
+2. Create database:
+```sql
 CREATE DATABASE studyhall;
-CREATE USER studyhall WITH PASSWORD 'your-secure-password';
-GRANT ALL PRIVILEGES ON DATABASE studyhall TO studyhall;
-\q
+CREATE USER studyhall_user WITH PASSWORD 'secure_password';
+GRANT ALL PRIVILEGES ON DATABASE studyhall TO studyhall_user;
 ```
 
-**Update `backend/database.py` to use PostgreSQL:**
+3. Update `backend/database.py`:
 ```python
-import os
-from sqlalchemy import create_engine
-
-database_url = os.getenv("DATABASE_URL", "sqlite:///studyhall.db")
-engine = create_engine(database_url)
+# Change SQLite connection to PostgreSQL
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://studyhall_user:secure_password@localhost/studyhall")
+engine = create_engine(DATABASE_URL)
 ```
 
-### 5. Gunicorn Configuration
+4. Initialize database:
+```bash
+python backend/init_db.py
+```
 
-**Create `gunicorn_config.py`:**
+### 3. Run with Gunicorn
+
+Create `gunicorn_config.py`:
+
 ```python
 bind = "127.0.0.1:5000"
 workers = 4
 worker_class = "sync"
 timeout = 120
 keepalive = 5
+max_requests = 1000
+max_requests_jitter = 50
 ```
 
-**Test Gunicorn:**
+Run:
 ```bash
-cd /var/www/studyhall
-source backend/.venv/bin/activate
 gunicorn -c gunicorn_config.py backend.main:app
 ```
 
-### 6. Systemd Service
+### 4. Systemd Service (Linux)
 
-**Create `/etc/systemd/system/studyhall.service`:**
+Create `/etc/systemd/system/studyhall.service`:
+
 ```ini
 [Unit]
-Description=StudyHall Flask API
+Description=StudyHall Flask Application
 After=network.target
 
 [Service]
 User=www-data
 Group=www-data
-WorkingDirectory=/var/www/studyhall
-Environment="PATH=/var/www/studyhall/backend/.venv/bin"
-Environment="PYTHONPATH=/var/www/studyhall"
-ExecStart=/var/www/studyhall/backend/.venv/bin/gunicorn -c gunicorn_config.py backend.main:app
-
-Restart=always
-RestartSec=10
+WorkingDirectory=/path/to/December-Vue-StudyHall
+Environment="PATH=/path/to/December-Vue-StudyHall/backend/.venv/bin"
+Environment="PYTHONPATH=/path/to/December-Vue-StudyHall"
+ExecStart=/path/to/December-Vue-StudyHall/backend/.venv/bin/gunicorn -c gunicorn_config.py backend.main:app
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-**Enable and start:**
+Enable and start:
 ```bash
-sudo systemctl daemon-reload
 sudo systemctl enable studyhall
 sudo systemctl start studyhall
 sudo systemctl status studyhall
 ```
 
-### 7. Nginx Configuration
+## Frontend Deployment
 
-**Create `/etc/nginx/sites-available/studyhall`:**
+### 1. Build Production Bundle
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+This creates `frontend/dist/` with optimized static files.
+
+### 2. Serve Static Files
+
+#### Option A: Serve with Flask (Simple)
+
+Update `backend/main.py`:
+
+```python
+from flask import send_from_directory
+import os
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend(path):
+    if path != "" and os.path.exists(f"frontend/dist/{path}"):
+        return send_from_directory('frontend/dist', path)
+    else:
+        return send_from_directory('frontend/dist', 'index.html')
+```
+
+#### Option B: Nginx (Recommended)
+
+Install Nginx:
+```bash
+# Ubuntu/Debian
+sudo apt-get install nginx
+
+# macOS
+brew install nginx
+```
+
+Create `/etc/nginx/sites-available/studyhall`:
+
 ```nginx
 server {
     listen 80;
-    server_name yourdomain.com www.yourdomain.com;
+    server_name your-domain.com;
 
     # Redirect HTTP to HTTPS
     return 301 https://$server_name$request_uri;
@@ -263,145 +219,127 @@ server {
 
 server {
     listen 443 ssl http2;
-    server_name yourdomain.com www.yourdomain.com;
+    server_name your-domain.com;
 
-    # SSL certificates (Let's Encrypt)
-    ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
+    ssl_certificate /path/to/cert.pem;
+    ssl_certificate_key /path/to/key.pem;
 
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-
-    # Static files (Vite build)
-    root /var/www/studyhall/frontend/dist;
+    # Frontend static files
+    root /path/to/December-Vue-StudyHall/frontend/dist;
     index index.html;
 
-    # API proxy
+    # Frontend routes
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Backend API
     location /api/ {
         proxy_pass http://127.0.0.1:5000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Cookie $http_cookie;
     }
 
-    # Frontend SPA (all routes)
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Cache static assets
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
 }
 ```
 
-**Enable site:**
+Enable site:
 ```bash
 sudo ln -s /etc/nginx/sites-available/studyhall /etc/nginx/sites-enabled/
 sudo nginx -t
-sudo systemctl restart nginx
+sudo systemctl reload nginx
 ```
 
-### 8. SSL Certificate (Let's Encrypt)
+## SSL/HTTPS Setup
 
-**Install Certbot:**
-```bash
-sudo apt install certbot python3-certbot-nginx -y
-```
+### Let's Encrypt (Free SSL)
 
-**Obtain certificate:**
 ```bash
-sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
-```
+# Install Certbot
+sudo apt-get install certbot python3-certbot-nginx
 
-**Auto-renewal (already configured by certbot):**
-```bash
+# Get certificate
+sudo certbot --nginx -d your-domain.com
+
+# Auto-renewal (already configured)
 sudo certbot renew --dry-run
 ```
 
 ## Docker Deployment
 
-### Dockerfile (Backend)
+### Dockerfile
 
-**Create `Dockerfile.backend`:**
+Create `Dockerfile`:
+
 ```dockerfile
-FROM python:3.9-slim
+# Build stage
+FROM node:18-alpine AS frontend-builder
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ .
+RUN npm run build
 
+# Production stage
+FROM python:3.9-slim
 WORKDIR /app
 
+# Install dependencies
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install gunicorn
 
+# Copy backend
 COPY backend/ ./backend/
-COPY database.py ./
-COPY models/ ./models/
-COPY services/ ./services/
 
+# Copy frontend build
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+
+# Environment
 ENV PYTHONPATH=/app
+ENV FLASK_ENV=production
+
+# Expose port
 EXPOSE 5000
 
-CMD ["gunicorn", "-c", "gunicorn_config.py", "backend.main:app"]
-```
-
-### Dockerfile (Frontend)
-
-**Create `Dockerfile.frontend`:**
-```dockerfile
-FROM node:18-alpine AS build
-
-WORKDIR /app
-COPY frontend/package*.json ./
-RUN npm ci
-COPY frontend/ ./
-RUN npm run build
-
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+# Run
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "backend.main:app"]
 ```
 
 ### Docker Compose
 
-**Create `docker-compose.yml`:**
+Create `docker-compose.yml`:
+
 ```yaml
 version: '3.8'
 
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
+  app:
+    build: .
+    ports:
+      - "5000:5000"
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - DATABASE_URL=postgresql://studyhall:password@db/studyhall
-    ports:
-      - "5000:5000"
+      - NOTION_API_KEY=${NOTION_API_KEY}
+      - NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
     depends_on:
       - db
-
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
+    volumes:
+      - ./backend/studyhall.db:/app/backend/studyhall.db
 
   db:
-    image: postgres:14
+    image: postgres:15-alpine
     environment:
-      - POSTGRES_DB=studyhall
       - POSTGRES_USER=studyhall
       - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=studyhall
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -409,214 +347,229 @@ volumes:
   postgres_data:
 ```
 
-**Deploy:**
+Build and run:
 ```bash
 docker-compose up -d
 ```
 
-## PaaS Deployment Examples
+## PaaS Deployment
 
 ### Heroku
 
-**Create `Procfile`:**
+1. Install Heroku CLI
+2. Create `Procfile`:
 ```
-web: gunicorn -c gunicorn_config.py backend.main:app
+web: gunicorn backend.main:app
 ```
 
-**Create `runtime.txt`:**
+3. Create `runtime.txt`:
 ```
 python-3.9.18
 ```
 
-**Deploy:**
+4. Deploy:
 ```bash
 heroku create studyhall-app
 heroku config:set SECRET_KEY=your-secret-key
 heroku config:set DATABASE_URL=postgresql://...
-git push heroku main
+git push heroku master
 ```
 
 ### Railway
 
 1. Connect GitHub repository
-2. Set environment variables
-3. Configure build command: `cd frontend && npm install && npm run build`
-4. Configure start command: `gunicorn backend.main:app`
-5. Deploy
+2. Set environment variables in dashboard
+3. Railway auto-detects and deploys
 
-## Security Hardening
+### Render
 
-### 1. Environment Variables
+1. Create new Web Service
+2. Connect repository
+3. Set build command: `cd frontend && npm install && npm run build`
+4. Set start command: `gunicorn backend.main:app`
+5. Set environment variables
 
-- Never commit `.env` files
-- Use secure secret management (AWS Secrets Manager, HashiCorp Vault)
-- Rotate secrets regularly
+## Session Storage (Production)
 
-### 2. Database Security
+### Redis Setup
 
-- Use strong passwords
-- Limit database access to application server only
-- Enable SSL for database connections
-- Regular backups
-
-### 3. Application Security
-
-- Update dependencies regularly
-- Use HTTPS only
-- Implement rate limiting
-- Add CSRF protection
-- Sanitize all inputs
-- Use parameterized queries (already using SQLAlchemy)
-
-### 4. Server Security
-
-- Keep system updated
-- Configure firewall (UFW)
-- Disable root SSH login
-- Use SSH keys instead of passwords
-- Set up fail2ban
-
-## Monitoring & Logging
-
-### Application Logs
-
-**Gunicorn logging:**
-```python
-# In gunicorn_config.py
-accesslog = "/var/log/studyhall/access.log"
-errorlog = "/var/log/studyhall/error.log"
-loglevel = "info"
-```
-
-### System Logs
-
+Install Redis:
 ```bash
-# View application logs
-sudo journalctl -u studyhall -f
+# Ubuntu/Debian
+sudo apt-get install redis-server
 
-# View Nginx logs
-sudo tail -f /var/log/nginx/access.log
-sudo tail -f /var/log/nginx/error.log
+# macOS
+brew install redis
 ```
 
-### Monitoring Tools
+Update `backend/services/session.py` to use Redis:
 
-- **Uptime monitoring**: UptimeRobot, Pingdom
-- **Application monitoring**: Sentry, Rollbar
-- **Server monitoring**: Datadog, New Relic, Prometheus
+```python
+import redis
+import json
+
+redis_client = redis.Redis(host='localhost', port=6379, db=0)
+
+def create_session(student_id: int) -> str:
+    token = generate_token()
+    redis_client.setex(
+        f"session:{token}",
+        604800,  # 7 days
+        json.dumps({"student_id": student_id})
+    )
+    return token
+```
+
+## Monitoring and Logging
+
+### Application Logging
+
+Update `backend/main.py`:
+
+```python
+import logging
+from logging.handlers import RotatingFileHandler
+
+if not app.debug:
+    file_handler = RotatingFileHandler(
+        'logs/studyhall.log',
+        maxBytes=10240000,
+        backupCount=10
+    )
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
+```
+
+### Health Check Endpoint
+
+Add to `backend/main.py`:
+
+```python
+@app.route("/api/health", methods=["GET"])
+def health_check():
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat()
+    })
+```
 
 ## Backup Strategy
 
 ### Database Backups
 
-**PostgreSQL:**
+#### SQLite
 ```bash
 # Daily backup script
-pg_dump -U studyhall studyhall > backup_$(date +%Y%m%d).sql
+cp backend/studyhall.db backups/studyhall-$(date +%Y%m%d).db
 ```
 
-**SQLite:**
+#### PostgreSQL
 ```bash
-# Simple copy
-cp studyhall.db backup_$(date +%Y%m%d).db
+# Daily backup
+pg_dump studyhall > backups/studyhall-$(date +%Y%m%d).sql
 ```
 
-**Automated backups:**
+### Automated Backups
+
+Create cron job:
 ```bash
-# Add to crontab
 0 2 * * * /path/to/backup-script.sh
 ```
 
-### Application Backups
+## Security Hardening
 
-- Backup code repository (Git)
-- Backup uploaded files (if any)
-- Backup configuration files
-
-## Scaling Considerations
-
-### Horizontal Scaling
-
-- Multiple Gunicorn workers
-- Load balancer (Nginx, HAProxy)
-- Multiple application servers
-- Shared session storage (Redis)
-- Shared database (PostgreSQL)
-
-### Vertical Scaling
-
-- Increase server resources (CPU, RAM)
-- Optimize database queries
-- Add caching layer (Redis)
+1. **Firewall**: Configure UFW or iptables
+2. **Fail2Ban**: Protect against brute force
+3. **Rate Limiting**: Add Flask-Limiter
+4. **Security Headers**: Configure in Nginx
+5. **Regular Updates**: Keep system and dependencies updated
 
 ## Troubleshooting
 
-### Application Not Starting
+### Common Issues
 
+**Issue**: 502 Bad Gateway
+- Check Gunicorn is running
+- Check Nginx configuration
+- Check logs: `sudo journalctl -u studyhall`
+
+**Issue**: Database connection errors
+- Verify database is running
+- Check connection string
+- Verify user permissions
+
+**Issue**: Static files not loading
+- Check file permissions
+- Verify Nginx root path
+- Check build output exists
+
+### Logs
+
+**Application logs**:
 ```bash
-# Check service status
-sudo systemctl status studyhall
-
-# Check logs
-sudo journalctl -u studyhall -n 50
-
-# Test manually
-cd /var/www/studyhall
-source backend/.venv/bin/activate
-gunicorn backend.main:app
+tail -f logs/studyhall.log
 ```
 
-### Nginx Errors
-
+**System logs**:
 ```bash
-# Test configuration
-sudo nginx -t
+sudo journalctl -u studyhall -f
+```
 
-# Check error logs
+**Nginx logs**:
+```bash
 sudo tail -f /var/log/nginx/error.log
-
-# Reload configuration
-sudo systemctl reload nginx
 ```
 
-### Database Connection Issues
+## Post-Deployment
 
-```bash
-# Test PostgreSQL connection
-psql -U studyhall -d studyhall -h localhost
-
-# Check PostgreSQL status
-sudo systemctl status postgresql
-```
+1. Test all functionality
+2. Monitor error logs
+3. Set up uptime monitoring
+4. Configure email alerts
+5. Document deployment process
+6. Create rollback plan
 
 ## Maintenance
 
-### Updating Application
+### Regular Tasks
 
-```bash
-cd /var/www/studyhall
-git pull origin main
-source backend/.venv/bin/activate
-pip install -r backend/requirements.txt
-cd frontend
-npm install
-npm run build
-sudo systemctl restart studyhall
-```
+- Weekly: Review logs and errors
+- Monthly: Update dependencies
+- Quarterly: Security audit
+- As needed: Database backups verification
 
-### Database Migrations
+### Updates
 
-For production, use Alembic for migrations:
-```bash
-alembic upgrade head
-```
+1. Pull latest code
+2. Update dependencies
+3. Run migrations (if any)
+4. Rebuild frontend
+5. Restart services
+6. Test functionality
+
+## Scaling
+
+### Horizontal Scaling
+
+1. Multiple Gunicorn workers
+2. Load balancer (Nginx or cloud LB)
+3. Shared session storage (Redis)
+4. Shared database (PostgreSQL)
+
+### Vertical Scaling
+
+1. Increase server resources
+2. Optimize database queries
+3. Add caching layer
+4. Use CDN for static assets
 
 ## Support
 
 For deployment issues:
-- Check logs first
-- Review this guide
-- Check GitHub Issues
-- Contact maintainers
-
-Good luck with your deployment! 🚀
+1. Check logs
+2. Review this documentation
+3. Check application documentation
+4. Review error messages carefully

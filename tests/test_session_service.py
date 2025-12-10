@@ -10,10 +10,10 @@ from backend.services.session import (
 
 
 class TestCreateSession:
-    """Tests for session creation."""
+    """Test session creation."""
     
     def test_create_session(self):
-        """Test creating a session."""
+        """Test creating a new session."""
         # Clear sessions before test
         _sessions.clear()
         
@@ -21,59 +21,71 @@ class TestCreateSession:
         token = create_session(student_id)
         
         assert token is not None
+        assert isinstance(token, str)
         assert len(token) > 0
         assert token in _sessions
-        assert _sessions[token]["student_id"] == student_id
-        assert "created_at" in _sessions[token]
-        assert "expires_at" in _sessions[token]
+        
+        session_data = _sessions[token]
+        assert session_data['student_id'] == student_id
+        assert 'created_at' in session_data
+        assert 'expires_at' in session_data
+        assert isinstance(session_data['created_at'], datetime)
+        assert isinstance(session_data['expires_at'], datetime)
     
-    def test_create_session_unique_tokens(self):
-        """Test that each session gets a unique token."""
+    def test_create_session_multiple(self):
+        """Test creating multiple sessions."""
         _sessions.clear()
         
         token1 = create_session(1)
         token2 = create_session(2)
+        token3 = create_session(1)  # Same student, different session
         
         assert token1 != token2
-        assert len(_sessions) == 2
+        assert token1 != token3
+        assert token2 != token3
+        assert len(_sessions) == 3
     
-    def test_create_session_expires_in_7_days(self):
-        """Test that session expires in 7 days."""
+    def test_create_session_expires_at(self):
+        """Test that session expires_at is set correctly."""
         _sessions.clear()
         
-        student_id = 1
-        token = create_session(student_id)
+        token = create_session(1)
         session_data = _sessions[token]
         
-        expected_expires = session_data["created_at"] + timedelta(days=7)
-        assert abs((session_data["expires_at"] - expected_expires).total_seconds()) < 1
+        # Expires at should be approximately 7 days from now
+        expected_expires = datetime.now() + timedelta(days=7)
+        time_diff = abs((expected_expires - session_data['expires_at']).total_seconds())
+        
+        # Allow 1 second tolerance
+        assert time_diff < 1
 
 
 class TestGetSession:
-    """Tests for getting session data."""
+    """Test getting session data."""
     
     def test_get_session_valid(self):
-        """Test getting a valid session."""
+        """Test getting valid session."""
         _sessions.clear()
         
-        student_id = 1
-        token = create_session(student_id)
+        token = create_session(1)
         
-        # Mock request object
+        # Create mock request with cookie
         request = Mock()
-        request.cookies = {"session_token": token}
+        request.cookies = {'session_token': token}
         
         session_data = get_session(request)
         
         assert session_data is not None
-        assert session_data["student_id"] == student_id
+        assert session_data['student_id'] == 1
+        assert 'created_at' in session_data
+        assert 'expires_at' in session_data
     
     def test_get_session_invalid_token(self):
         """Test getting session with invalid token."""
         _sessions.clear()
         
         request = Mock()
-        request.cookies = {"session_token": "invalid-token"}
+        request.cookies = {'session_token': 'invalid_token'}
         
         session_data = get_session(request)
         
@@ -91,25 +103,24 @@ class TestGetSession:
         assert session_data is None
     
     def test_get_session_expired(self):
-        """Test getting an expired session."""
+        """Test getting expired session."""
         _sessions.clear()
         
-        student_id = 1
-        token = create_session(student_id)
-        
+        token = create_session(1)
         # Manually expire the session
-        _sessions[token]["expires_at"] = datetime.now() - timedelta(days=1)
+        _sessions[token]['expires_at'] = datetime.now() - timedelta(days=1)
         
         request = Mock()
-        request.cookies = {"session_token": token}
+        request.cookies = {'session_token': token}
         
         session_data = get_session(request)
         
         assert session_data is None
-        assert token not in _sessions  # Should be deleted
+        # Session should be deleted
+        assert token not in _sessions
     
     def test_get_session_no_cookies_attribute(self):
-        """Test get_session when request has no cookies attribute."""
+        """Test getting session when request has no cookies attribute."""
         _sessions.clear()
         
         request = Mock()
@@ -121,15 +132,13 @@ class TestGetSession:
 
 
 class TestDeleteSession:
-    """Tests for deleting sessions."""
+    """Test session deletion."""
     
     def test_delete_session_exists(self):
-        """Test deleting an existing session."""
+        """Test deleting existing session."""
         _sessions.clear()
         
-        student_id = 1
-        token = create_session(student_id)
-        
+        token = create_session(1)
         assert token in _sessions
         
         delete_session(token)
@@ -137,15 +146,15 @@ class TestDeleteSession:
         assert token not in _sessions
     
     def test_delete_session_not_exists(self):
-        """Test deleting a non-existent session."""
+        """Test deleting non-existent session."""
         _sessions.clear()
         
         # Should not raise an error
-        delete_session("non-existent-token")
+        delete_session('nonexistent_token')
         
         assert len(_sessions) == 0
     
-    def test_delete_session_multiple_sessions(self):
+    def test_delete_session_multiple(self):
         """Test deleting one session doesn't affect others."""
         _sessions.clear()
         
@@ -161,3 +170,59 @@ class TestDeleteSession:
         assert token2 not in _sessions
         assert token3 in _sessions
         assert len(_sessions) == 2
+
+
+class TestSessionIntegration:
+    """Integration tests for session management."""
+    
+    def test_session_lifecycle(self):
+        """Test complete session lifecycle."""
+        _sessions.clear()
+        
+        # Create session
+        token = create_session(1)
+        assert token in _sessions
+        
+        # Get session
+        request = Mock()
+        request.cookies = {'session_token': token}
+        session_data = get_session(request)
+        assert session_data is not None
+        assert session_data['student_id'] == 1
+        
+        # Delete session
+        delete_session(token)
+        assert token not in _sessions
+        
+        # Try to get deleted session
+        session_data = get_session(request)
+        assert session_data is None
+    
+    def test_session_isolation(self):
+        """Test that sessions are isolated per student."""
+        _sessions.clear()
+        
+        token1 = create_session(1)
+        token2 = create_session(2)
+        
+        request1 = Mock()
+        request1.cookies = {'session_token': token1}
+        
+        request2 = Mock()
+        request2.cookies = {'session_token': token2}
+        
+        session1 = get_session(request1)
+        session2 = get_session(request2)
+        
+        assert session1['student_id'] == 1
+        assert session2['student_id'] == 2
+    
+    def test_session_token_uniqueness(self):
+        """Test that session tokens are unique."""
+        _sessions.clear()
+        
+        tokens = [create_session(1) for _ in range(100)]
+        
+        # All tokens should be unique
+        assert len(set(tokens)) == 100
+        assert len(_sessions) == 100
