@@ -79,3 +79,4 @@ class NotionSyncService:
 
 # Global instance
 notion_service = NotionSyncService()
+

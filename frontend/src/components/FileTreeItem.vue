@@ -101,3 +101,4 @@ function handleDrop(e: DragEvent) {
   emit('drop', e, props.item)
 }
 </script>
+

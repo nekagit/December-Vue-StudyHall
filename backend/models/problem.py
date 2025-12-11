@@ -24,3 +24,4 @@ class Problem(Base):
     
     def __repr__(self):
         return f"<Problem(id={self.id}, title={self.title[:50]}, difficulty={self.difficulty})>"
+

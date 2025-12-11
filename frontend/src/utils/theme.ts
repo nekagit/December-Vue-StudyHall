@@ -252,3 +252,4 @@ export function initializeTheme(): void {
     root.style.setProperty('--base-border-radius', `${savedBorderRadius}px`)
   }
 }
+
