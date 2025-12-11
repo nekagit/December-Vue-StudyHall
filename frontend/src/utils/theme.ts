@@ -239,3 +239,4 @@ export function initializeTheme(): void {
   const theme = getThemeById(themeId) || getThemeById(DEFAULT_THEME_ID)!
   applyTheme(theme)
 }
+
