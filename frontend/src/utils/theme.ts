@@ -238,4 +238,17 @@ export function initializeTheme(): void {
   const themeId = getCurrentTheme()
   const theme = getThemeById(themeId) || getThemeById(DEFAULT_THEME_ID)!
   applyTheme(theme)
+  
+  // Initialize design preferences
+  const root = document.documentElement
+  const savedFontSize = localStorage.getItem('fontSize')
+  const savedBorderRadius = localStorage.getItem('borderRadius')
+  
+  if (savedFontSize) {
+    root.style.setProperty('--base-font-size', `${savedFontSize}px`)
+  }
+  
+  if (savedBorderRadius) {
+    root.style.setProperty('--base-border-radius', `${savedBorderRadius}px`)
+  }
 }

@@ -15,6 +15,10 @@
   --msit-accent: #83E65B;
   --msit-accent-300: #A2ED87;
   --msit-accent-500: #6BD945;
+  
+  /* Design preferences */
+  --base-font-size: 16px;
+  --base-border-radius: 8px;
 }
 
 @theme {
