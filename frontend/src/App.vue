@@ -51,6 +51,10 @@
                       <span class="font-medium">Resources</span>
                       <span class="text-xs text-msit-dark-300">Additional learning resources</span>
                     </router-link>
+                    <router-link to="/tutor" class="nav-dropdown-item" @click="closeDropdown('learn')">
+                      <span class="font-medium">AI Tutor</span>
+                      <span class="text-xs text-msit-dark-300">Get personalized tutoring</span>
+                    </router-link>
                   </div>
                 </transition>
               </div>
@@ -125,6 +129,10 @@
                       <span class="font-medium">Templates</span>
                       <span class="text-xs text-msit-dark-300">Code templates</span>
                     </router-link>
+                    <router-link to="/editor" class="nav-dropdown-item" @click="closeDropdown('tools')">
+                      <span class="font-medium">Code Editor</span>
+                      <span class="text-xs text-msit-dark-300">VS Code-like editor</span>
+                    </router-link>
                     <router-link to="/cheat-sheets" class="nav-dropdown-item" @click="closeDropdown('tools')">
                       <span class="font-medium">Cheat Sheets</span>
                       <span class="text-xs text-msit-dark-300">Quick reference guides</span>
@@ -161,6 +169,10 @@
                     <router-link to="/export" class="nav-dropdown-item" @click="closeDropdown('discover')">
                       <span class="font-medium">Export</span>
                       <span class="text-xs text-msit-dark-300">Export your work</span>
+                    </router-link>
+                    <router-link to="/settings" class="nav-dropdown-item" @click="closeDropdown('discover')">
+                      <span class="font-medium">Settings</span>
+                      <span class="text-xs text-msit-dark-300">Customize your experience</span>
                     </router-link>
                   </div>
                 </transition>
@@ -230,6 +242,7 @@
                   <router-link to="/learning-path" @click="closeMobileMenu" class="mobile-nav-subitem">Learning Path</router-link>
                   <router-link to="/library" @click="closeMobileMenu" class="mobile-nav-subitem">Library</router-link>
                   <router-link to="/resources" @click="closeMobileMenu" class="mobile-nav-subitem">Resources</router-link>
+                  <router-link to="/tutor" @click="closeMobileMenu" class="mobile-nav-subitem">AI Tutor</router-link>
                 </div>
               </transition>
             </div>
@@ -272,6 +285,7 @@
                   <router-link to="/compiler" @click="closeMobileMenu" class="mobile-nav-subitem">Compiler</router-link>
                   <router-link to="/snippets" @click="closeMobileMenu" class="mobile-nav-subitem">Snippets</router-link>
                   <router-link to="/templates" @click="closeMobileMenu" class="mobile-nav-subitem">Templates</router-link>
+                  <router-link to="/editor" @click="closeMobileMenu" class="mobile-nav-subitem">Code Editor</router-link>
                   <router-link to="/cheat-sheets" @click="closeMobileMenu" class="mobile-nav-subitem">Cheat Sheets</router-link>
                   <router-link to="/tools" @click="closeMobileMenu" class="mobile-nav-subitem">All Tools</router-link>
                 </div>
@@ -293,6 +307,7 @@
                 <div v-if="mobileSections.discover" class="mobile-nav-section-content">
                   <router-link to="/search" @click="closeMobileMenu" class="mobile-nav-subitem">Search</router-link>
                   <router-link to="/export" @click="closeMobileMenu" class="mobile-nav-subitem">Export</router-link>
+                  <router-link to="/settings" @click="closeMobileMenu" class="mobile-nav-subitem">Settings</router-link>
                 </div>
               </transition>
             </div>
@@ -310,7 +325,7 @@
       </transition>
     </nav>
 
-    <main class="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+    <main :class="route.path === '/editor' ? '' : 'max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8'">
       <router-view />
     </main>
   </div>
@@ -340,7 +355,8 @@ const isLearnActive = computed(() => {
   return route.path.startsWith('/materials') ||
          route.path === '/learning-path' ||
          route.path === '/library' ||
-         route.path === '/resources'
+         route.path === '/resources' ||
+         route.path === '/tutor'
 })
 
 const isPracticeActive = computed(() => {
@@ -355,13 +371,15 @@ const isToolsActive = computed(() => {
   return route.path === '/compiler' ||
          route.path === '/snippets' ||
          route.path === '/templates' ||
+         route.path === '/editor' ||
          route.path === '/cheat-sheets' ||
          route.path === '/tools'
 })
 
 const isDiscoverActive = computed(() => {
   return route.path === '/search' ||
-         route.path === '/export'
+         route.path === '/export' ||
+         route.path === '/settings'
 })
 
 function openDropdown(name: keyof typeof openDropdowns.value) {
@@ -386,11 +404,19 @@ function closeMobileMenu() {
 </script>
 
 <style scoped>
-@reference "tailwindcss";
-
 /* Navigation Item Styles */
 .nav-item {
-  @apply relative inline-flex items-center px-3 py-2 text-sm font-medium transition-all duration-200;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition-property: all;
+  transition-duration: 200ms;
   color: #E0EADD;
   font-family: 'Inter', sans-serif;
 }
@@ -404,7 +430,11 @@ function closeMobileMenu() {
 }
 
 .nav-arrow {
-  @apply ml-1 h-3 w-3 transition-transform duration-200;
+  margin-left: 0.25rem;
+  height: 0.75rem;
+  width: 0.75rem;
+  transition-property: transform;
+  transition-duration: 200ms;
   transform: rotate(0deg);
 }
 
@@ -414,12 +444,18 @@ function closeMobileMenu() {
 
 /* Dropdown Container */
 .nav-dropdown-container {
-  @apply relative;
+  position: relative;
 }
 
 /* Dropdown Menu */
 .nav-dropdown {
-  @apply absolute top-full left-0 mt-2 w-64 rounded-lg shadow-xl;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.5rem;
+  width: 16rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   background-color: rgba(26, 49, 43, 0.98);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(131, 230, 91, 0.1);
@@ -427,7 +463,13 @@ function closeMobileMenu() {
 }
 
 .nav-dropdown-item {
-  @apply block px-4 py-3 transition-colors duration-150;
+  display: block;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  transition-property: color, background-color;
+  transition-duration: 150ms;
   color: #E0EADD;
   display: flex;
   flex-direction: column;
@@ -462,7 +504,15 @@ function closeMobileMenu() {
 
 /* Mobile Navigation */
 .mobile-nav-item {
-  @apply block px-3 py-2 rounded-md text-base font-medium transition-colors;
+  display: block;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  font-weight: 500;
+  transition-property: color, background-color;
   color: #E0EADD;
   font-family: 'Inter', sans-serif;
 }
@@ -478,11 +528,22 @@ function closeMobileMenu() {
 }
 
 .mobile-nav-section {
-  @apply border-t border-msit-dark-700;
+  border-top-width: 1px;
+  border-top-color: var(--msit-dark-700);
 }
 
 .mobile-nav-section-header {
-  @apply w-full flex items-center justify-between px-3 py-2 text-base font-medium transition-colors;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  transition-property: color, background-color;
   color: #E0EADD;
   font-family: 'Inter', sans-serif;
 }
@@ -492,11 +553,23 @@ function closeMobileMenu() {
 }
 
 .mobile-nav-section-content {
-  @apply pl-6 pb-2 space-y-1;
+  padding-left: 1.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.mobile-nav-section-content > * + * {
+  margin-top: 0.25rem;
 }
 
 .mobile-nav-subitem {
-  @apply block px-3 py-2 rounded-md text-sm transition-colors;
+  display: block;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition-property: color, background-color;
   color: #C2D5BC;
   font-family: 'Inter', sans-serif;
 }
@@ -511,7 +584,10 @@ function closeMobileMenu() {
 }
 
 .mobile-nav-arrow {
-  @apply h-4 w-4 transition-transform duration-200;
+  height: 1rem;
+  width: 1rem;
+  transition-property: transform;
+  transition-duration: 200ms;
   transform: rotate(0deg);
 }
 

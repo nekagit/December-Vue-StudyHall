@@ -16,3 +16,6 @@ class Student(Base):
         return f"<Student(id={self.id}, email={self.email}, name={self.name})>"
 
 
+
+
+

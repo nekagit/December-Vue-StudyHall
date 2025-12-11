@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import './style.css'
 import App from './App.vue'
 import { hasCharacterConfig } from './utils/character'
+import { initializeTheme } from './utils/theme'
 
 // Import components
 import Configuration from './views/Configuration.vue'
@@ -28,6 +29,9 @@ import TestCoverage from './views/TestCoverage.vue'
 import CheatSheets from './views/CheatSheets.vue'
 import Templates from './views/Templates.vue'
 import Help from './views/Help.vue'
+import Editor from './views/Editor.vue'
+import Settings from './views/Settings.vue'
+import Tutor from './views/Tutor.vue'
 
 const routes = [
   { path: '/configuration', component: Configuration },
@@ -52,7 +56,10 @@ const routes = [
   { path: '/test-coverage', component: TestCoverage },
   { path: '/cheat-sheets', component: CheatSheets },
   { path: '/templates', component: Templates },
+  { path: '/editor', component: Editor },
   { path: '/help', component: Help },
+  { path: '/settings', component: Settings },
+  { path: '/tutor', component: Tutor },
 ]
 
 const router = createRouter({
@@ -61,7 +68,7 @@ const router = createRouter({
 })
 
 // Configuration guard - redirect to configuration if character not set
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   // Allow access to root path and configuration page without character config
   if (to.path === '/' || to.path === '/configuration') {
     // If already configured and trying to access configuration, redirect to home
@@ -81,6 +88,9 @@ router.beforeEach((to, from, next) => {
   
   next()
 })
+
+// Initialize theme before mounting app
+initializeTheme()
 
 const app = createApp(App)
 app.use(router)

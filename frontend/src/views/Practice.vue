@@ -83,8 +83,33 @@
           </div>
         </div>
 
+        <!-- Code Input -->
+        <div class="mb-4">
+          <label class="block text-sm font-semibold text-msit-dark-50 mb-2 font-sans">Your Code:</label>
+            <textarea
+              v-model="userCode[exercise.id]"
+              :placeholder="`# ${exercise.title}\n# Write your solution here\n\n`"
+              class="w-full bg-msit-dark-900 border border-msit-dark-700 rounded-lg p-3 text-sm text-msit-dark-50 font-mono focus:border-msit-accent focus:ring-1 focus:ring-msit-accent outline-none resize-y min-h-[150px]"
+              rows="8"
+            ></textarea>
+        </div>
+
         <!-- Actions -->
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+          <button
+            @click="runTestsForExercise(exercise)"
+            :disabled="!userCode[exercise.id] || isLoading[exercise.id]"
+            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium font-sans disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg v-if="!isLoading[exercise.id]" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <svg v-else class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ isLoading[exercise.id] ? 'Running Tests...' : 'Run Tests' }}
+          </button>
           <button
             @click="openInCompiler(exercise)"
             class="inline-flex items-center px-4 py-2 bg-msit-accent text-msit-dark rounded-lg hover:bg-msit-accent-500 transition-colors text-sm font-medium font-sans"
@@ -102,6 +127,57 @@
           </button>
         </div>
 
+        <!-- Test Results -->
+        <div v-if="testResults[exercise.id] && testResults[exercise.id].length > 0" class="mb-4">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-sm font-semibold text-msit-dark-50 font-sans">Test Results:</h4>
+            <span :class="[
+              'px-2 py-1 rounded text-xs font-medium font-sans',
+              allTestsPassed(exercise.id) ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+            ]">
+              {{ passedTestsCount(exercise.id) }} / {{ testResults[exercise.id].length }} passed
+            </span>
+          </div>
+          <div class="space-y-2">
+            <div
+              v-for="(result, idx) in testResults[exercise.id]"
+              :key="idx"
+              :class="[
+                'p-3 rounded-lg border font-sans',
+                result.passed ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'
+              ]"
+            >
+              <div class="flex items-start gap-2 mb-2">
+                <svg v-if="result.passed" class="h-5 w-5 text-green-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <svg v-else class="h-5 w-5 text-red-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div class="flex-1">
+                  <div class="text-xs font-mono text-msit-dark-200 mb-1">
+                    <span class="font-semibold">Test {{ idx + 1 }}:</span> {{ result.testCase.input }}
+                  </div>
+                  <div v-if="result.passed" class="text-xs text-green-400">
+                    ✓ Passed
+                  </div>
+                  <div v-else class="text-xs space-y-1">
+                    <div class="text-red-400">
+                      ✗ Failed
+                    </div>
+                    <div class="text-msit-dark-300">
+                      <span class="font-semibold">Expected:</span> {{ result.expected }}
+                    </div>
+                    <div class="text-msit-dark-300">
+                      <span class="font-semibold">Got:</span> {{ result.actual }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Solution (shown when clicked) -->
         <div v-if="showSolution[exercise.id]" class="mt-4 bg-msit-dark-900 border border-msit-accent rounded-lg p-4">
           <h4 class="text-sm font-semibold text-msit-accent mb-2 font-sans">Solution:</h4>
@@ -113,13 +189,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { runTests, loadPyodide, type TestCase, type TestResult } from '../utils/testRunner'
 
 const router = useRouter()
 const selectedDifficulty = ref('')
 const showHints = ref<Record<number, boolean>>({})
 const showSolution = ref<Record<number, boolean>>({})
+const userCode = ref<Record<number, string>>({})
+const testResults = ref<Record<number, TestResult[]>>({})
+const isLoading = ref<Record<number, boolean>>({})
+let pyodide: any = null
 
 const exercises = [
   {
@@ -130,7 +211,10 @@ const exercises = [
     problem: 'Create a Python program that prints the message "Hello, World!"',
     example: 'Output:\nHello, World!',
     hints: ['Use the print() function', 'Pass a string as an argument'],
-    solution: 'print("Hello, World!")'
+    solution: 'print("Hello, World!")',
+    testCases: [
+      { input: 'print("Hello, World!")', output: 'Hello, World!' }
+    ]
   },
   {
     id: 2,
@@ -140,7 +224,13 @@ const exercises = [
     problem: 'Create a function called add_numbers that takes two parameters (a and b) and returns their sum.',
     example: 'add_numbers(5, 3) should return 8\nadd_numbers(10, -5) should return 5',
     hints: ['Use the + operator', 'Return the result'],
-    solution: 'def add_numbers(a, b):\n    return a + b'
+    solution: 'def add_numbers(a, b):\n    return a + b',
+    testCases: [
+      { input: 'add_numbers(5, 3)', output: '8' },
+      { input: 'add_numbers(10, -5)', output: '5' },
+      { input: 'add_numbers(0, 0)', output: '0' },
+      { input: 'add_numbers(-1, 1)', output: '0' }
+    ]
   },
   {
     id: 3,
@@ -150,7 +240,13 @@ const exercises = [
     problem: 'Create a function that takes three numbers and returns the largest one.',
     example: 'find_max(3, 7, 2) should return 7\nfind_max(1, 1, 1) should return 1',
     hints: ['Use comparison operators', 'You can use if-elif-else statements', 'Or use the built-in max() function'],
-    solution: 'def find_max(a, b, c):\n    return max(a, b, c)\n\n# Or:\ndef find_max(a, b, c):\n    if a >= b and a >= c:\n        return a\n    elif b >= c:\n        return b\n    else:\n        return c'
+    solution: 'def find_max(a, b, c):\n    return max(a, b, c)\n\n# Or:\ndef find_max(a, b, c):\n    if a >= b and a >= c:\n        return a\n    elif b >= c:\n        return b\n    else:\n        return c',
+    testCases: [
+      { input: 'find_max(3, 7, 2)', output: '7' },
+      { input: 'find_max(1, 1, 1)', output: '1' },
+      { input: 'find_max(10, 5, 8)', output: '10' },
+      { input: 'find_max(-5, -2, -10)', output: '-2' }
+    ]
   },
   {
     id: 4,
@@ -160,7 +256,13 @@ const exercises = [
     problem: 'Create a function that takes a string and returns the count of vowels (a, e, i, o, u) in it. Case-insensitive.',
     example: 'count_vowels("Hello") should return 2\ncount_vowels("Python") should return 1',
     hints: ['Convert string to lowercase', 'Use a loop to iterate through characters', 'Check if character is in a list of vowels'],
-    solution: 'def count_vowels(text):\n    vowels = "aeiou"\n    count = 0\n    for char in text.lower():\n        if char in vowels:\n            count += 1\n    return count'
+    solution: 'def count_vowels(text):\n    vowels = "aeiou"\n    count = 0\n    for char in text.lower():\n        if char in vowels:\n            count += 1\n    return count',
+    testCases: [
+      { input: 'count_vowels("Hello")', output: '2' },
+      { input: 'count_vowels("Python")', output: '1' },
+      { input: 'count_vowels("AEIOU")', output: '5' },
+      { input: 'count_vowels("xyz")', output: '0' }
+    ]
   },
   {
     id: 5,
@@ -170,7 +272,13 @@ const exercises = [
     problem: 'Create a function that takes a string and returns it reversed. Do not use [::-1] or reversed().',
     example: 'reverse_string("hello") should return "olleh"\nreverse_string("Python") should return "nohtyP"',
     hints: ['Use a loop', 'Build the reversed string character by character', 'Start from the end of the string'],
-    solution: 'def reverse_string(text):\n    reversed_text = ""\n    for i in range(len(text) - 1, -1, -1):\n        reversed_text += text[i]\n    return reversed_text'
+    solution: 'def reverse_string(text):\n    reversed_text = ""\n    for i in range(len(text) - 1, -1, -1):\n        reversed_text += text[i]\n    return reversed_text',
+    testCases: [
+      { input: 'reverse_string("hello")', output: '"olleh"' },
+      { input: 'reverse_string("Python")', output: '"nohtyP"' },
+      { input: 'reverse_string("a")', output: '"a"' },
+      { input: 'reverse_string("123")', output: '"321"' }
+    ]
   },
   {
     id: 6,
@@ -180,7 +288,13 @@ const exercises = [
     problem: 'Create a function that calculates n! (n factorial). Use recursion.',
     example: 'factorial(5) should return 120\nfactorial(0) should return 1',
     hints: ['Factorial of n is n * factorial(n-1)', 'Base case: factorial(0) = 1'],
-    solution: 'def factorial(n):\n    if n == 0 or n == 1:\n        return 1\n    return n * factorial(n - 1)'
+    solution: 'def factorial(n):\n    if n == 0 or n == 1:\n        return 1\n    return n * factorial(n - 1)',
+    testCases: [
+      { input: 'factorial(5)', output: '120' },
+      { input: 'factorial(0)', output: '1' },
+      { input: 'factorial(1)', output: '1' },
+      { input: 'factorial(3)', output: '6' }
+    ]
   },
   {
     id: 7,
@@ -190,7 +304,13 @@ const exercises = [
     problem: 'A palindrome reads the same forwards and backwards. Create a function that returns True if a string is a palindrome, False otherwise.',
     example: 'is_palindrome("racecar") should return True\nis_palindrome("hello") should return False',
     hints: ['Compare characters from start and end', 'Move towards the center', 'Ignore case if needed'],
-    solution: 'def is_palindrome(text):\n    text = text.lower().replace(" ", "")\n    left = 0\n    right = len(text) - 1\n    while left < right:\n        if text[left] != text[right]:\n            return False\n        left += 1\n        right -= 1\n    return True'
+    solution: 'def is_palindrome(text):\n    text = text.lower().replace(" ", "")\n    left = 0\n    right = len(text) - 1\n    while left < right:\n        if text[left] != text[right]:\n            return False\n        left += 1\n        right -= 1\n    return True',
+    testCases: [
+      { input: 'is_palindrome("racecar")', output: 'True' },
+      { input: 'is_palindrome("hello")', output: 'False' },
+      { input: 'is_palindrome("a")', output: 'True' },
+      { input: 'is_palindrome("madam")', output: 'True' }
+    ]
   },
   {
     id: 8,
@@ -200,17 +320,28 @@ const exercises = [
     problem: 'Create a function that takes a list of numbers and returns their sum.',
     example: 'sum_list([1, 2, 3, 4]) should return 10\nsum_list([5, -3, 2]) should return 4',
     hints: ['Use a loop', 'Initialize a sum variable', 'Add each number to the sum'],
-    solution: 'def sum_list(numbers):\n    total = 0\n    for num in numbers:\n        total += num\n    return total\n\n# Or using built-in:\ndef sum_list(numbers):\n    return sum(numbers)'
+    solution: 'def sum_list(numbers):\n    total = 0\n    for num in numbers:\n        total += num\n    return total\n\n# Or using built-in:\ndef sum_list(numbers):\n    return sum(numbers)',
+    testCases: [
+      { input: 'sum_list([1, 2, 3, 4])', output: '10' },
+      { input: 'sum_list([5, -3, 2])', output: '4' },
+      { input: 'sum_list([0])', output: '0' },
+      { input: 'sum_list([-1, -2, -3])', output: '-6' }
+    ]
   },
   {
     id: 9,
     title: 'FizzBuzz',
     difficulty: 'Intermediate',
     description: 'Classic FizzBuzz problem.',
-    problem: 'Write a program that prints numbers from 1 to n. For multiples of 3, print "Fizz". For multiples of 5, print "Buzz". For multiples of both, print "FizzBuzz".',
-    example: 'For n=15: 1, 2, Fizz, 4, Buzz, Fizz, 7, 8, Fizz, Buzz, 11, Fizz, 13, 14, FizzBuzz',
-    hints: ['Use modulo operator (%)', 'Check for multiples of 15 first', 'Then check for 3 and 5'],
-    solution: 'def fizzbuzz(n):\n    for i in range(1, n + 1):\n        if i % 15 == 0:\n            print("FizzBuzz")\n        elif i % 3 == 0:\n            print("Fizz")\n        elif i % 5 == 0:\n            print("Buzz")\n        else:\n            print(i)'
+    problem: 'Write a function that returns a list of strings. For numbers from 1 to n: For multiples of 3, return "Fizz". For multiples of 5, return "Buzz". For multiples of both, return "FizzBuzz". Otherwise return the number as a string.',
+    example: 'fizzbuzz(15) should return ["1", "2", "Fizz", "4", "Buzz", "Fizz", "7", "8", "Fizz", "Buzz", "11", "Fizz", "13", "14", "FizzBuzz"]',
+    hints: ['Use modulo operator (%)', 'Check for multiples of 15 first', 'Then check for 3 and 5', 'Return a list of strings'],
+    solution: 'def fizzbuzz(n):\n    result = []\n    for i in range(1, n + 1):\n        if i % 15 == 0:\n            result.append("FizzBuzz")\n        elif i % 3 == 0:\n            result.append("Fizz")\n        elif i % 5 == 0:\n            result.append("Buzz")\n        else:\n            result.append(str(i))\n    return result',
+    testCases: [
+      { input: 'fizzbuzz(15)', output: '["1", "2", "Fizz", "4", "Buzz", "Fizz", "7", "8", "Fizz", "Buzz", "11", "Fizz", "13", "14", "FizzBuzz"]' },
+      { input: 'fizzbuzz(5)', output: '["1", "2", "Fizz", "4", "Buzz"]' },
+      { input: 'fizzbuzz(3)', output: '["1", "2", "Fizz"]' }
+    ]
   },
   {
     id: 10,
@@ -220,7 +351,12 @@ const exercises = [
     problem: 'Create a function that takes a list and returns a list of duplicate elements.',
     example: 'find_duplicates([1, 2, 2, 3, 4, 4, 5]) should return [2, 4]',
     hints: ['Use a dictionary or set to track counts', 'Iterate through the list', 'Return elements that appear more than once'],
-    solution: 'def find_duplicates(lst):\n    seen = {}\n    duplicates = []\n    for item in lst:\n        if item in seen:\n            if item not in duplicates:\n                duplicates.append(item)\n        else:\n            seen[item] = 1\n    return duplicates'
+    solution: 'def find_duplicates(lst):\n    seen = {}\n    duplicates = []\n    for item in lst:\n        if item in seen:\n            if item not in duplicates:\n                duplicates.append(item)\n        else:\n            seen[item] = 1\n    return duplicates',
+    testCases: [
+      { input: 'find_duplicates([1, 2, 2, 3, 4, 4, 5])', output: '[2, 4]' },
+      { input: 'find_duplicates([1, 2, 3])', output: '[]' },
+      { input: 'find_duplicates([1, 1, 1, 2, 2])', output: '[1, 2]' }
+    ]
   }
 ]
 
@@ -245,8 +381,59 @@ const viewSolution = (exercise: any) => {
 }
 
 const openInCompiler = (exercise: any) => {
-  const code = `# ${exercise.title}\n# ${exercise.description}\n\n# Your solution here:\n\n`
+  const code = userCode.value[exercise.id] || `# ${exercise.title}\n# ${exercise.description}\n\n# Your solution here:\n\n`
   localStorage.setItem('compiler_code', code)
   router.push('/compiler')
 }
+
+const runTestsForExercise = async (exercise: any) => {
+  if (!userCode.value[exercise.id] || !exercise.testCases) return
+
+  isLoading.value[exercise.id] = true
+
+  try {
+    if (!pyodide) {
+      pyodide = await loadPyodide()
+    }
+
+    const results = await runTests(pyodide, userCode.value[exercise.id], exercise.testCases)
+    testResults.value[exercise.id] = results
+  } catch (error: any) {
+    console.error('Test execution error:', error)
+    testResults.value[exercise.id] = exercise.testCases.map((testCase: TestCase) => ({
+      passed: false,
+      expected: testCase.output,
+      actual: `Error: ${error.message || String(error)}`,
+      testCase
+    }))
+  } finally {
+    isLoading.value[exercise.id] = false
+  }
+}
+
+const passedTestsCount = (exerciseId: number): number => {
+  if (!testResults.value[exerciseId]) return 0
+  return testResults.value[exerciseId].filter(r => r.passed).length
+}
+
+const allTestsPassed = (exerciseId: number): boolean => {
+  if (!testResults.value[exerciseId] || testResults.value[exerciseId].length === 0) return false
+  return testResults.value[exerciseId].every(r => r.passed)
+}
+
+onMounted(async () => {
+  // Initialize user code for each exercise
+  exercises.forEach(exercise => {
+    if (!userCode.value[exercise.id]) {
+      userCode.value[exercise.id] = `# ${exercise.title}\n# ${exercise.description}\n\n# Your solution here:\n\n`
+    }
+  })
+  
+  // Preload Pyodide
+  try {
+    pyodide = await loadPyodide()
+  } catch (error) {
+    console.error('Failed to load Pyodide:', error)
+  }
+})
 </script>

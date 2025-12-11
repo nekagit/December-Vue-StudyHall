@@ -493,9 +493,10 @@ const loadPyodide = async () => {
   if (pyodide) return
   
   try {
-    // @ts-ignore
-    if (window.loadPyodide) {
-      pyodide = await window.loadPyodide()
+    // @ts-ignore - Pyodide is loaded dynamically
+    if ((window as any).loadPyodide) {
+      // @ts-ignore
+      pyodide = await (window as any).loadPyodide()
     } else {
       await new Promise((resolve) => {
         const script = document.createElement('script')
@@ -693,3 +694,6 @@ onUnmounted(() => {
   }
 })
 </script>
+
+
+

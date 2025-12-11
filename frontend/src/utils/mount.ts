@@ -1,4 +1,4 @@
-import { createApp, Component } from 'vue'
+import { createApp, type Component } from 'vue'
 
 export function mountIslands(components: Record<string, Component>) {
   document.querySelectorAll('[data-vue-component]').forEach(el => {
@@ -11,5 +11,8 @@ export function mountIslands(components: Record<string, Component>) {
     }
   })
 }
+
+
+
 
 

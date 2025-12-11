@@ -55,3 +55,6 @@ export function removeCharacterConfig(): void {
 export function hasCharacterConfig(): boolean {
   return localStorage.getItem(CHARACTER_STORAGE_KEY) !== null
 }
+
+
+
