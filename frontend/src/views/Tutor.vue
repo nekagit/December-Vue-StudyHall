@@ -291,6 +291,8 @@ async function submitFeedback(feedback: 'like' | 'dislike') {
 </script>
 
 <style scoped>
+@reference "../style.css";
+
 .markdown-content :deep(h1) {
   @apply text-2xl font-bold mt-6 mb-4 text-msit-dark-50;
 }
@@ -344,4 +346,8 @@ async function submitFeedback(feedback: 'like' | 'dislike') {
   @apply italic;
 }
 </style>
+
+
+
+
 

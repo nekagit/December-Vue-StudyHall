@@ -327,7 +327,6 @@ const resetPreferences = () => {
 }
 </script>
 
-<<<<<<< HEAD
 <style scoped>
 input[type="range"] {
   -webkit-appearance: none;
@@ -363,5 +362,8 @@ input[type="range"]::-moz-range-thumb {
   overflow: hidden;
 }
 </style>
-=======
->>>>>>> df4caa5f5de63697a7bd9f2f6108875a189ed0fc
+
+
+
+
+

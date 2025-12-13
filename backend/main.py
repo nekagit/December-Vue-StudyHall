@@ -552,6 +552,9 @@ def handle_chat_message(data):
         if not session_id or not message:
             return
         
+        # Store message in session
+        pair_programming.add_message(session_id, username, message, request.sid)
+        
         # Broadcast chat message to all participants
         emit('chat_message', {
             'id': f"{session_id}-{int(__import__('time').time() * 1000)}",
@@ -568,8 +571,20 @@ def handle_typing_start(data):
     try:
         session_id = data.get('session_id')
         if session_id:
+            # Update typing status in session
+            pair_programming.set_typing(session_id, request.sid, True)
+            
+            # Get username from participants
+            session = pair_programming.get_session(session_id)
+            username = 'Anonymous'
+            if session:
+                for p in session.get('participants', []):
+                    if p.get('socket_id') == request.sid:
+                        username = p.get('username', 'Anonymous')
+                        break
+            
             emit('typing_start', {
-                'username': data.get('username', 'Anonymous')
+                'username': username
             }, room=session_id, include_self=False)
     except Exception as e:
         app.logger.error(f"Typing start error: {str(e)}\n{traceback.format_exc()}")
@@ -580,8 +595,20 @@ def handle_typing_stop(data):
     try:
         session_id = data.get('session_id')
         if session_id:
+            # Update typing status in session
+            pair_programming.set_typing(session_id, request.sid, False)
+            
+            # Get username from participants
+            session = pair_programming.get_session(session_id)
+            username = 'Anonymous'
+            if session:
+                for p in session.get('participants', []):
+                    if p.get('socket_id') == request.sid:
+                        username = p.get('username', 'Anonymous')
+                        break
+            
             emit('typing_stop', {
-                'username': data.get('username', 'Anonymous')
+                'username': username
             }, room=session_id, include_self=False)
     except Exception as e:
         app.logger.error(f"Typing stop error: {str(e)}\n{traceback.format_exc()}")

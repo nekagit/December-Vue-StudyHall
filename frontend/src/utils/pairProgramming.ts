@@ -49,15 +49,56 @@ class PairProgrammingClient {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 10,
+      reconnectionDelayMax: 5000,
+      timeout: 20000
     })
 
     this.socket.on('connect', () => {
       console.log('Connected to pair programming server')
+      // Rejoin session if we have one
+      if (this.sessionId) {
+        this.joinSession(this.sessionId).catch(err => {
+          console.error('Failed to rejoin session after reconnect:', err)
+          if (this.callbacks.onError) {
+            this.callbacks.onError('Failed to reconnect to session. Please refresh the page.')
+          }
+        })
+      }
     })
 
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from pair programming server')
+    this.socket.on('disconnect', (reason: string) => {
+      console.log('Disconnected from pair programming server:', reason)
+      if (reason === 'io server disconnect') {
+        // Server disconnected, try to reconnect
+        this.socket?.connect()
+      }
+    })
+
+    this.socket.on('connect_error', (error: Error) => {
+      console.error('Connection error:', error)
+      if (this.callbacks.onError) {
+        this.callbacks.onError(`Connection error: ${error.message}`)
+      }
+    })
+
+    this.socket.on('reconnect', (attemptNumber: number) => {
+      console.log('Reconnected after', attemptNumber, 'attempts')
+    })
+
+    this.socket.on('reconnect_attempt', (attemptNumber: number) => {
+      console.log('Reconnection attempt', attemptNumber)
+    })
+
+    this.socket.on('reconnect_error', (error: Error) => {
+      console.error('Reconnection error:', error)
+    })
+
+    this.socket.on('reconnect_failed', () => {
+      console.error('Failed to reconnect after all attempts')
+      if (this.callbacks.onError) {
+        this.callbacks.onError('Failed to reconnect to server. Please refresh the page.')
+      }
     })
 
     this.socket.on('session_state', (data: any) => {
@@ -116,18 +157,22 @@ class PairProgrammingClient {
       }
     })
 
-    this.socket.on('user_typing', (data: any) => {
-      if (data.is_typing && this.callbacks.onTypingStart) {
+    this.socket.on('typing_start', (data: any) => {
+      if (this.callbacks.onTypingStart) {
         this.callbacks.onTypingStart(data.username)
-      } else if (!data.is_typing && this.callbacks.onTypingStop) {
+      }
+    })
+
+    this.socket.on('typing_stop', (data: any) => {
+      if (this.callbacks.onTypingStop) {
         this.callbacks.onTypingStop(data.username)
       }
     })
 
-    this.socket.on('chat_message_received', (data: any) => {
+    this.socket.on('chat_message', (data: any) => {
       if (this.callbacks.onChatMessage) {
         this.callbacks.onChatMessage({
-          id: Date.now().toString(),
+          id: data.id || Date.now().toString(),
           username: data.username,
           message: data.message,
           timestamp: new Date(data.timestamp || Date.now())
@@ -176,18 +221,34 @@ class PairProgrammingClient {
     }
   }
 
-  async joinSession(sessionId: string) {
+  async joinSession(sessionId: string): Promise<void> {
     if (!this.socket?.connected) {
       this.connect()
-      // Wait for connection
-      await new Promise<void>((resolve) => {
-        if (this.socket) {
-          if (this.socket.connected) {
-            resolve()
-          } else {
-            this.socket.once('connect', () => resolve())
-          }
+      // Wait for connection with timeout
+      await new Promise<void>((resolve, reject) => {
+        if (!this.socket) {
+          reject(new Error('Socket not initialized'))
+          return
         }
+        
+        if (this.socket.connected) {
+          resolve()
+          return
+        }
+        
+        const timeout = setTimeout(() => {
+          reject(new Error('Connection timeout'))
+        }, 10000) // 10 second timeout
+        
+        this.socket.once('connect', () => {
+          clearTimeout(timeout)
+          resolve()
+        })
+        
+        this.socket.once('connect_error', (error: Error) => {
+          clearTimeout(timeout)
+          reject(error)
+        })
       })
     }
 
@@ -260,7 +321,8 @@ class PairProgrammingClient {
   sendTypingStart() {
     if (this.socket && this.sessionId) {
       this.socket.emit('typing_start', {
-        session_id: this.sessionId
+        session_id: this.sessionId,
+        username: this.username
       })
     }
   }
@@ -268,7 +330,8 @@ class PairProgrammingClient {
   sendTypingStop() {
     if (this.socket && this.sessionId) {
       this.socket.emit('typing_stop', {
-        session_id: this.sessionId
+        session_id: this.sessionId,
+        username: this.username
       })
     }
   }
@@ -341,6 +404,9 @@ class PairProgrammingClient {
 }
 
 export const pairProgrammingClient = new PairProgrammingClient()
+
+
+
 
 
 

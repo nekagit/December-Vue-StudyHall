@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@source "./**/*.vue";
+@source "./**/*.js";
+@source "./**/*.ts";
+@source "../index.html";
+
 :root {
   /* MSIT-inspired color palette */
   --msit-dark: #1A312B;
