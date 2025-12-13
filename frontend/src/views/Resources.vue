@@ -22,8 +22,14 @@
       </button>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-msit-accent"></div>
+      <p class="mt-2 text-msit-dark-200 font-sans">Loading resources...</p>
+    </div>
+
     <!-- Resources Grid -->
-    <div class="space-y-6">
+    <div v-else class="space-y-6">
       <div
         v-for="category in filteredCategories"
         :key="category"
@@ -72,11 +78,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const selectedCategory = ref('All')
+const resources = ref<any[]>([])
+const loading = ref(false)
 
-const resources = [
+const loadResources = async () => {
+  loading.value = true
+  try {
+    const params = new URLSearchParams()
+    if (selectedCategory.value && selectedCategory.value !== 'All') {
+      params.append('category', selectedCategory.value)
+    }
+    
+    const response = await fetch(`/api/resources?${params.toString()}`, {
+      credentials: 'include'
+    })
+    if (response.ok) {
+      resources.value = await response.json()
+    }
+  } catch (e) {
+    console.error('Error loading resources:', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Legacy resources for fallback
+const legacyResources = [
   // Documentation
   {
     id: 1,
@@ -318,6 +348,10 @@ const filteredCategories = computed(() => {
 })
 
 const getResourcesByCategory = (category: string) => {
-  return resources.filter(r => r.category === category)
+  return resources.value.filter(r => r.category === category)
 }
+
+onMounted(() => {
+  loadResources()
+})
 </script>

@@ -45,7 +45,7 @@ class PairProgrammingClient {
       return
     }
 
-    this.socket = io('http://localhost:5000', {
+    this.socket = io('http://localhost:5001', {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
@@ -198,7 +198,7 @@ class PairProgrammingClient {
 
   async createSession(): Promise<string> {
     try {
-      const response = await fetch('http://localhost:5000/api/pair-programming/create', {
+      const response = await fetch('http://localhost:5001/api/pair-programming/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -340,7 +340,7 @@ class PairProgrammingClient {
     if (!this.sessionId) return false
     
     try {
-      const response = await fetch(`http://localhost:5000/api/pair-programming/${this.sessionId}/extend`, {
+      const response = await fetch(`http://localhost:5001/api/pair-programming/${this.sessionId}/extend`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -358,7 +358,7 @@ class PairProgrammingClient {
 
   async restoreSession(sessionId: string): Promise<boolean> {
     try {
-      const response = await fetch(`http://localhost:5000/api/pair-programming/${sessionId}`)
+      const response = await fetch(`http://localhost:5001/api/pair-programming/${sessionId}`)
       const data = await response.json()
       
       if (data.success && data.session) {

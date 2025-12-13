@@ -570,25 +570,41 @@ const decodeURL = () => {
 }
 
 const generateHash = async (algorithm: string) => {
-  // Note: Browser-based hashing using Web Crypto API
   if (!hashInput.value) return
   
   try {
-    const encoder = new TextEncoder()
-    const data = encoder.encode(hashInput.value)
+    // Use backend endpoint for all hash algorithms (supports MD5, SHA1, SHA256)
+    const response = await fetch('/api/tools/hash', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: hashInput.value, algorithm: algorithm })
+    })
     
-    let hashBuffer: ArrayBuffer
-    if (algorithm === 'md5') {
-      // MD5 not available in Web Crypto API, using SHA256 as fallback
-      hashBuffer = await crypto.subtle.digest('SHA-256', data)
-    } else if (algorithm === 'sha1') {
-      hashBuffer = await crypto.subtle.digest('SHA-1', data)
-    } else {
-      hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    if (response.ok) {
+      const result = await response.json()
+      if (result.success) {
+        hashOutput.value = result.hash
+        return
+      }
     }
     
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    hashOutput.value = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    // Fallback to client-side for SHA1 and SHA256 if backend fails
+    if (algorithm !== 'md5') {
+      const encoder = new TextEncoder()
+      const data = encoder.encode(hashInput.value)
+      let hashBuffer: ArrayBuffer
+      
+      if (algorithm === 'sha1') {
+        hashBuffer = await crypto.subtle.digest('SHA-1', data)
+      } else {
+        hashBuffer = await crypto.subtle.digest('SHA-256', data)
+      }
+      
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      hashOutput.value = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    } else {
+      hashOutput.value = 'Error: MD5 requires backend support'
+    }
   } catch (e) {
     hashOutput.value = 'Error generating hash'
   }

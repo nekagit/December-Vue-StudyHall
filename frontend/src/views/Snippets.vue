@@ -36,8 +36,14 @@
       </div>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-msit-accent"></div>
+      <p class="mt-2 text-msit-dark-200 font-sans">Loading snippets...</p>
+    </div>
+
     <!-- Snippets Grid -->
-    <div v-if="filteredSnippets.length === 0" class="text-center py-12">
+    <div v-else-if="filteredSnippets.length === 0" class="text-center py-12">
       <p class="text-msit-dark-200 font-sans">No snippets found</p>
     </div>
     
@@ -90,14 +96,41 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const searchQuery = ref('')
 const selectedCategory = ref('')
+const snippets = ref<any[]>([])
+const loading = ref(false)
 
-const snippets = [
+const loadSnippets = async () => {
+  loading.value = true
+  try {
+    const params = new URLSearchParams()
+    if (searchQuery.value) {
+      params.append('search', searchQuery.value)
+    }
+    if (selectedCategory.value) {
+      params.append('category', selectedCategory.value)
+    }
+    
+    const response = await fetch(`/api/snippets?${params.toString()}`, {
+      credentials: 'include'
+    })
+    if (response.ok) {
+      snippets.value = await response.json()
+    }
+  } catch (e) {
+    console.error('Error loading snippets:', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Legacy snippets data for fallback
+const legacySnippets = [
   {
     id: 1,
     name: 'Hello World',
@@ -567,12 +600,12 @@ print(f"Difference: {diff.days} days")`
 ]
 
 const categories = computed(() => {
-  const cats = new Set(snippets.map(s => s.category))
+  const cats = new Set(snippets.value.map(s => s.category))
   return Array.from(cats).sort()
 })
 
 const filteredSnippets = computed(() => {
-  let result = snippets
+  let result = snippets.value
   
   if (selectedCategory.value) {
     result = result.filter(s => s.category === selectedCategory.value)
@@ -584,11 +617,24 @@ const filteredSnippets = computed(() => {
       s.name.toLowerCase().includes(query) ||
       s.description.toLowerCase().includes(query) ||
       s.category.toLowerCase().includes(query) ||
-      s.code.toLowerCase().includes(query)
+      (s.code && s.code.toLowerCase().includes(query))
     )
   }
   
   return result
+})
+
+// Watch for changes and reload (debounced)
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+watch([searchQuery, selectedCategory], () => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    loadSnippets()
+  }, 300)
+})
+
+onMounted(() => {
+  loadSnippets()
 })
 
 const copySnippet = (code: string) => {

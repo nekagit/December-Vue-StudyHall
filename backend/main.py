@@ -20,13 +20,13 @@ app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
 # CORS configuration - more permissive for development
 CORS(app, 
      supports_credentials=True, 
-     origins=["http://localhost:5173", "http://localhost:5000", "http://127.0.0.1:5173"],
+     origins=["http://localhost:5173", "http://localhost:5001", "http://127.0.0.1:5173"],
      allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
      expose_headers=["Content-Type"])
 
 # Initialize SocketIO with CORS support
-socketio = SocketIO(app, cors_allowed_origins=["http://localhost:5173", "http://localhost:5000", "http://127.0.0.1:5173"], async_mode='threading')
+socketio = SocketIO(app, cors_allowed_origins=["http://localhost:5173", "http://localhost:5001", "http://127.0.0.1:5173"], async_mode='threading')
 
 # Add explicit OPTIONS handler for all routes
 @app.before_request
@@ -49,8 +49,20 @@ def get_db():
 @app.route("/api/materials", methods=["GET"])
 def get_materials():
     """Get all materials - no authentication required"""
+    # #region agent log
+    log_path = '/Users/nenadkalicanin/Documents/Github/december/December-Vue-StudyHall/.cursor/debug.log'
+    try:
+        import json, os, time
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        with open(log_path, 'a') as f:
+            f.write(json.dumps({"location":"main.py:get_materials","message":"Function entry","data":{"args":dict(request.args)},"timestamp":time.time()*1000,"sessionId":"debug-session","runId":"post-fix","hypothesisId":"B"})+'\n')
+    except:
+        pass  # Don't let logging break the endpoint
+    # #endregion
+    
     db = SessionLocal()
     try:
+        
         query = db.query(Material)
         
         # Search functionality
@@ -68,6 +80,14 @@ def get_materials():
         
         materials = query.order_by(Material.order_index, Material.created_at).all()
         
+        # #region agent log
+        try:
+            with open(log_path, 'a') as f:
+                f.write(json.dumps({"location":"main.py:get_materials","message":"Query successful","data":{"count":len(materials)},"timestamp":time.time()*1000,"sessionId":"debug-session","runId":"post-fix","hypothesisId":"B"})+'\n')
+        except:
+            pass
+        # #endregion
+        
         return jsonify([{
             "id": m.id,
             "title": m.title,
@@ -76,6 +96,19 @@ def get_materials():
             "notion_url": m.notion_url,
             "created_at": m.created_at.isoformat() if m.created_at else None
         } for m in materials])
+    except Exception as e:
+        # #region agent log
+        try:
+            error_msg = str(e)
+            error_tb = traceback.format_exc()
+            with open(log_path, 'a') as f:
+                f.write(json.dumps({"location":"main.py:get_materials","message":"Error occurred","data":{"error":error_msg,"traceback":error_tb},"timestamp":time.time()*1000,"sessionId":"debug-session","runId":"post-fix","hypothesisId":"B"})+'\n')
+        except:
+            pass
+        # #endregion
+        app.logger.error(f"Get materials error: {str(e)}\n{traceback.format_exc()}")
+        print(f"ERROR in get_materials: {str(e)}\n{traceback.format_exc()}")
+        return jsonify({"error": str(e), "traceback": traceback.format_exc()}), 500
     finally:
         db.close()
 
@@ -103,11 +136,57 @@ def get_material(material_id):
 @app.route("/api/materials/categories", methods=["GET"])
 def get_categories():
     """Get all material categories - no authentication required"""
+    # #region agent log
+    log_path = '/Users/nenadkalicanin/Documents/Github/december/December-Vue-StudyHall/.cursor/debug.log'
+    print("[DEBUG] get_categories called")  # Force console output
+    try:
+        import json, os, time
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        with open(log_path, 'a') as f:
+            f.write(json.dumps({"location":"main.py:get_categories","message":"Function entry","timestamp":time.time()*1000,"sessionId":"debug-session","runId":"post-fix","hypothesisId":"B"})+'\n')
+    except Exception as log_err:
+        print(f"[DEBUG] Logging failed: {log_err}")  # Show if logging fails
+    # #endregion
+    
     db = SessionLocal()
     try:
-        from sqlalchemy import distinct
-        categories = db.query(distinct(Material.category)).filter(Material.category.isnot(None)).all()
-        return jsonify([cat[0] for cat in categories if cat[0]])
+        print("[DEBUG] Querying categories...")  # Force console output
+        
+        # Fix: Use correct SQLAlchemy syntax for distinct query
+        # Query distinct categories directly using .distinct() method
+        categories = db.query(Material.category).filter(Material.category.isnot(None)).distinct().all()
+        
+        print(f"[DEBUG] Found {len(categories)} categories")  # Force console output
+        
+        # #region agent log
+        try:
+            with open(log_path, 'a') as f:
+                f.write(json.dumps({"location":"main.py:get_categories","message":"Query successful","data":{"raw_categories":str(categories),"count":len(categories)},"timestamp":time.time()*1000,"sessionId":"debug-session","runId":"post-fix","hypothesisId":"B"})+'\n')
+        except:
+            pass
+        # #endregion
+        
+        # Extract category strings from Row objects
+        # SQLAlchemy returns Row objects which can be indexed like tuples: Row('Python',)
+        # Simply access the first element: cat[0]
+        result = [cat[0] for cat in categories if cat[0]]
+        
+        print(f"[DEBUG] Returning {len(result)} categories: {result}")  # Force console output
+        return jsonify(result)
+    except Exception as e:
+        # #region agent log
+        error_msg = str(e)
+        error_tb = traceback.format_exc()
+        print(f"[DEBUG] ERROR in get_categories: {error_msg}")  # Force console output
+        print(f"[DEBUG] Traceback: {error_tb}")  # Force console output
+        try:
+            with open(log_path, 'a') as f:
+                f.write(json.dumps({"location":"main.py:get_categories","message":"Error occurred","data":{"error":error_msg,"traceback":error_tb},"timestamp":time.time()*1000,"sessionId":"debug-session","runId":"post-fix","hypothesisId":"B"})+'\n')
+        except:
+            pass
+        # #endregion
+        app.logger.error(f"Get categories error: {error_msg}\n{error_tb}")
+        return jsonify({"error": error_msg, "traceback": error_tb}), 500
     finally:
         db.close()
 
@@ -227,6 +306,223 @@ def get_problem_topics():
     finally:
         db.close()
 
+# Global Search endpoint - searches across all content types
+@app.route("/api/search", methods=["GET"])
+def global_search():
+    """Search across materials, problems, and other content - no authentication required"""
+    db = SessionLocal()
+    try:
+        query = request.args.get("q", "").strip()
+        content_types = request.args.get("types", "materials,problems").split(",")
+        
+        if not query:
+            return jsonify({"results": []})
+        
+        results = []
+        search_lower = query.lower()
+        
+        # Search materials
+        if "materials" in content_types:
+            materials = db.query(Material).filter(
+                (Material.title.ilike(f"%{query}%")) |
+                (Material.content.ilike(f"%{query}%"))
+            ).limit(20).all()
+            
+            for m in materials:
+                results.append({
+                    "id": m.id,
+                    "title": m.title,
+                    "description": (m.content or "")[:200],
+                    "type": "materials",
+                    "category": m.category,
+                    "route": f"/materials/{m.id}"
+                })
+        
+        # Search problems
+        if "problems" in content_types:
+            problems = db.query(Problem).filter(
+                (Problem.title.ilike(f"%{query}%")) |
+                (Problem.description.ilike(f"%{query}%")) |
+                (Problem.full_description.ilike(f"%{query}%"))
+            ).limit(20).all()
+            
+            for p in problems:
+                results.append({
+                    "id": p.id,
+                    "title": p.title,
+                    "description": (p.description or "")[:200],
+                    "type": "problems",
+                    "category": p.category or "General",
+                    "route": f"/practice-problems"
+                })
+        
+        return jsonify({"results": results})
+    except Exception as e:
+        app.logger.error(f"Global search error: {str(e)}\n{traceback.format_exc()}")
+        return jsonify({"error": str(e), "results": []}), 500
+    finally:
+        db.close()
+
+# Snippets API endpoints
+@app.route("/api/snippets", methods=["GET"])
+def get_snippets():
+    """Get code snippets - no authentication required"""
+    # For MVP, return static snippets. Can be moved to database later
+    snippets = [
+        {
+            "id": 1,
+            "name": "Hello World",
+            "category": "Basics",
+            "description": "Basic print statement",
+            "code": 'print("Hello, World!")'
+        },
+        {
+            "id": 2,
+            "name": "Variables and Types",
+            "category": "Basics",
+            "description": "Variable assignment and type checking",
+            "code": "# Variable assignment\nname = 'StudyHall'\nage = 25\nis_active = True\n\n# Type checking\nprint(type(name))  # <class 'str'>\nprint(type(age))   # <class 'int'>"
+        },
+        {
+            "id": 3,
+            "name": "Lists Operations",
+            "category": "Data Structures",
+            "description": "Common list operations",
+            "code": "# List operations\nnumbers = [1, 2, 3, 4, 5]\n\n# Access elements\nprint(numbers[0])      # 1\nprint(numbers[-1])     # 5\n\n# Slice\nprint(numbers[1:3])    # [2, 3]\n\n# Modify\nnumbers.append(6)     # [1, 2, 3, 4, 5, 6]\nnumbers.insert(0, 0)   # [0, 1, 2, 3, 4, 5, 6]"
+        },
+        {
+            "id": 4,
+            "name": "For Loops",
+            "category": "Control Flow",
+            "description": "Iterating with for loops",
+            "code": "# For loop examples\n\n# Iterate over list\nfruits = ['apple', 'banana', 'orange']\nfor fruit in fruits:\n    print(fruit)\n\n# With range\nfor i in range(5):\n    print(i)  # 0, 1, 2, 3, 4\n\n# With enumerate\nfor index, fruit in enumerate(fruits):\n    print(f'{index}: {fruit}')"
+        },
+        {
+            "id": 5,
+            "name": "Functions",
+            "category": "Functions",
+            "description": "Define and call functions",
+            "code": "# Function definition\ndef greet(name):\n    return f'Hello, {name}!'\n\n# Function call\nmessage = greet('StudyHall')\nprint(message)  # Hello, StudyHall!\n\n# Function with default parameters\ndef power(base, exponent=2):\n    return base ** exponent\n\nprint(power(3))      # 9\nprint(power(3, 3))   # 27"
+        },
+        {
+            "id": 6,
+            "name": "Dictionaries",
+            "category": "Data Structures",
+            "description": "Key-value pairs",
+            "code": "# Dictionary operations\nstudent = {\n    'name': 'Alice',\n    'age': 20,\n    'grade': 'A'\n}\n\n# Access values\nprint(student['name'])        # Alice\nprint(student.get('age'))     # 20\n\n# Add/Update\nstudent['email'] = 'alice@example.com'\nstudent['age'] = 21\n\n# Iterate\nfor key, value in student.items():\n    print(f'{key}: {value}')"
+        }
+    ]
+    
+    # Filter by search query if provided
+    search = request.args.get("search", "").strip().lower()
+    category = request.args.get("category", "").strip()
+    
+    filtered = snippets
+    if search:
+        filtered = [s for s in filtered if search in s["name"].lower() or search in s["description"].lower()]
+    if category:
+        filtered = [s for s in filtered if s["category"].lower() == category.lower()]
+    
+    return jsonify(filtered)
+
+# Cheat Sheets API endpoints
+@app.route("/api/cheat-sheets", methods=["GET"])
+def get_cheat_sheets():
+    """Get cheat sheets - no authentication required"""
+    cheat_sheets = [
+        {
+            "id": 1,
+            "title": "Python Basics",
+            "description": "Essential Python syntax and operations",
+            "sections": [
+                {
+                    "title": "Variables",
+                    "content": "name = 'StudyHall'\nage = 25\nis_active = True"
+                },
+                {
+                    "title": "Print",
+                    "content": "print('Hello')\nprint(f'Age: {age}')"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "title": "Lists",
+            "description": "List operations and methods",
+            "sections": [
+                {
+                    "title": "Create",
+                    "content": "numbers = [1, 2, 3]\nempty = []"
+                },
+                {
+                    "title": "Methods",
+                    "content": "numbers.append(4)\nnumbers.insert(0, 0)\nnumbers.remove(2)\nnumbers.pop()"
+                }
+            ]
+        }
+    ]
+    
+    search = request.args.get("search", "").strip().lower()
+    if search:
+        cheat_sheets = [cs for cs in cheat_sheets if search in cs["title"].lower() or search in cs["description"].lower()]
+    
+    return jsonify(cheat_sheets)
+
+# Resources API endpoints
+@app.route("/api/resources", methods=["GET"])
+def get_resources():
+    """Get learning resources - no authentication required"""
+    resources = [
+        {
+            "id": 1,
+            "title": "Python Official Documentation",
+            "description": "Comprehensive official documentation for Python programming language.",
+            "url": "https://docs.python.org/3/",
+            "category": "Documentation",
+            "type": "Official",
+            "free": True
+        },
+        {
+            "id": 2,
+            "title": "Real Python",
+            "description": "High-quality Python tutorials, articles, and courses for developers of all skill levels.",
+            "url": "https://realpython.com/",
+            "category": "Tutorials",
+            "type": "Tutorial",
+            "free": True
+        },
+        {
+            "id": 3,
+            "title": "Python.org Tutorial",
+            "description": "Official Python tutorial covering basics to advanced topics. Perfect for beginners.",
+            "url": "https://docs.python.org/3/tutorial/",
+            "category": "Tutorials",
+            "type": "Official",
+            "free": True
+        },
+        {
+            "id": 4,
+            "title": "LeetCode",
+            "description": "Practice coding problems and improve your problem-solving skills with Python.",
+            "url": "https://leetcode.com/",
+            "category": "Practice",
+            "type": "Platform",
+            "free": True
+        }
+    ]
+    
+    # Search functionality
+    search = request.args.get("search", "").strip().lower()
+    if search:
+        resources = [r for r in resources if search in r["title"].lower() or search in r["description"].lower() or search in r["category"].lower()]
+    
+    # Category filter
+    category = request.args.get("category", "").strip()
+    if category and category != "All":
+        resources = [r for r in resources if r["category"].lower() == category.lower()]
+    
+    return jsonify(resources)
+
 # Export endpoint - allows users to export their work
 @app.route("/api/export", methods=["POST"])
 def export_work():
@@ -245,6 +541,41 @@ def export_work():
         })
     except Exception as e:
         app.logger.error(f"Export error: {str(e)}\n{traceback.format_exc()}")
+        return jsonify({"error": str(e)}), 500
+
+# Tools API endpoints
+@app.route("/api/tools/hash", methods=["POST"])
+def generate_hash():
+    """Generate hash (MD5, SHA1, SHA256) for text - no authentication required"""
+    try:
+        data = request.json or {}
+        text = data.get("text", "").strip()
+        algorithm = data.get("algorithm", "sha256").strip().lower()
+        
+        if not text:
+            return jsonify({"error": "Text is required"}), 400
+        
+        import hashlib
+        
+        # Generate hash based on algorithm
+        if algorithm == "md5":
+            hash_obj = hashlib.md5(text.encode('utf-8'))
+        elif algorithm == "sha1":
+            hash_obj = hashlib.sha1(text.encode('utf-8'))
+        elif algorithm == "sha256":
+            hash_obj = hashlib.sha256(text.encode('utf-8'))
+        else:
+            return jsonify({"error": "Unsupported algorithm. Use md5, sha1, or sha256"}), 400
+        
+        hash_hex = hash_obj.hexdigest()
+        
+        return jsonify({
+            "success": True,
+            "algorithm": algorithm,
+            "hash": hash_hex
+        })
+    except Exception as e:
+        app.logger.error(f"Hash generation error: {str(e)}\n{traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 # Tutor API endpoints
@@ -614,4 +945,4 @@ def handle_typing_stop(data):
         app.logger.error(f"Typing stop error: {str(e)}\n{traceback.format_exc()}")
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True, port=5000, allow_unsafe_werkzeug=True)
+    socketio.run(app, debug=True, port=5001, allow_unsafe_werkzeug=True)

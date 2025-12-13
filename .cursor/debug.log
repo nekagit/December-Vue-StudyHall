@@ -1,0 +1,6 @@
+{"location": "main.py:get_categories", "message": "Function entry", "timestamp": 1765636122390.588, "sessionId": "debug-session", "runId": "post-fix", "hypothesisId": "B"}
+{"location": "main.py:get_categories", "message": "Query successful", "data": {"raw_categories": "[('Python',), ('Web Dev',), ('Algorithms',), ('Best Practices',), ('Database',)]", "count": 5}, "timestamp": 1765636122396.508, "sessionId": "debug-session", "runId": "post-fix", "hypothesisId": "B"}
+{"location": "main.py:get_categories", "message": "Function entry", "timestamp": 1765636182577.7202, "sessionId": "debug-session", "runId": "post-fix", "hypothesisId": "B"}
+{"location": "main.py:get_categories", "message": "Query successful", "data": {"raw_categories": "[('Python',), ('Web Dev',), ('Algorithms',), ('Best Practices',), ('Database',)]", "count": 5}, "timestamp": 1765636182583.2068, "sessionId": "debug-session", "runId": "post-fix", "hypothesisId": "B"}
+{"location": "main.py:get_materials", "message": "Function entry", "data": {"args": {}}, "timestamp": 1765636182584.393, "sessionId": "debug-session", "runId": "post-fix", "hypothesisId": "B"}
+{"location": "main.py:get_materials", "message": "Query successful", "data": {"count": 19}, "timestamp": 1765636182586.044, "sessionId": "debug-session", "runId": "post-fix", "hypothesisId": "B"}

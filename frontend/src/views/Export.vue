@@ -187,13 +187,14 @@ const exportEverything = async () => {
     const codeHistory = localStorage.getItem('python_code_history')
     const codeData = codeHistory ? JSON.parse(codeHistory) : []
     
-    const response = await fetch('/api/materials', {
+    const materialsResponse = await fetch('/api/materials', {
       credentials: 'include'
     })
-    const materials = response.ok ? await response.json() : []
+    const materials = materialsResponse.ok ? await materialsResponse.json() : []
     
-    const content = {
-      exportDate: new Date().toISOString(),
+    const exportData = {
+      date: new Date().toISOString().split('T')[0],
+      timestamp: new Date().toISOString(),
       code: codeData,
       materials: materials,
       summary: {
@@ -202,11 +203,29 @@ const exportEverything = async () => {
       }
     }
     
-    const filename = `studyhall-export-${new Date().toISOString().split('T')[0]}.json`
-    downloadFile(JSON.stringify(content, null, 2), filename, 'application/json')
-    saveExportHistory(filename, content)
-  } catch (e) {
-    alert('Error exporting everything')
+    // Use the export API endpoint
+    const exportResponse = await fetch('/api/export', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify(exportData)
+    })
+    
+    if (!exportResponse.ok) {
+      throw new Error('Failed to export via API')
+    }
+    
+    const result = await exportResponse.json()
+    const filename = result.filename || `studyhall-export-${new Date().toISOString().split('T')[0]}.json`
+    
+    // Download the file
+    downloadFile(JSON.stringify(exportData, null, 2), filename, 'application/json')
+    saveExportHistory(filename, exportData)
+  } catch (e: any) {
+    console.error('Export error:', e)
+    alert(`Error exporting everything: ${e.message || 'Unknown error'}`)
   }
 }
 

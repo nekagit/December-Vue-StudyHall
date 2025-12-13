@@ -61,13 +61,13 @@
         <div class="p-6 sm:p-8 relative overflow-x-auto">
           <div class="world-path-container" :style="{ minWidth: `${path.lessons.length * 120}px` }">
             <!-- Background Path -->
-            <svg class="absolute inset-0 w-full h-full" style="pointer-events: none; z-index: 0;">
+            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style="pointer-events: none; z-index: 0;">
               <path
                 v-for="(lesson, idx) in path.lessons.slice(0, -1)"
-                :key="`path-${idx}`"
+                :key="`path-${path.id}-${idx}`"
                 :d="getPathD(idx, path.lessons.length)"
                 stroke="rgba(131, 230, 91, 0.4)"
-                stroke-width="5"
+                stroke-width="0.5"
                 fill="none"
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -240,7 +240,8 @@
             <div
               v-for="(lesson, idx) in selectedPath.lessons"
               :key="idx"
-              class="flex items-start p-4 bg-msit-dark-900 rounded-lg border border-msit-dark-700"
+              @click="navigateToLesson(lesson)"
+              class="flex items-start p-4 bg-msit-dark-900 rounded-lg border border-msit-dark-700 cursor-pointer hover:border-msit-accent hover:bg-msit-dark-800 transition-all"
             >
               <div class="shrink-0 w-8 h-8 rounded-full bg-msit-accent/20 flex items-center justify-center mr-4">
                 <span class="text-sm font-semibold text-msit-accent font-sans">{{ idx + 1 }}</span>
@@ -268,7 +269,7 @@
             @click="startPath(selectedPath)"
             class="px-4 py-2 border border-transparent text-sm font-semibold rounded-md text-msit-dark bg-msit-accent hover:bg-msit-accent-500 transition-colors font-sans"
           >
-            Start Learning Path
+            Start First Lesson
           </button>
         </div>
       </div>
@@ -1404,11 +1405,30 @@ const learningPaths = [
   }
 ]
 
+const navigateToLesson = (lesson: any) => {
+  // Close modal first
+  selectedPath.value = null
+  
+  // Navigate based on lesson type
+  if (lesson.type === 'Practice' || lesson.type === 'Interactive' || lesson.type === 'Project') {
+    router.push('/compiler')
+  } else if (lesson.type === 'Video' || lesson.type === 'Tutorial') {
+    router.push('/materials')
+  } else {
+    // Default to compiler for any other type
+    router.push('/compiler')
+  }
+}
+
 const startPath = (path: any) => {
-  // Show path details modal
-  selectedPath.value = path
-  // You can navigate to first lesson or materials related to this path
-  // For now, we show the modal with all lessons
+  // Navigate to the first lesson or compiler
+  if (path.lessons && path.lessons.length > 0) {
+    const firstLesson = path.lessons[0]
+    navigateToLesson(firstLesson)
+  } else {
+    // If no lessons, navigate to compiler
+    router.push('/compiler')
+  }
 }
 
 // World map helper functions
@@ -1424,14 +1444,63 @@ const getNodePosition = (index: number, total: number) => {
 }
 
 const getPathD = (index: number, total: number) => {
+  // #region agent log
+  console.log('[DEBUG] getPathD entry', { index, total, timestamp: Date.now() });
+  // #endregion
+  
+  // Use viewBox coordinates (0-100) - NO PERCENTAGE SIGNS
+  // Ensure we have valid numbers
+  if (!total || total <= 1 || index < 0 || index >= total - 1) {
+    console.warn('[DEBUG] getPathD invalid params', { index, total });
+    return ''
+  }
+  
+  // Calculate positions in viewBox coordinate system (0-100)
   const startX = (index / (total - 1)) * 100
   const endX = ((index + 1) / (total - 1)) * 100
   const midY = 50
   
+  // Validate numbers are finite
+  if (!Number.isFinite(startX) || !Number.isFinite(endX) || !Number.isFinite(midY)) {
+    console.error('[DEBUG] getPathD invalid coordinates', { startX, endX, midY, index, total });
+    return ''
+  }
+  
   // Create a wavy/curved path like a world map journey
   // Alternate between upward and downward curves for visual interest
   const curveDirection = index % 2 === 0 ? -15 : 15
-  return `M ${startX}% ${midY}% Q ${(startX + endX) / 2}% ${midY + curveDirection}% ${endX}% ${midY}%`
+  const controlX = (startX + endX) / 2
+  const controlY = midY + curveDirection
+  
+  // Ensure all values are valid numbers
+  if (!Number.isFinite(controlX) || !Number.isFinite(controlY)) {
+    console.error('[DEBUG] getPathD invalid control points', { controlX, controlY, startX, endX });
+    return ''
+  }
+  
+  // Format path with proper number formatting - ABSOLUTELY NO % SIGNS
+  // Use simple number format (SVG will handle decimals)
+  const pathD = `M ${startX} ${midY} Q ${controlX} ${controlY} ${endX} ${midY}`
+  
+  // #region agent log
+  const hasPercent = pathD.includes('%');
+  console.log('[DEBUG] getPathD exit', { 
+    pathD, 
+    startX, 
+    endX, 
+    midY, 
+    controlX, 
+    controlY, 
+    hasPercent,
+    pathLength: pathD.length,
+    timestamp: Date.now()
+  });
+  if (hasPercent) {
+    console.error('[DEBUG] ERROR: Path still contains % sign!', pathD);
+  }
+  // #endregion
+  
+  return pathD
 }
 
 const isLessonUnlocked = (index: number) => {
@@ -1448,6 +1517,8 @@ const isLessonCompleted = (index: number) => {
 const selectLesson = (lesson: any, path: any) => {
   selectedLesson.value = lesson
   selectedPath.value = path
+  // Navigate to the lesson
+  navigateToLesson(lesson)
 }
 </script>
 

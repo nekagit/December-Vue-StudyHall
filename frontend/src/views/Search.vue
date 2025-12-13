@@ -167,106 +167,101 @@ const performSearch = async () => {
       }
     }
 
-    // Search snippets (from local data)
+    // Search snippets from API
     if (activeFilters.value.includes('snippets')) {
-      const snippets = [
-        { id: 1, name: 'Hello World', category: 'Basics', description: 'Basic print statement', code: 'print("Hello, World!")' },
-        { id: 2, name: 'Variables and Types', category: 'Basics', description: 'Variable assignment and type checking' },
-        { id: 3, name: 'Lists Operations', category: 'Data Structures', description: 'Common list operations' },
-        { id: 4, name: 'List Methods', category: 'Data Structures', description: 'Adding, removing, and modifying list elements' },
-        { id: 5, name: 'For Loops', category: 'Control Flow', description: 'Iterating with for loops' },
-        { id: 6, name: 'While Loops', category: 'Control Flow', description: 'Conditional iteration' },
-        { id: 7, name: 'If-Else Statements', category: 'Control Flow', description: 'Conditional logic' },
-        { id: 8, name: 'Functions', category: 'Functions', description: 'Define and call functions' },
-        { id: 9, name: 'Lambda Functions', category: 'Functions', description: 'Anonymous functions' },
-        { id: 10, name: 'Dictionaries', category: 'Data Structures', description: 'Key-value pairs' }
-      ]
-
-      snippets.forEach(s => {
-        if (s.name.toLowerCase().includes(query) || s.description.toLowerCase().includes(query) || s.category.toLowerCase().includes(query)) {
-          searchResults.push({
-            id: s.id,
-            title: s.name,
-            description: s.description,
-            type: 'snippets',
-            category: s.category,
-            route: '/snippets'
+      try {
+        const response = await fetch(`/api/snippets?search=${encodeURIComponent(searchQuery.value)}`, {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const snippets = await response.json()
+          snippets.forEach((s: any) => {
+            searchResults.push({
+              id: s.id,
+              title: s.name,
+              description: s.description,
+              type: 'snippets',
+              category: s.category,
+              route: '/snippets'
+            })
           })
         }
-      })
+      } catch (e) {
+        console.error('Error fetching snippets:', e)
+      }
     }
 
-    // Search problems (from local data)
+    // Search problems (from API)
     if (activeFilters.value.includes('problems')) {
-      const problems = [
-        { id: 1, title: 'Sum of Two Numbers', difficulty: 'beginner', category: 'Basics', description: 'Write a function that takes two numbers as arguments and returns their sum.' },
-        { id: 2, title: 'Find Maximum in List', difficulty: 'beginner', category: 'Data Structures', description: 'Write a function that finds the maximum value in a list without using the built-in max() function.' },
-        { id: 3, title: 'Reverse a String', difficulty: 'beginner', category: 'Strings', description: 'Write a function that reverses a string without using the built-in reversed() function or slicing.' },
-        { id: 4, title: 'Count Vowels', difficulty: 'beginner', category: 'Strings', description: 'Write a function that counts the number of vowels (a, e, i, o, u) in a string.' },
-        { id: 5, title: 'Factorial', difficulty: 'intermediate', category: 'Recursion', description: 'Write a function that calculates the factorial of a number using recursion.' },
-        { id: 6, title: 'Check Palindrome', difficulty: 'intermediate', category: 'Strings', description: 'Write a function that checks if a string is a palindrome (reads the same forwards and backwards).' }
-      ]
-
-      problems.forEach(p => {
-        if (p.title.toLowerCase().includes(query) || p.description.toLowerCase().includes(query) || p.category.toLowerCase().includes(query)) {
-          searchResults.push({
-            id: p.id,
-            title: p.title,
-            description: p.description,
-            type: 'problems',
-            category: p.category,
-            route: '/practice-problems'
+      try {
+        const response = await fetch(`/api/problems?search=${encodeURIComponent(searchQuery.value)}`, {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const problems = await response.json()
+          problems.forEach((p: any) => {
+            searchResults.push({
+              id: p.id,
+              title: p.title,
+              description: p.description || p.fullDescription || '',
+              type: 'problems',
+              category: p.category || p.difficulty || 'General',
+              route: '/practice-problems'
+            })
           })
         }
-      })
+      } catch (e) {
+        // Ignore errors, continue with other searches
+        console.error('Error fetching problems:', e)
+      }
     }
 
-    // Search resources (from local data)
+    // Search resources from API
     if (activeFilters.value.includes('resources')) {
-      const resources = [
-        { id: 1, title: 'Python Official Documentation', category: 'Documentation', description: 'Comprehensive official documentation for Python programming language.' },
-        { id: 2, title: 'Real Python', category: 'Tutorials', description: 'High-quality Python tutorials, articles, and courses for developers of all skill levels.' },
-        { id: 3, title: 'Python.org Tutorial', category: 'Tutorials', description: 'Official Python tutorial covering basics to advanced topics. Perfect for beginners.' },
-        { id: 4, title: 'LeetCode', category: 'Practice', description: 'Practice coding problems and improve your problem-solving skills with Python.' }
-      ]
-
-      resources.forEach(r => {
-        if (r.title.toLowerCase().includes(query) || r.description.toLowerCase().includes(query) || r.category.toLowerCase().includes(query)) {
-          searchResults.push({
-            id: r.id,
-            title: r.title,
-            description: r.description,
-            type: 'resources',
-            category: r.category,
-            route: '/resources'
+      try {
+        const response = await fetch(`/api/resources?search=${encodeURIComponent(searchQuery.value)}`, {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const resources = await response.json()
+          resources.forEach((r: any) => {
+            searchResults.push({
+              id: r.id,
+              title: r.title,
+              description: r.description,
+              type: 'resources',
+              category: r.category,
+              route: '/resources'
+            })
           })
         }
-      })
+      } catch (e) {
+        console.error('Error fetching resources:', e)
+      }
     }
 
-    // Search cheat sheets (from local data)
+    // Search cheat sheets from API
     if (activeFilters.value.includes('cheatsheets')) {
-      const sheets = [
-        { id: 1, title: 'Python Basics', description: 'Essential Python syntax and operations' },
-        { id: 2, title: 'Strings', description: 'String operations and methods' },
-        { id: 3, title: 'Lists', description: 'List operations and methods' },
-        { id: 4, title: 'Dictionaries', description: 'Dictionary operations and methods' },
-        { id: 5, title: 'Control Flow', description: 'If statements, loops, and control structures' },
-        { id: 6, title: 'Functions', description: 'Function definition and usage' }
-      ]
-
-      sheets.forEach(s => {
-        if (s.title.toLowerCase().includes(query) || s.description.toLowerCase().includes(query)) {
-          searchResults.push({
-            id: s.id,
-            title: s.title,
-            description: s.description,
-            type: 'cheatsheets',
-            category: 'Reference',
-            route: '/cheat-sheets'
+      try {
+        const response = await fetch(`/api/cheat-sheets?search=${encodeURIComponent(searchQuery.value)}`, {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const sheets = await response.json()
+          sheets.forEach((s: any) => {
+            searchResults.push({
+              id: s.id,
+              title: s.title,
+              description: s.description,
+              type: 'cheatsheets',
+              category: 'Reference',
+              route: '/cheat-sheets'
+            })
           })
         }
-      })
+      } catch (e) {
+        console.error('Error fetching cheat sheets:', e)
+      }
     }
 
     results.value = searchResults

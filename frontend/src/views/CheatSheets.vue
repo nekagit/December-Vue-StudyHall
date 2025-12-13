@@ -17,8 +17,14 @@
       />
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-msit-accent"></div>
+      <p class="mt-2 text-msit-dark-200 font-sans">Loading cheat sheets...</p>
+    </div>
+
     <!-- Cheat Sheets Grid -->
-    <div v-if="filteredSheets.length === 0" class="text-center py-12">
+    <div v-else-if="filteredSheets.length === 0" class="text-center py-12">
       <p class="text-msit-dark-200 font-sans">No cheat sheets found</p>
     </div>
 
@@ -93,12 +99,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
 const searchQuery = ref('')
 const expandedSheet = ref<number | null>(null)
+const cheatSheets = ref<any[]>([])
+const loading = ref(false)
 
-const cheatSheets = [
+const loadCheatSheets = async () => {
+  loading.value = true
+  try {
+    const params = new URLSearchParams()
+    if (searchQuery.value) {
+      params.append('search', searchQuery.value)
+    }
+    
+    const response = await fetch(`/api/cheat-sheets?${params.toString()}`, {
+      credentials: 'include'
+    })
+    if (response.ok) {
+      cheatSheets.value = await response.json()
+    }
+  } catch (e) {
+    console.error('Error loading cheat sheets:', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Legacy cheat sheets for fallback
+const legacyCheatSheets = [
   {
     id: 1,
     title: 'Python Basics',
@@ -475,19 +505,8 @@ except Exception:
 ]
 
 const filteredSheets = computed(() => {
-  if (!searchQuery.value) {
-    return cheatSheets
-  }
-  
-  const query = searchQuery.value.toLowerCase()
-  return cheatSheets.filter(sheet =>
-    sheet.title.toLowerCase().includes(query) ||
-    sheet.description.toLowerCase().includes(query) ||
-    sheet.sections.some(section =>
-      section.title.toLowerCase().includes(query) ||
-      section.content.toLowerCase().includes(query)
-    )
-  )
+  // API already filters by search, so just return all if loaded
+  return cheatSheets.value
 })
 
 const copySheet = (sheet: any) => {
@@ -498,4 +517,17 @@ const copySheet = (sheet: any) => {
   navigator.clipboard.writeText(content)
   alert('Cheat sheet copied to clipboard!')
 }
+
+// Watch for search query changes
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+watch(searchQuery, () => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    loadCheatSheets()
+  }, 300)
+})
+
+onMounted(() => {
+  loadCheatSheets()
+})
 </script>

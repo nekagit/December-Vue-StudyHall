@@ -11,7 +11,7 @@
     <div v-else-if="material" class="bg-msit-dark-800 shadow rounded-lg overflow-hidden border border-msit-dark-700">
       <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-msit-dark-700">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <h1 class="text-2xl sm:text-3xl font-bold text-msit-dark-50 font-serif break-words">{{ material.title }}</h1>
+          <h1 class="text-2xl sm:text-3xl font-bold text-msit-dark-50 font-serif wrap-break-word">{{ material.title }}</h1>
           <span v-if="material.category" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-msit-accent/20 text-msit-accent font-sans self-start sm:self-auto">
             {{ material.category }}
           </span>
@@ -174,15 +174,22 @@ const copyMaterialLink = () => {
 
 const loadMaterial = async () => {
   loading.value = true
+  error.value = ''
   try {
-    const response = await fetch(`/api/materials/${route.params.id}`)
+    const response = await fetch(`/api/materials/${route.params.id}`, {
+      credentials: 'include'
+    })
     if (response.ok) {
       material.value = await response.json()
-    } else {
+    } else if (response.status === 404) {
       error.value = 'Material not found'
+    } else {
+      const errorData = await response.json().catch(() => ({}))
+      error.value = errorData.error || 'Failed to load material'
     }
-  } catch (e) {
-    error.value = 'An error occurred'
+  } catch (e: any) {
+    error.value = e.message || 'An error occurred while loading the material'
+    console.error('Error loading material:', e)
   } finally {
     loading.value = false
   }

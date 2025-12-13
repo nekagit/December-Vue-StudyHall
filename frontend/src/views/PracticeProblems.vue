@@ -40,6 +40,7 @@
           >
             <option value="">All Topics</option>
             <option v-for="topic in topics" :key="topic" :value="topic">{{ topic }}</option>
+            <option v-if="loadingTopics" value="" disabled>Loading topics...</option>
           </select>
         </div>
       </div>
@@ -296,7 +297,9 @@ const userCode = ref<Record<number, string>>({})
 const testResults = ref<Record<number, TestResult[]>>({})
 const isLoading = ref<Record<number, boolean>>({})
 const problems = ref<any[]>([])
+const topics = ref<string[]>([])
 const loadingProblems = ref(false)
+const loadingTopics = ref(false)
 let pyodide: any = null
 
 // Problems are now fetched from the API
@@ -326,17 +329,30 @@ const fetchProblems = async () => {
   }
 }
 
-// Old hardcoded problems removed - now fetched from API
-
-const topics = computed(() => {
-  const topicSet = new Set<string>()
-  problems.value.forEach(p => {
-    if (p.tags) {
-      p.tags.forEach((tag: string) => topicSet.add(tag))
+// Fetch topics from API endpoint
+const fetchTopics = async () => {
+  loadingTopics.value = true
+  try {
+    const response = await fetch('/api/problems/topics')
+    if (!response.ok) {
+      throw new Error('Failed to fetch topics')
     }
-  })
-  return Array.from(topicSet).sort()
-})
+    const data = await response.json()
+    topics.value = Array.isArray(data) ? data.sort() : []
+  } catch (error) {
+    console.error('Error fetching topics:', error)
+    // Fallback to computing from problems
+    const topicSet = new Set<string>()
+    problems.value.forEach(p => {
+      if (p.tags) {
+        p.tags.forEach((tag: string) => topicSet.add(tag))
+      }
+    })
+    topics.value = Array.from(topicSet).sort()
+  } finally {
+    loadingTopics.value = false
+  }
+}
 
 const filteredProblems = computed(() => {
   let result = problems.value
@@ -408,8 +424,8 @@ const allTestsPassed = (problemId: number): boolean => {
 }
 
 onMounted(async () => {
-  // Fetch problems from API
-  await fetchProblems()
+  // Fetch problems and topics from API
+  await Promise.all([fetchProblems(), fetchTopics()])
   
   // Preload Pyodide
   try {

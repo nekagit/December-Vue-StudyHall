@@ -49,6 +49,24 @@
       <div class="text-sm text-msit-accent font-sans">{{ success }}</div>
     </div>
 
+    <!-- Sync from Notion Button -->
+    <div class="mb-6 flex justify-end">
+      <button
+        @click="syncFromNotion"
+        :disabled="syncing"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-msit-dark bg-msit-accent hover:bg-msit-accent-500 transition-colors font-sans disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <svg v-if="syncing" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <svg v-else class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        {{ syncing ? 'Syncing...' : 'Sync from Notion' }}
+      </button>
+    </div>
+
     <div v-if="loading" class="text-center py-12">
       <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-msit-accent"></div>
     </div>
@@ -102,6 +120,7 @@ const error = ref('')
 const success = ref('')
 const searchQuery = ref('')
 const selectedCategory = ref('')
+const syncing = ref(false)
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
 const loadMaterials = async () => {
@@ -157,6 +176,46 @@ const clearFilters = () => {
   searchQuery.value = ''
   selectedCategory.value = ''
   loadMaterials()
+}
+
+const syncFromNotion = async () => {
+  syncing.value = true
+  error.value = ''
+  success.value = ''
+  
+  try {
+    const response = await fetch('/api/materials/sync-notion', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.error || 'Failed to sync from Notion')
+    }
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      success.value = `Successfully synced ${result.synced_count || 0} materials from Notion`
+      // Reload materials after sync
+      await loadMaterials()
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        success.value = ''
+      }, 5000)
+    } else {
+      throw new Error(result.error || 'Sync failed')
+    }
+  } catch (e: any) {
+    error.value = e.message || 'An error occurred while syncing from Notion'
+    console.error('Notion sync error:', e)
+  } finally {
+    syncing.value = false
+  }
 }
 
 onMounted(() => {
