@@ -31,8 +31,29 @@
       </button>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="text-center py-12">
+      <div class="flex items-center justify-center">
+        <svg class="animate-spin h-8 w-8 text-msit-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="ml-3 text-msit-dark-200 font-sans">Loading learning paths...</span>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
+      <div class="flex items-center gap-2 text-red-400">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="font-medium font-sans">{{ error }}</span>
+      </div>
+    </div>
+
     <!-- World Map View -->
-    <div v-if="viewMode === 'world'" class="space-y-8">
+    <div v-else-if="viewMode === 'world'" class="space-y-8">
       <div
         v-for="path in learningPaths"
         :key="path.id"
@@ -135,7 +156,7 @@
     </div>
 
     <!-- Grid View -->
-    <div v-if="viewMode === 'grid'" class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div v-else-if="viewMode === 'grid'" class="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <div
         v-for="path in learningPaths"
         :key="path.id"
@@ -278,15 +299,45 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const selectedPath = ref<any>(null)
 const viewMode = ref<'world' | 'grid'>('world')
 const selectedLesson = ref<{ title: string; description: string; duration: number; type: string } | null>(null)
+const loading = ref(false)
+const error = ref('')
 
-const learningPaths = [
+const learningPaths = ref<any[]>([])
+
+// Fetch learning paths from API
+const fetchLearningPaths = async () => {
+  loading.value = true
+  error.value = ''
+  try {
+    const response = await fetch('/api/learning-paths')
+    if (!response.ok) {
+      throw new Error('Failed to fetch learning paths')
+    }
+    const data = await response.json()
+    learningPaths.value = data
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load learning paths'
+    console.error('Error fetching learning paths:', err)
+    // Fallback to empty array on error
+    learningPaths.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchLearningPaths()
+})
+
+// Fallback data (used if API fails or for initial render)
+const fallbackLearningPaths = [
   {
     id: 1,
     title: 'Python Basics',

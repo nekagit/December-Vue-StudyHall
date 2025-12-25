@@ -193,16 +193,31 @@
             ></textarea>
           </div>
 
+          <!-- Error Message -->
+          <div v-if="testErrors[selectedProblem.id]" class="mt-6 bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+            <div class="flex items-center gap-2 text-red-400">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span class="font-medium font-sans">{{ testErrors[selectedProblem.id] }}</span>
+            </div>
+          </div>
+
           <!-- Test Results -->
           <div v-if="testResults[selectedProblem.id] && testResults[selectedProblem.id].length > 0" class="mt-6">
             <div class="flex items-center justify-between mb-3">
               <h3 class="text-lg font-semibold text-msit-dark-50 font-sans">Test Results:</h3>
-              <span :class="[
-                'px-3 py-1 rounded-full text-sm font-medium font-sans',
-                allTestsPassed(selectedProblem.id) ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-              ]">
-                {{ passedTestsCount(selectedProblem.id) }} / {{ testResults[selectedProblem.id].length }} passed
-              </span>
+              <div class="flex items-center gap-3">
+                <span v-if="testMethod[selectedProblem.id]" class="text-xs text-msit-dark-400 font-sans">
+                  ({{ testMethod[selectedProblem.id] }})
+                </span>
+                <span :class="[
+                  'px-3 py-1 rounded-full text-sm font-medium font-sans',
+                  allTestsPassed(selectedProblem.id) ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                ]">
+                  {{ passedTestsCount(selectedProblem.id) }} / {{ testResults[selectedProblem.id].length }} passed
+                </span>
+              </div>
             </div>
             <div class="space-y-3">
               <div
@@ -255,7 +270,7 @@
           <button
             @click="runTestsForProblem(selectedProblem)"
             :disabled="!userCode[selectedProblem.id] || isLoading[selectedProblem.id]"
-            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-semibold font-sans disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-semibold font-sans disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="isLoading[selectedProblem.id]" class="inline-flex items-center">
               <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
@@ -268,7 +283,26 @@
               <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              Run Tests
+              Run Tests (Client)
+            </span>
+          </button>
+          <button
+            @click="submitToBackend(selectedProblem)"
+            :disabled="!userCode[selectedProblem.id] || isSubmitting[selectedProblem.id]"
+            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-semibold font-sans disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span v-if="isSubmitting[selectedProblem.id]" class="inline-flex items-center">
+              <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Submitting...
+            </span>
+            <span v-else class="inline-flex items-center">
+              <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Submit & Validate
             </span>
           </button>
           <button
@@ -295,7 +329,10 @@ const selectedTopic = ref('')
 const selectedProblem = ref<any>(null)
 const userCode = ref<Record<number, string>>({})
 const testResults = ref<Record<number, TestResult[]>>({})
+const testErrors = ref<Record<number, string>>({})
+const testMethod = ref<Record<number, string>>({})
 const isLoading = ref<Record<number, boolean>>({})
+const isSubmitting = ref<Record<number, boolean>>({})
 const problems = ref<any[]>([])
 const topics = ref<string[]>([])
 const loadingProblems = ref(false)
@@ -392,24 +429,112 @@ const runTestsForProblem = async (problem: any) => {
   if (!userCode.value[problem.id] || !problem.testCases) return
 
   isLoading.value[problem.id] = true
+  testErrors.value[problem.id] = ''
+  testResults.value[problem.id] = []
+  testMethod.value[problem.id] = ''
 
+  // First, try server-side submission (more reliable)
   try {
-    if (!pyodide) {
-      pyodide = await loadPyodide()
+    const response = await fetch(`/api/problems/${problem.id}/submit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        code: userCode.value[problem.id],
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.error || 'Server submission failed')
     }
 
-    const results = await runTests(pyodide, userCode.value[problem.id], problem.testCases)
-    testResults.value[problem.id] = results
-  } catch (error: any) {
-    console.error('Test execution error:', error)
-    testResults.value[problem.id] = problem.testCases.map((testCase: TestCase) => ({
-      passed: false,
-      expected: testCase.output,
-      actual: `Error: ${error.message || String(error)}`,
-      testCase
-    }))
+    const data = await response.json()
+    
+    if (data.success) {
+      // Convert server response to TestResult format
+      testResults.value[problem.id] = data.results.map((r: any) => ({
+        passed: r.passed,
+        expected: r.expected || '',
+        actual: r.actual || '',
+        testCase: {
+          input: r.input || '',
+          output: r.expected || ''
+        }
+      }))
+      testMethod.value[problem.id] = 'Server'
+      return
+    } else {
+      throw new Error(data.error || 'Submission failed')
+    }
+  } catch (serverError: any) {
+    console.warn('Server-side test failed, trying client-side:', serverError)
+    
+    // Fallback to client-side Pyodide
+    try {
+      if (!pyodide) {
+        pyodide = await loadPyodide()
+      }
+
+      const results = await runTests(pyodide, userCode.value[problem.id], problem.testCases)
+      testResults.value[problem.id] = results
+      testMethod.value[problem.id] = 'Client (Pyodide)'
+    } catch (clientError: any) {
+      console.error('Client-side test execution error:', clientError)
+      testErrors.value[problem.id] = `Both server and client-side testing failed. ${clientError.message || String(clientError)}`
+      testResults.value[problem.id] = problem.testCases.map((testCase: TestCase) => ({
+        passed: false,
+        expected: testCase.output,
+        actual: `Error: ${clientError.message || String(clientError)}`,
+        testCase
+      }))
+    }
   } finally {
     isLoading.value[problem.id] = false
+  }
+}
+
+const submitToBackend = async (problem: any) => {
+  if (!userCode.value[problem.id]) return
+
+  isSubmitting.value[problem.id] = true
+  testErrors.value[problem.id] = ''
+
+  try {
+    const response = await fetch(`/api/problems/${problem.id}/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: userCode.value[problem.id] })
+    })
+
+    const result = await response.json()
+    
+    if (result.success) {
+      // Convert backend results to frontend format
+      testResults.value[problem.id] = result.results.map((r: any) => ({
+        passed: r.passed,
+        expected: r.expected,
+        actual: r.actual,
+        testCase: {
+          input: r.input,
+          output: r.expected
+        }
+      }))
+      testMethod.value[problem.id] = 'Server (Backend)'
+      
+      // Show success message if all tests passed
+      if (result.allPassed) {
+        alert(`🎉 All ${result.totalTests} tests passed!`)
+      }
+    } else {
+      testErrors.value[problem.id] = result.error || 'Submission failed'
+    }
+  } catch (error: any) {
+    console.error('Backend submission error:', error)
+    testErrors.value[problem.id] = `Error submitting solution: ${error.message || 'Network error'}`
+  } finally {
+    isSubmitting.value[problem.id] = false
   }
 }
 

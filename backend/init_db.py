@@ -134,6 +134,96 @@ try:
                 category="Database",
                 order_index=41
             ),
+            
+            # Advanced Python
+            Material(
+                title="List Comprehensions",
+                content="# List Comprehensions\n\nPythonic way to create lists concisely.\n\n## Basic Syntax\n```python\n# Traditional way\nsquares = []\nfor x in range(10):\n    squares.append(x**2)\n\n# List comprehension\nsquares = [x**2 for x in range(10)]\n```\n\n## With Conditions\n```python\n# Even squares only\neven_squares = [x**2 for x in range(10) if x % 2 == 0]\n\n# Filter and transform\nnames = [name.upper() for name in ['alice', 'bob', 'charlie'] if len(name) > 3]\n```\n\n## Nested Comprehensions\n```python\nmatrix = [[i*j for j in range(3)] for i in range(3)]\n```\n\n## Dictionary and Set Comprehensions\n```python\n# Dictionary comprehension\nsquares_dict = {x: x**2 for x in range(5)}\n\n# Set comprehension\nunique_lengths = {len(name) for name in ['alice', 'bob', 'charlie']}\n```\n\n## Benefits\n- More readable\n- Often faster\n- Pythonic style\n- Concise code",
+                category="Python",
+                order_index=7
+            ),
+            Material(
+                title="Python Decorators",
+                content="# Python Decorators\n\nDecorators are a powerful way to modify or extend function behavior.\n\n## Basic Decorator\n```python\ndef my_decorator(func):\n    def wrapper():\n        print('Before function')\n        func()\n        print('After function')\n    return wrapper\n\n@my_decorator\ndef say_hello():\n    print('Hello!')\n```\n\n## Decorator with Arguments\n```python\ndef repeat(times):\n    def decorator(func):\n        def wrapper(*args, **kwargs):\n            for _ in range(times):\n                result = func(*args, **kwargs)\n            return result\n        return wrapper\n    return decorator\n\n@repeat(3)\ndef greet(name):\n    print(f'Hello, {name}!')\n```\n\n## Built-in Decorators\n```python\n@staticmethod\ndef utility_method():\n    pass\n\n@classmethod\ndef class_method(cls):\n    pass\n\n@property\ndef name(self):\n    return self._name\n```\n\n## Common Use Cases\n- Logging\n- Timing functions\n- Caching\n- Access control\n- Input validation",
+                category="Python",
+                order_index=8
+            ),
+            Material(
+                title="Generators and Iterators",
+                content="# Generators and Iterators\n\nEfficient way to work with sequences without storing all values in memory.\n\n## Generator Functions\n```python\ndef countdown(n):\n    while n > 0:\n        yield n\n        n -= 1\n\nfor num in countdown(5):\n    print(num)  # 5, 4, 3, 2, 1\n```\n\n## Generator Expressions\n```python\n# Similar to list comprehension but lazy\nsquares = (x**2 for x in range(10))\n\n# Memory efficient\nlarge_sum = sum(x**2 for x in range(1000000))\n```\n\n## Iterator Protocol\n```python\nclass Countdown:\n    def __init__(self, start):\n        self.current = start\n    \n    def __iter__(self):\n        return self\n    \n    def __next__(self):\n        if self.current <= 0:\n            raise StopIteration\n        self.current -= 1\n        return self.current + 1\n```\n\n## Benefits\n- Memory efficient\n- Lazy evaluation\n- Can represent infinite sequences\n- Clean syntax",
+                category="Python",
+                order_index=9
+            ),
+            Material(
+                title="Async and Await",
+                content="# Async and Await\n\nAsynchronous programming in Python for concurrent operations.\n\n## Basic Async Function\n```python\nimport asyncio\n\nasync def fetch_data():\n    await asyncio.sleep(1)  # Simulate I/O\n    return 'Data'\n\nasync def main():\n    result = await fetch_data()\n    print(result)\n\nasyncio.run(main())\n```\n\n## Concurrent Execution\n```python\nasync def fetch_multiple():\n    results = await asyncio.gather(\n        fetch_data('url1'),\n        fetch_data('url2'),\n        fetch_data('url3')\n    )\n    return results\n```\n\n## Async Context Managers\n```python\nasync with aiohttp.ClientSession() as session:\n    async with session.get(url) as response:\n        data = await response.json()\n```\n\n## When to Use\n- I/O-bound operations\n- Network requests\n- File operations\n- Database queries\n\n## Benefits\n- Non-blocking operations\n- Better resource utilization\n- Scalable concurrent code",
+                category="Python",
+                order_index=10
+            ),
+            Material(
+                title="Python Context Managers",
+                content="# Python Context Managers\n\nManage resources with automatic setup and cleanup.\n\n## Using with Statement\n```python\n# File handling\nwith open('file.txt', 'r') as f:\n    content = f.read()\n# File automatically closed\n```\n\n## Custom Context Manager\n```python\nclass MyContext:\n    def __enter__(self):\n        print('Entering context')\n        return self\n    \n    def __exit__(self, exc_type, exc_val, exc_tb):\n        print('Exiting context')\n        return False  # Don't suppress exceptions\n\nwith MyContext() as ctx:\n    print('Inside context')\n```\n\n## Using contextlib\n```python\nfrom contextlib import contextmanager\n\n@contextmanager\ndef my_context():\n    print('Setup')\n    try:\n        yield\n    finally:\n        print('Cleanup')\n\nwith my_context():\n    print('Do work')\n```\n\n## Common Use Cases\n- File operations\n- Database connections\n- Lock management\n- Resource cleanup\n- Timing operations",
+                category="Python",
+                order_index=11
+            ),
+            
+            # More Algorithms
+            Material(
+                title="Trees and Binary Trees",
+                content="# Trees and Binary Trees\n\nHierarchical data structures for organizing data.\n\n## Tree Structure\n```python\nclass TreeNode:\n    def __init__(self, val):\n        self.val = val\n        self.left = None\n        self.right = None\n```\n\n## Tree Traversal\n```python\ndef inorder_traversal(root):\n    if root:\n        inorder_traversal(root.left)\n        print(root.val)\n        inorder_traversal(root.right)\n\ndef preorder_traversal(root):\n    if root:\n        print(root.val)\n        preorder_traversal(root.left)\n        preorder_traversal(root.right)\n\ndef postorder_traversal(root):\n    if root:\n        postorder_traversal(root.left)\n        postorder_traversal(root.right)\n        print(root.val)\n```\n\n## Binary Search Tree\n- Left subtree < root\n- Right subtree > root\n- Efficient search: O(log n)\n\n## Common Operations\n- Insert: O(log n)\n- Search: O(log n)\n- Delete: O(log n)\n- Traverse: O(n)",
+                category="Algorithms",
+                order_index=23
+            ),
+            Material(
+                title="Graph Algorithms",
+                content="# Graph Algorithms\n\nWorking with graphs and networks.\n\n## Graph Representation\n```python\n# Adjacency list\ngraph = {\n    'A': ['B', 'C'],\n    'B': ['A', 'D'],\n    'C': ['A', 'D'],\n    'D': ['B', 'C']\n}\n```\n\n## Depth-First Search (DFS)\n```python\ndef dfs(graph, start, visited=None):\n    if visited is None:\n        visited = set()\n    visited.add(start)\n    print(start)\n    for neighbor in graph[start]:\n        if neighbor not in visited:\n            dfs(graph, neighbor, visited)\n```\n\n## Breadth-First Search (BFS)\n```python\nfrom collections import deque\n\ndef bfs(graph, start):\n    visited = set()\n    queue = deque([start])\n    visited.add(start)\n    \n    while queue:\n        node = queue.popleft()\n        print(node)\n        for neighbor in graph[node]:\n            if neighbor not in visited:\n                visited.add(neighbor)\n                queue.append(neighbor)\n```\n\n## Applications\n- Path finding\n- Network analysis\n- Social networks\n- Web crawling",
+                category="Algorithms",
+                order_index=24
+            ),
+            Material(
+                title="Dynamic Programming",
+                content="# Dynamic Programming\n\nSolving complex problems by breaking them into simpler subproblems.\n\n## Key Principles\n- Optimal substructure\n- Overlapping subproblems\n- Memoization or tabulation\n\n## Fibonacci Example\n```python\n# Naive (inefficient)\ndef fib(n):\n    if n <= 1:\n        return n\n    return fib(n-1) + fib(n-2)\n\n# Memoized (efficient)\ndef fib_memo(n, memo={}):\n    if n in memo:\n        return memo[n]\n    if n <= 1:\n        return n\n    memo[n] = fib_memo(n-1, memo) + fib_memo(n-2, memo)\n    return memo[n]\n\n# Tabulated (bottom-up)\ndef fib_tab(n):\n    dp = [0, 1]\n    for i in range(2, n + 1):\n        dp.append(dp[i-1] + dp[i-2])\n    return dp[n]\n```\n\n## Common Problems\n- Longest common subsequence\n- Knapsack problem\n- Coin change\n- Edit distance\n\n## When to Use\n- Optimization problems\n- Counting problems\n- Problems with overlapping subproblems",
+                category="Algorithms",
+                order_index=25
+            ),
+            
+            # System Design
+            Material(
+                title="System Design Basics",
+                content="# System Design Basics\n\nDesigning scalable and reliable systems.\n\n## Key Concepts\n- **Scalability**: Handle growing load\n- **Reliability**: System works correctly\n- **Availability**: System is accessible\n- **Performance**: Fast response times\n\n## Design Process\n1. Requirements gathering\n2. Capacity estimation\n3. System interface design\n4. Data model design\n5. High-level design\n6. Detailed design\n7. Identify bottlenecks\n8. Scale the design\n\n## Common Patterns\n- **Load Balancing**: Distribute traffic\n- **Caching**: Reduce database load\n- **Database Sharding**: Partition data\n- **CDN**: Content delivery network\n- **Message Queues**: Async processing\n\n## Scalability Strategies\n- Horizontal scaling (add servers)\n- Vertical scaling (upgrade hardware)\n- Caching layers\n- Database optimization\n- Microservices architecture",
+                category="System Design",
+                order_index=50
+            ),
+            
+            # Security
+            Material(
+                title="Web Security Fundamentals",
+                content="# Web Security Fundamentals\n\nProtecting web applications from common vulnerabilities.\n\n## Common Vulnerabilities\n- **SQL Injection**: Malicious SQL queries\n- **XSS (Cross-Site Scripting)**: Injecting scripts\n- **CSRF (Cross-Site Request Forgery)**: Unauthorized actions\n- **Authentication Issues**: Weak passwords, session hijacking\n\n## Prevention Techniques\n```python\n# SQL Injection Prevention\n# BAD\nquery = f\"SELECT * FROM users WHERE id = {user_id}\"\n\n# GOOD - Use parameterized queries\nquery = \"SELECT * FROM users WHERE id = ?\"\ncursor.execute(query, (user_id,))\n```\n\n## Best Practices\n- Input validation and sanitization\n- Use HTTPS\n- Implement proper authentication\n- Regular security updates\n- Principle of least privilege\n- Security headers\n- Rate limiting\n\n## OWASP Top 10\nCommon security risks to be aware of:\n1. Injection\n2. Broken Authentication\n3. Sensitive Data Exposure\n4. XML External Entities\n5. Broken Access Control\n6. Security Misconfiguration\n7. XSS\n8. Insecure Deserialization\n9. Using Components with Known Vulnerabilities\n10. Insufficient Logging & Monitoring",
+                category="Security",
+                order_index=60
+            ),
+            
+            # DevOps
+            Material(
+                title="Docker Basics",
+                content="# Docker Basics\n\nContainerization for consistent deployments.\n\n## Dockerfile Example\n```dockerfile\nFROM python:3.9-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install -r requirements.txt\nCOPY . .\nCMD [\"python\", \"app.py\"]\n```\n\n## Common Commands\n```bash\n# Build image\ndocker build -t myapp .\n\n# Run container\ndocker run -p 5000:5000 myapp\n\n# List containers\ndocker ps\n\n# Stop container\ndocker stop <container_id>\n```\n\n## Benefits\n- Consistent environments\n- Easy deployment\n- Isolation\n- Resource efficiency\n- Version control for environments\n\n## Docker Compose\n```yaml\nversion: '3'\nservices:\n  web:\n    build: .\n    ports:\n      - \"5000:5000\"\n  db:\n    image: postgres:13\n```",
+                category="DevOps",
+                order_index=70
+            ),
+            
+            # More Web Dev
+            Material(
+                title="React Fundamentals",
+                content="# React Fundamentals\n\nPopular JavaScript library for building user interfaces.\n\n## Components\n```jsx\nfunction Welcome(props) {\n  return <h1>Hello, {props.name}</h1>;\n}\n\n// Or with hooks\nfunction Welcome({ name }) {\n  const [count, setCount] = useState(0);\n  return (\n    <div>\n      <h1>Hello, {name}</h1>\n      <button onClick={() => setCount(count + 1)}>\n        Count: {count}\n      </button>\n    </div>\n  );\n}\n```\n\n## Key Concepts\n- **Components**: Reusable UI pieces\n- **Props**: Pass data to components\n- **State**: Component data\n- **Hooks**: useState, useEffect, etc.\n- **JSX**: JavaScript syntax extension\n\n## Common Hooks\n```jsx\n// State\nconst [value, setValue] = useState(initial);\n\n// Effects\nuseEffect(() => {\n  // Side effects\n  return () => {\n    // Cleanup\n  };\n}, [dependencies]);\n```\n\n## Why React?\n- Component-based architecture\n- Virtual DOM for performance\n- Large ecosystem\n- Strong community",
+                category="Web Dev",
+                order_index=15
+            ),
+            Material(
+                title="Node.js and Express",
+                content="# Node.js and Express\n\nJavaScript runtime and web framework for backend development.\n\n## Basic Express App\n```javascript\nconst express = require('express');\nconst app = express();\n\napp.get('/', (req, res) => {\n  res.json({ message: 'Hello World' });\n});\n\napp.listen(3000, () => {\n  console.log('Server running on port 3000');\n});\n```\n\n## Middleware\n```javascript\n// Logging middleware\napp.use((req, res, next) => {\n  console.log(`${req.method} ${req.path}`);\n  next();\n});\n\n// Body parser\napp.use(express.json());\n```\n\n## Routing\n```javascript\napp.get('/api/users', getUsers);\napp.post('/api/users', createUser);\napp.put('/api/users/:id', updateUser);\napp.delete('/api/users/:id', deleteUser);\n```\n\n## Key Features\n- Asynchronous I/O\n- NPM ecosystem\n- RESTful APIs\n- Middleware support\n- Template engines\n\n## Common Use Cases\n- API servers\n- Real-time applications\n- Microservices\n- Serverless functions",
+                category="Web Dev",
+                order_index=16
+            ),
     ]
     
     # Check existing materials
@@ -473,6 +563,323 @@ try:
             starter_code="def transpose_matrix(matrix):\n    # Your code here\n    pass",
             category="Lists",
             order_index=15
+        ),
+        Problem(
+            title="Factorial",
+            description="Calculate the factorial of a number.",
+            full_description="Write a function `factorial` that takes a non-negative integer n and returns n! (n factorial).\n\nExample:\n- factorial(5) should return 120 (5 * 4 * 3 * 2 * 1)\n- factorial(0) should return 1",
+            difficulty="beginner",
+            tags=["Recursion", "Math"],
+            points=20,
+            estimated_time=15,
+            examples=[{"input": "factorial(5)", "output": "120"}, {"input": "factorial(0)", "output": "1"}],
+            constraints=["n is a non-negative integer", "0! = 1"],
+            test_cases=[
+                {"input": "factorial(5)", "output": "120"},
+                {"input": "factorial(0)", "output": "1"},
+                {"input": "factorial(1)", "output": "1"},
+                {"input": "factorial(3)", "output": "6"},
+                {"input": "factorial(7)", "output": "5040"}
+            ],
+            starter_code="def factorial(n):\n    # Your code here\n    pass",
+            category="Math",
+            order_index=16
+        ),
+        Problem(
+            title="Find Minimum in List",
+            description="Find the minimum value in a list without using the built-in min() function.",
+            full_description="Write a function `find_min` that takes a list of numbers and returns the minimum value. Do not use Python's built-in `min()` function.\n\nExample:\n- find_min([5, 2, 8, 1, 9]) should return 1\n- find_min([-5, -2, -10]) should return -10",
+            difficulty="beginner",
+            tags=["Lists", "Loops"],
+            points=15,
+            estimated_time=10,
+            examples=[{"input": "find_min([5, 2, 8, 1, 9])", "output": "1"}, {"input": "find_min([-5, -2, -10])", "output": "-10"}],
+            constraints=["List contains at least one element", "All elements are numbers"],
+            test_cases=[
+                {"input": "find_min([5, 2, 8, 1, 9])", "output": "1"},
+                {"input": "find_min([-5, -2, -10])", "output": "-10"},
+                {"input": "find_min([42])", "output": "42"},
+                {"input": "find_min([1, 1, 1])", "output": "1"},
+                {"input": "find_min([-1, 5, -3])", "output": "-3"}
+            ],
+            starter_code="def find_min(numbers):\n    # Your code here\n    pass",
+            category="Lists",
+            order_index=17
+        ),
+        Problem(
+            title="Sum of List",
+            description="Calculate the sum of all numbers in a list without using the built-in sum() function.",
+            full_description="Write a function `sum_list` that takes a list of numbers and returns their sum. Do not use Python's built-in `sum()` function.\n\nExample:\n- sum_list([1, 2, 3, 4, 5]) should return 15\n- sum_list([-1, 0, 1]) should return 0",
+            difficulty="beginner",
+            tags=["Lists", "Loops"],
+            points=15,
+            estimated_time=10,
+            examples=[{"input": "sum_list([1, 2, 3, 4, 5])", "output": "15"}, {"input": "sum_list([-1, 0, 1])", "output": "0"}],
+            constraints=["List may be empty (return 0)", "All elements are numbers"],
+            test_cases=[
+                {"input": "sum_list([1, 2, 3, 4, 5])", "output": "15"},
+                {"input": "sum_list([-1, 0, 1])", "output": "0"},
+                {"input": "sum_list([])", "output": "0"},
+                {"input": "sum_list([10])", "output": "10"},
+                {"input": "sum_list([-5, -3, -2])", "output": "-10"}
+            ],
+            starter_code="def sum_list(numbers):\n    # Your code here\n    pass",
+            category="Lists",
+            order_index=18
+        ),
+        Problem(
+            title="Count Words",
+            description="Count the number of words in a string.",
+            full_description="Write a function `count_words` that takes a string and returns the number of words. Words are separated by spaces.\n\nExample:\n- count_words(\"Hello world\") should return 2\n- count_words(\"Python is great\") should return 3",
+            difficulty="beginner",
+            tags=["Strings"],
+            points=15,
+            estimated_time=10,
+            examples=[{"input": "count_words(\"Hello world\")", "output": "2"}, {"input": "count_words(\"Python is great\")", "output": "3"}],
+            constraints=["Words are separated by single spaces", "Handle empty strings"],
+            test_cases=[
+                {"input": "count_words(\"Hello world\")", "output": "2"},
+                {"input": "count_words(\"Python is great\")", "output": "3"},
+                {"input": "count_words(\"Hello\")", "output": "1"},
+                {"input": "count_words(\"\")", "output": "0"},
+                {"input": "count_words(\"a b c d e\")", "output": "5"}
+            ],
+            starter_code="def count_words(s):\n    # Your code here\n    pass",
+            category="Strings",
+            order_index=19
+        ),
+        Problem(
+            title="Longest Word",
+            description="Find the longest word in a string.",
+            full_description="Write a function `longest_word` that takes a string and returns the longest word. If there are multiple words of the same length, return the first one.\n\nExample:\n- longest_word(\"Python is awesome\") should return \"awesome\"\n- longest_word(\"Hello world\") should return \"Hello\"",
+            difficulty="beginner",
+            tags=["Strings", "Loops"],
+            points=20,
+            estimated_time=15,
+            examples=[{"input": "longest_word(\"Python is awesome\")", "output": "\"awesome\""}, {"input": "longest_word(\"Hello world\")", "output": "\"Hello\""}],
+            constraints=["Words are separated by spaces", "Return the first longest word if tied"],
+            test_cases=[
+                {"input": "longest_word(\"Python is awesome\")", "output": "\"awesome\""},
+                {"input": "longest_word(\"Hello world\")", "output": "\"Hello\""},
+                {"input": "longest_word(\"a bb ccc\")", "output": "\"ccc\""},
+                {"input": "longest_word(\"test\")", "output": "\"test\""},
+                {"input": "longest_word(\"one two three four\")", "output": "\"three\""}
+            ],
+            starter_code="def longest_word(s):\n    # Your code here\n    pass",
+            category="Strings",
+            order_index=20
+        ),
+        Problem(
+            title="FizzBuzz",
+            description="Implement the classic FizzBuzz problem.",
+            full_description="Write a function `fizzbuzz` that takes an integer n and returns a list of strings from 1 to n. For multiples of 3, return \"Fizz\". For multiples of 5, return \"Buzz\". For multiples of both 3 and 5, return \"FizzBuzz\".\n\nExample:\n- fizzbuzz(15) should return [\"1\", \"2\", \"Fizz\", \"4\", \"Buzz\", \"Fizz\", \"7\", \"8\", \"Fizz\", \"Buzz\", \"11\", \"Fizz\", \"13\", \"14\", \"FizzBuzz\"]",
+            difficulty="beginner",
+            tags=["Loops", "Conditionals"],
+            points=25,
+            estimated_time=20,
+            examples=[{"input": "fizzbuzz(5)", "output": "[\"1\", \"2\", \"Fizz\", \"4\", \"Buzz\"]"}],
+            constraints=["n is a positive integer", "Return list of strings"],
+            test_cases=[
+                {"input": "fizzbuzz(5)", "output": "[\"1\", \"2\", \"Fizz\", \"4\", \"Buzz\"]"},
+                {"input": "fizzbuzz(3)", "output": "[\"1\", \"2\", \"Fizz\"]"},
+                {"input": "fizzbuzz(15)", "output": "[\"1\", \"2\", \"Fizz\", \"4\", \"Buzz\", \"Fizz\", \"7\", \"8\", \"Fizz\", \"Buzz\", \"11\", \"Fizz\", \"13\", \"14\", \"FizzBuzz\"]"},
+                {"input": "fizzbuzz(1)", "output": "[\"1\"]"},
+                {"input": "fizzbuzz(7)", "output": "[\"1\", \"2\", \"Fizz\", \"4\", \"Buzz\", \"Fizz\", \"7\"]"}
+            ],
+            starter_code="def fizzbuzz(n):\n    # Your code here\n    pass",
+            category="Basics",
+            order_index=21
+        ),
+        Problem(
+            title="Find Duplicates",
+            description="Find all duplicate elements in a list.",
+            full_description="Write a function `find_duplicates` that takes a list and returns a list of all duplicate elements (each duplicate should appear only once in the result).\n\nExample:\n- find_duplicates([1, 2, 2, 3, 4, 4, 5]) should return [2, 4]\n- find_duplicates([\"a\", \"b\", \"a\", \"c\", \"b\"]) should return [\"a\", \"b\"]",
+            difficulty="intermediate",
+            tags=["Lists", "Algorithms"],
+            points=30,
+            estimated_time=20,
+            examples=[{"input": "find_duplicates([1, 2, 2, 3, 4, 4, 5])", "output": "[2, 4]"}, {"input": "find_duplicates([\"a\", \"b\", \"a\", \"c\"])", "output": "[\"a\"]"}],
+            constraints=["Return duplicates only once", "Preserve order of first occurrence"],
+            test_cases=[
+                {"input": "find_duplicates([1, 2, 2, 3, 4, 4, 5])", "output": "[2, 4]"},
+                {"input": "find_duplicates([\"a\", \"b\", \"a\", \"c\"])", "output": "[\"a\"]"},
+                {"input": "find_duplicates([1, 2, 3])", "output": "[]"},
+                {"input": "find_duplicates([1, 1, 1])", "output": "[1]"},
+                {"input": "find_duplicates([\"a\", \"b\", \"a\", \"b\", \"c\"])", "output": "[\"a\", \"b\"]"}
+            ],
+            starter_code="def find_duplicates(lst):\n    # Your code here\n    pass",
+            category="Lists",
+            order_index=22
+        ),
+        Problem(
+            title="Longest Common Prefix",
+            description="Find the longest common prefix among an array of strings.",
+            full_description="Write a function `longest_common_prefix` that takes a list of strings and returns the longest common prefix. If there is no common prefix, return an empty string.\n\nExample:\n- longest_common_prefix([\"flower\", \"flow\", \"flight\"]) should return \"fl\"\n- longest_common_prefix([\"dog\", \"racecar\", \"car\"]) should return \"\"",
+            difficulty="intermediate",
+            tags=["Strings", "Algorithms"],
+            points=35,
+            estimated_time=25,
+            examples=[{"input": "longest_common_prefix([\"flower\", \"flow\", \"flight\"])", "output": "\"fl\""}, {"input": "longest_common_prefix([\"dog\", \"racecar\", \"car\"])", "output": "\"\""}],
+            constraints=["All strings contain lowercase letters only", "Return empty string if no common prefix"],
+            test_cases=[
+                {"input": "longest_common_prefix([\"flower\", \"flow\", \"flight\"])", "output": "\"fl\""},
+                {"input": "longest_common_prefix([\"dog\", \"racecar\", \"car\"])", "output": "\"\""},
+                {"input": "longest_common_prefix([\"interspecies\", \"interstellar\", \"interstate\"])", "output": "\"inters\""},
+                {"input": "longest_common_prefix([\"throne\", \"throne\"])", "output": "\"throne\""},
+                {"input": "longest_common_prefix([\"a\"])", "output": "\"a\""}
+            ],
+            starter_code="def longest_common_prefix(strs):\n    # Your code here\n    pass",
+            category="Strings",
+            order_index=23
+        ),
+        Problem(
+            title="Reverse Words in String",
+            description="Reverse the order of words in a string.",
+            full_description="Write a function `reverse_words` that takes a string and returns a new string with the order of words reversed. Words are separated by spaces.\n\nExample:\n- reverse_words(\"Hello World\") should return \"World Hello\"\n- reverse_words(\"Python is great\") should return \"great is Python\"",
+            difficulty="intermediate",
+            tags=["Strings", "Algorithms"],
+            points=30,
+            estimated_time=20,
+            examples=[{"input": "reverse_words(\"Hello World\")", "output": "\"World Hello\""}, {"input": "reverse_words(\"Python is great\")", "output": "\"great is Python\""}],
+            constraints=["Words are separated by single spaces", "Preserve spacing"],
+            test_cases=[
+                {"input": "reverse_words(\"Hello World\")", "output": "\"World Hello\""},
+                {"input": "reverse_words(\"Python is great\")", "output": "\"great is Python\""},
+                {"input": "reverse_words(\"a\")", "output": "\"a\""},
+                {"input": "reverse_words(\"one two three\")", "output": "\"three two one\""},
+                {"input": "reverse_words(\"  hello  world  \")", "output": "\"  world  hello  \""}
+            ],
+            starter_code="def reverse_words(s):\n    # Your code here\n    pass",
+            category="Strings",
+            order_index=24
+        ),
+        Problem(
+            title="Maximum Subarray",
+            description="Find the contiguous subarray with the largest sum.",
+            full_description="Write a function `max_subarray` that takes a list of integers and returns the maximum sum of any contiguous subarray (Kadane's algorithm).\n\nExample:\n- max_subarray([-2, 1, -3, 4, -1, 2, 1, -5, 4]) should return 6 (subarray [4, -1, 2, 1])\n- max_subarray([1, -3, 2, 1, -1]) should return 3",
+            difficulty="advanced",
+            tags=["Arrays", "Dynamic Programming"],
+            points=50,
+            estimated_time=40,
+            examples=[{"input": "max_subarray([-2, 1, -3, 4, -1, 2, 1, -5, 4])", "output": "6"}, {"input": "max_subarray([1, -3, 2, 1, -1])", "output": "3"}],
+            constraints=["At least one element in array", "Use Kadane's algorithm for O(n) solution"],
+            test_cases=[
+                {"input": "max_subarray([-2, 1, -3, 4, -1, 2, 1, -5, 4])", "output": "6"},
+                {"input": "max_subarray([1, -3, 2, 1, -1])", "output": "3"},
+                {"input": "max_subarray([-1, -2, -3])", "output": "-1"},
+                {"input": "max_subarray([5, -1, 3, -2])", "output": "7"},
+                {"input": "max_subarray([1])", "output": "1"}
+            ],
+            starter_code="def max_subarray(nums):\n    # Your code here\n    pass",
+            category="Algorithms",
+            order_index=25
+        ),
+        Problem(
+            title="Climbing Stairs",
+            description="Count ways to climb n stairs (can climb 1 or 2 steps at a time).",
+            full_description="Write a function `climb_stairs` that takes an integer n representing the number of stairs. You can climb either 1 or 2 steps at a time. Return the number of distinct ways to reach the top.\n\nExample:\n- climb_stairs(2) should return 2 (1+1 or 2)\n- climb_stairs(3) should return 3 (1+1+1, 1+2, or 2+1)",
+            difficulty="intermediate",
+            tags=["Dynamic Programming", "Recursion"],
+            points=40,
+            estimated_time=30,
+            examples=[{"input": "climb_stairs(2)", "output": "2"}, {"input": "climb_stairs(3)", "output": "3"}],
+            constraints=["n is a positive integer", "Use dynamic programming for efficiency"],
+            test_cases=[
+                {"input": "climb_stairs(2)", "output": "2"},
+                {"input": "climb_stairs(3)", "output": "3"},
+                {"input": "climb_stairs(4)", "output": "5"},
+                {"input": "climb_stairs(5)", "output": "8"},
+                {"input": "climb_stairs(1)", "output": "1"}
+            ],
+            starter_code="def climb_stairs(n):\n    # Your code here\n    pass",
+            category="Algorithms",
+            order_index=26
+        ),
+        Problem(
+            title="Contains Duplicate",
+            description="Check if an array contains any duplicates.",
+            full_description="Write a function `contains_duplicate` that takes a list of integers and returns True if any value appears at least twice, False if all elements are distinct.\n\nExample:\n- contains_duplicate([1, 2, 3, 1]) should return True\n- contains_duplicate([1, 2, 3, 4]) should return False",
+            difficulty="beginner",
+            tags=["Arrays", "Hash Tables"],
+            points=20,
+            estimated_time=15,
+            examples=[{"input": "contains_duplicate([1, 2, 3, 1])", "output": "True"}, {"input": "contains_duplicate([1, 2, 3, 4])", "output": "False"}],
+            constraints=["Array may be empty (return False)", "Use efficient approach"],
+            test_cases=[
+                {"input": "contains_duplicate([1, 2, 3, 1])", "output": "True"},
+                {"input": "contains_duplicate([1, 2, 3, 4])", "output": "False"},
+                {"input": "contains_duplicate([1, 1, 1, 3, 3, 4, 3, 2, 4, 2])", "output": "True"},
+                {"input": "contains_duplicate([])", "output": "False"},
+                {"input": "contains_duplicate([1])", "output": "False"}
+            ],
+            starter_code="def contains_duplicate(nums):\n    # Your code here\n    pass",
+            category="Arrays",
+            order_index=27
+        ),
+        Problem(
+            title="Single Number",
+            description="Find the single number that appears only once in an array.",
+            full_description="Write a function `single_number` that takes a list of integers where every element appears twice except for one. Return that single element.\n\nExample:\n- single_number([2, 2, 1]) should return 1\n- single_number([4, 1, 2, 1, 2]) should return 4",
+            difficulty="intermediate",
+            tags=["Arrays", "Bit Manipulation"],
+            points=35,
+            estimated_time=25,
+            examples=[{"input": "single_number([2, 2, 1])", "output": "1"}, {"input": "single_number([4, 1, 2, 1, 2])", "output": "4"}],
+            constraints=["Linear time complexity O(n)", "Constant space O(1)"],
+            test_cases=[
+                {"input": "single_number([2, 2, 1])", "output": "1"},
+                {"input": "single_number([4, 1, 2, 1, 2])", "output": "4"},
+                {"input": "single_number([1])", "output": "1"},
+                {"input": "single_number([1, 2, 3, 2, 1])", "output": "3"},
+                {"input": "single_number([5, 3, 5, 2, 3])", "output": "2"}
+            ],
+            starter_code="def single_number(nums):\n    # Your code here\n    pass",
+            category="Arrays",
+            order_index=28
+        ),
+        Problem(
+            title="Power of Two",
+            description="Check if a number is a power of two.",
+            full_description="Write a function `is_power_of_two` that takes an integer n and returns True if n is a power of 2, False otherwise.\n\nExample:\n- is_power_of_two(1) should return True (2^0 = 1)\n- is_power_of_two(16) should return True (2^4 = 16)\n- is_power_of_two(3) should return False",
+            difficulty="intermediate",
+            tags=["Math", "Bit Manipulation"],
+            points=30,
+            estimated_time=20,
+            examples=[{"input": "is_power_of_two(1)", "output": "True"}, {"input": "is_power_of_two(16)", "output": "True"}, {"input": "is_power_of_two(3)", "output": "False"}],
+            constraints=["n is a positive integer", "Use bit manipulation for efficiency"],
+            test_cases=[
+                {"input": "is_power_of_two(1)", "output": "True"},
+                {"input": "is_power_of_two(16)", "output": "True"},
+                {"input": "is_power_of_two(3)", "output": "False"},
+                {"input": "is_power_of_two(4)", "output": "True"},
+                {"input": "is_power_of_two(5)", "output": "False"},
+                {"input": "is_power_of_two(1024)", "output": "True"}
+            ],
+            starter_code="def is_power_of_two(n):\n    # Your code here\n    pass",
+            category="Math",
+            order_index=29
+        ),
+        Problem(
+            title="Roman to Integer",
+            description="Convert a Roman numeral to an integer.",
+            full_description="Write a function `roman_to_int` that takes a string representing a Roman numeral and returns its integer value.\n\nExample:\n- roman_to_int(\"III\") should return 3\n- roman_to_int(\"LVIII\") should return 58\n- roman_to_int(\"MCMXCIV\") should return 1994",
+            difficulty="intermediate",
+            tags=["Strings", "Math"],
+            points=45,
+            estimated_time=35,
+            examples=[{"input": "roman_to_int(\"III\")", "output": "3"}, {"input": "roman_to_int(\"LVIII\")", "output": "58"}],
+            constraints=["Input is a valid Roman numeral", "Range: 1 to 3999"],
+            test_cases=[
+                {"input": "roman_to_int(\"III\")", "output": "3"},
+                {"input": "roman_to_int(\"LVIII\")", "output": "58"},
+                {"input": "roman_to_int(\"MCMXCIV\")", "output": "1994"},
+                {"input": "roman_to_int(\"IV\")", "output": "4"},
+                {"input": "roman_to_int(\"IX\")", "output": "9"},
+                {"input": "roman_to_int(\"I\")", "output": "1"}
+            ],
+            starter_code="def roman_to_int(s):\n    # Your code here\n    pass",
+            category="Strings",
+            order_index=30
         ),
     ]
     

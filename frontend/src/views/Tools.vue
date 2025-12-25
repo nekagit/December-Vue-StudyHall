@@ -501,32 +501,89 @@ const toolNames: Record<string, string> = {
   qrcode: 'QR Code Generator'
 }
 
-const formatJSON = () => {
+const formatJSON = async () => {
+  if (!jsonInput.value.trim()) return
+  
   try {
-    const parsed = JSON.parse(jsonInput.value)
-    jsonInput.value = JSON.stringify(parsed, null, 2)
-    jsonError.value = ''
+    const response = await fetch('/api/tools/json/format', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ json: jsonInput.value })
+    })
+    
+    const result = await response.json()
+    if (result.success && result.valid) {
+      jsonInput.value = result.formatted
+      jsonError.value = '✓ Valid JSON'
+    } else {
+      jsonError.value = result.error || 'Invalid JSON'
+    }
   } catch (e: any) {
-    jsonError.value = `Invalid JSON: ${e.message}`
+    // Fallback to client-side
+    try {
+      const parsed = JSON.parse(jsonInput.value)
+      jsonInput.value = JSON.stringify(parsed, null, 2)
+      jsonError.value = ''
+    } catch (err: any) {
+      jsonError.value = `Invalid JSON: ${err.message}`
+    }
   }
 }
 
-const minifyJSON = () => {
+const minifyJSON = async () => {
+  if (!jsonInput.value.trim()) return
+  
   try {
-    const parsed = JSON.parse(jsonInput.value)
-    jsonInput.value = JSON.stringify(parsed)
-    jsonError.value = ''
+    const response = await fetch('/api/tools/json/format', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ json: jsonInput.value })
+    })
+    
+    const result = await response.json()
+    if (result.success && result.valid) {
+      const parsed = JSON.parse(result.formatted)
+      jsonInput.value = JSON.stringify(parsed)
+      jsonError.value = ''
+    } else {
+      jsonError.value = result.error || 'Invalid JSON'
+    }
   } catch (e: any) {
-    jsonError.value = `Invalid JSON: ${e.message}`
+    // Fallback to client-side
+    try {
+      const parsed = JSON.parse(jsonInput.value)
+      jsonInput.value = JSON.stringify(parsed)
+      jsonError.value = ''
+    } catch (err: any) {
+      jsonError.value = `Invalid JSON: ${err.message}`
+    }
   }
 }
 
-const validateJSON = () => {
+const validateJSON = async () => {
+  if (!jsonInput.value.trim()) return
+  
   try {
-    JSON.parse(jsonInput.value)
-    jsonError.value = '✓ Valid JSON'
+    const response = await fetch('/api/tools/json/format', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ json: jsonInput.value })
+    })
+    
+    const result = await response.json()
+    if (result.success && result.valid) {
+      jsonError.value = '✓ Valid JSON'
+    } else {
+      jsonError.value = result.error || 'Invalid JSON'
+    }
   } catch (e: any) {
-    jsonError.value = `Invalid JSON: ${e.message}`
+    // Fallback to client-side
+    try {
+      JSON.parse(jsonInput.value)
+      jsonError.value = '✓ Valid JSON'
+    } catch (err: any) {
+      jsonError.value = `Invalid JSON: ${err.message}`
+    }
   }
 }
 
@@ -541,31 +598,103 @@ const testRegex = () => {
   }
 }
 
-const encodeBase64 = () => {
+const encodeBase64 = async () => {
+  if (!base64Input.value.trim()) return
+  
   try {
-    base64Output.value = btoa(base64Input.value)
+    const response = await fetch('/api/tools/base64/encode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: base64Input.value })
+    })
+    
+    const result = await response.json()
+    if (result.success) {
+      base64Output.value = result.encoded
+    } else {
+      base64Output.value = result.error || 'Error encoding'
+    }
   } catch (e) {
-    base64Output.value = 'Error encoding'
+    // Fallback to client-side
+    try {
+      base64Output.value = btoa(base64Input.value)
+    } catch (err) {
+      base64Output.value = 'Error encoding'
+    }
   }
 }
 
-const decodeBase64 = () => {
+const decodeBase64 = async () => {
+  if (!base64Input.value.trim()) return
+  
   try {
-    base64Output.value = atob(base64Input.value)
+    const response = await fetch('/api/tools/base64/decode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ encoded: base64Input.value })
+    })
+    
+    const result = await response.json()
+    if (result.success) {
+      base64Output.value = result.decoded
+    } else {
+      base64Output.value = result.error || 'Error decoding'
+    }
   } catch (e) {
-    base64Output.value = 'Error decoding'
+    // Fallback to client-side
+    try {
+      base64Output.value = atob(base64Input.value)
+    } catch (err) {
+      base64Output.value = 'Error decoding'
+    }
   }
 }
 
-const encodeURL = () => {
-  urlOutput.value = encodeURIComponent(urlInput.value)
+const encodeURL = async () => {
+  if (!urlInput.value.trim()) return
+  
+  try {
+    const response = await fetch('/api/tools/url/encode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: urlInput.value })
+    })
+    
+    const result = await response.json()
+    if (result.success) {
+      urlOutput.value = result.encoded
+    } else {
+      urlOutput.value = result.error || 'Error encoding'
+    }
+  } catch (e) {
+    // Fallback to client-side
+    urlOutput.value = encodeURIComponent(urlInput.value)
+  }
 }
 
-const decodeURL = () => {
+const decodeURL = async () => {
+  if (!urlInput.value.trim()) return
+  
   try {
-    urlOutput.value = decodeURIComponent(urlInput.value)
+    const response = await fetch('/api/tools/url/decode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ encoded: urlInput.value })
+    })
+    
+    const result = await response.json()
+    if (result.success) {
+      urlOutput.value = result.decoded
+    } else {
+      urlOutput.value = result.error || 'Error decoding URL'
+    }
   } catch (e) {
-    urlOutput.value = 'Error decoding URL'
+    // Fallback to client-side
+    try {
+      urlOutput.value = decodeURIComponent(urlInput.value)
+    } catch (err) {
+      urlOutput.value = 'Error decoding URL'
+    }
   }
 }
 

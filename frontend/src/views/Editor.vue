@@ -66,8 +66,8 @@
     </div>
 
     <!-- Pair Programming Panel -->
-    <div v-if="showPairProgramming" class="bg-msit-dark-800 border-b border-msit-dark-700 px-4 py-2">
-      <div v-if="!isInPairSession" class="flex items-center gap-2">
+    <div v-if="showPairProgramming" class="bg-msit-dark-800 border-b border-msit-dark-700">
+      <div v-if="!isInPairSession" class="px-4 py-2 flex items-center gap-2">
         <button
           @click="createPairSession"
           :disabled="isCreatingSession"
@@ -90,17 +90,75 @@
           {{ isJoiningSession ? 'Joining...' : 'Join' }}
         </button>
       </div>
-      <div v-else class="flex items-center justify-between">
-        <div class="flex items-center gap-4">
-          <span class="text-xs text-msit-dark-300 font-sans">Session: <code class="text-msit-accent">{{ pairSessionId }}</code></span>
-          <span class="text-xs text-msit-dark-300 font-sans">{{ participants.length }} participant(s)</span>
+      <div v-else class="flex flex-col">
+        <div class="px-4 py-2 flex items-center justify-between border-b border-msit-dark-700">
+          <div class="flex items-center gap-4">
+            <span class="text-xs text-msit-dark-300 font-sans">Session: <code class="text-msit-accent font-mono">{{ pairSessionId }}</code></span>
+            <span class="text-xs text-msit-dark-300 font-sans">{{ participants.length }} participant(s)</span>
+            <div class="flex items-center gap-2">
+              <span v-for="p in participants" :key="p.username" class="text-xs px-2 py-0.5 bg-msit-accent/20 text-msit-accent rounded font-sans">
+                {{ p.username }}
+              </span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              @click="showPairChat = !showPairChat"
+              class="px-3 py-1.5 bg-msit-dark-700 text-msit-dark-200 rounded hover:bg-msit-dark-600 transition-colors text-sm font-sans flex items-center gap-2"
+            >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              Chat
+            </button>
+            <button
+              @click="leavePairSession"
+              class="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-sans"
+            >
+              Leave Session
+            </button>
+          </div>
         </div>
-        <button
-          @click="leavePairSession"
-          class="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-sans"
-        >
-          Leave Session
-        </button>
+        <!-- Chat Panel -->
+        <div v-if="showPairChat" class="border-t border-msit-dark-700 bg-msit-dark-900">
+          <div class="h-48 flex flex-col">
+            <div class="flex-1 overflow-y-auto p-3 space-y-2">
+              <div
+                v-for="msg in chatMessages"
+                :key="msg.id"
+                class="flex flex-col"
+              >
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-xs font-semibold text-msit-accent font-sans">{{ msg.username }}</span>
+                  <span class="text-xs text-msit-dark-400 font-sans">{{ formatTime(msg.timestamp) }}</span>
+                </div>
+                <div class="text-sm text-msit-dark-200 bg-msit-dark-800 rounded px-3 py-2 font-sans">
+                  {{ msg.message }}
+                </div>
+              </div>
+              <div v-if="typingUsers.length > 0" class="text-xs text-msit-dark-400 italic font-sans">
+                {{ typingUsers.join(', ') }} {{ typingUsers.length === 1 ? 'is' : 'are' }} typing...
+              </div>
+            </div>
+            <div class="p-3 border-t border-msit-dark-700 flex gap-2">
+              <input
+                v-model="chatInput"
+                @keyup.enter="sendChatMessage"
+                @input="handleChatTyping"
+                type="text"
+                placeholder="Type a message..."
+                class="flex-1 px-3 py-2 bg-msit-dark-800 border border-msit-dark-600 rounded text-sm text-msit-dark-50 font-sans focus:outline-none focus:ring-1 focus:ring-msit-accent"
+              />
+              <button
+                @click="sendChatMessage"
+                :disabled="!chatInput.trim()"
+                class="px-4 py-2 bg-msit-accent text-msit-dark rounded hover:bg-msit-accent-500 disabled:opacity-50 transition-colors text-sm font-sans"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -298,17 +356,47 @@
 
     <!-- GitHub Upload Dialog -->
     <div v-if="showGithubDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-msit-dark-800 rounded-lg p-6 w-96 border border-msit-dark-700">
+      <div class="bg-msit-dark-800 rounded-lg p-6 w-96 border border-msit-dark-700 max-h-[90vh] overflow-y-auto">
         <h2 class="text-xl font-semibold text-msit-dark-50 mb-4 font-serif">Upload to GitHub</h2>
-        <div class="space-y-4">
+        
+        <!-- Error Message -->
+        <div v-if="uploadError" class="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <div class="flex items-center gap-2 text-red-400 text-sm font-sans">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{{ uploadError }}</span>
+          </div>
+        </div>
+
+        <!-- Upload Progress -->
+        <div v-if="isUploading" class="mb-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-msit-dark-200 font-sans">Uploading...</span>
+            <span class="text-sm text-msit-dark-300 font-sans">{{ uploadProgress.current }} / {{ uploadProgress.total }}</span>
+          </div>
+          <div class="w-full bg-msit-dark-700 rounded-full h-2">
+            <div
+              class="bg-msit-accent h-2 rounded-full transition-all duration-300"
+              :style="{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }"
+            ></div>
+          </div>
+          <p v-if="uploadProgress.currentFile" class="text-xs text-msit-dark-300 mt-2 font-sans">
+            {{ uploadProgress.currentFile }}
+          </p>
+        </div>
+
+        <div class="space-y-4" :class="{ 'opacity-50 pointer-events-none': isUploading }">
           <div>
             <label class="block text-sm text-msit-dark-200 mb-1 font-sans">Repository (owner/repo)</label>
             <input
               v-model="githubRepo"
               type="text"
               placeholder="username/repo-name"
-              class="w-full px-3 py-2 bg-msit-dark-900 border border-msit-dark-700 rounded text-msit-dark-50 font-sans focus:outline-none focus:ring-2 focus:ring-msit-accent"
+              :disabled="isUploading"
+              class="w-full px-3 py-2 bg-msit-dark-900 border border-msit-dark-700 rounded text-msit-dark-50 font-sans focus:outline-none focus:ring-2 focus:ring-msit-accent disabled:opacity-50"
             />
+            <p class="text-xs text-msit-dark-300 mt-1 font-sans">Format: owner/repository-name</p>
           </div>
           <div>
             <label class="block text-sm text-msit-dark-200 mb-1 font-sans">Branch</label>
@@ -316,7 +404,8 @@
               v-model="githubBranch"
               type="text"
               placeholder="main"
-              class="w-full px-3 py-2 bg-msit-dark-900 border border-msit-dark-700 rounded text-msit-dark-50 font-sans focus:outline-none focus:ring-2 focus:ring-msit-accent"
+              :disabled="isUploading"
+              class="w-full px-3 py-2 bg-msit-dark-900 border border-msit-dark-700 rounded text-msit-dark-50 font-sans focus:outline-none focus:ring-2 focus:ring-msit-accent disabled:opacity-50"
             />
           </div>
           <div>
@@ -325,24 +414,30 @@
               v-model="githubToken"
               type="password"
               placeholder="ghp_xxxxxxxxxxxx"
-              class="w-full px-3 py-2 bg-msit-dark-900 border border-msit-dark-700 rounded text-msit-dark-50 font-sans focus:outline-none focus:ring-2 focus:ring-msit-accent"
+              :disabled="isUploading"
+              class="w-full px-3 py-2 bg-msit-dark-900 border border-msit-dark-700 rounded text-msit-dark-50 font-sans focus:outline-none focus:ring-2 focus:ring-msit-accent disabled:opacity-50"
             />
-            <p class="text-xs text-msit-dark-300 mt-1 font-sans">Token is stored in localStorage only</p>
+            <p class="text-xs text-msit-dark-300 mt-1 font-sans">Token is stored in localStorage only. Create at: github.com/settings/tokens</p>
           </div>
         </div>
         <div class="flex justify-end gap-2 mt-6">
           <button
-            @click="showGithubDialog = false"
-            class="px-4 py-2 bg-msit-dark-700 text-msit-dark-200 rounded hover:bg-msit-dark-600 transition-colors font-sans"
+            @click="cancelUpload"
+            :disabled="isUploading"
+            class="px-4 py-2 bg-msit-dark-700 text-msit-dark-200 rounded hover:bg-msit-dark-600 transition-colors font-sans disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            {{ isUploading ? 'Cancel' : 'Close' }}
           </button>
           <button
             @click="uploadToGithub"
-            :disabled="!githubRepo || !githubToken"
-            class="px-4 py-2 bg-msit-accent text-msit-dark rounded hover:bg-msit-accent-500 transition-colors font-sans disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="!githubRepo || !githubToken || isUploading"
+            class="px-4 py-2 bg-msit-accent text-msit-dark rounded hover:bg-msit-accent-500 transition-colors font-sans disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Upload
+            <svg v-if="isUploading" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ isUploading ? 'Uploading...' : 'Upload' }}
           </button>
         </div>
       </div>
@@ -356,7 +451,7 @@ import loader from '@monaco-editor/loader'
 import JSZip from 'jszip'
 import type * as monaco from 'monaco-editor'
 import FileTreeItem from '../components/FileTreeItem.vue'
-import { pairProgrammingClient } from '../utils/pairProgramming'
+import { pairProgrammingClient, type ChatMessage } from '../utils/pairProgramming'
 
 interface FileItem {
   id: string
@@ -392,6 +487,9 @@ const githubRepo = ref('')
 const githubBranch = ref('main')
 const githubToken = ref('')
 const draggedItem = ref<FileItem | null>(null)
+const isUploading = ref(false)
+const uploadProgress = ref({ current: 0, total: 0, currentFile: '' })
+const uploadError = ref('')
 
 const STORAGE_KEY = 'editor_files'
 const GITHUB_TOKEN_KEY = 'github_token'
@@ -406,6 +504,13 @@ const isCreatingSession = ref(false)
 const isJoiningSession = ref(false)
 let isReceivingCodeUpdate = ref(false)
 let codeChangeTimeout: ReturnType<typeof setTimeout> | null = null
+
+// Chat state
+const showPairChat = ref(false)
+const chatMessages = ref<ChatMessage[]>([])
+const chatInput = ref('')
+const typingUsers = ref<string[]>([])
+let typingTimeout: ReturnType<typeof setTimeout> | null = null
 
 // Build tree structure from flat array
 function buildTree(items: FileItem[]): FileItem[] {
@@ -1015,70 +1120,155 @@ async function exportProject() {
 // Upload to GitHub
 async function uploadToGithub() {
   if (!githubRepo.value || !githubToken.value) {
-    alert('Please provide repository and token')
+    uploadError.value = 'Please provide repository and token'
     return
   }
 
+  // Validate repository format
+  const repoMatch = githubRepo.value.match(/^([\w.-]+)\/([\w.-]+)$/)
+  if (!repoMatch) {
+    uploadError.value = 'Invalid repository format. Use: owner/repo (e.g., username/repository-name)'
+    return
+  }
+
+  const [owner, repo] = repoMatch.slice(1)
+  const branch = githubBranch.value.trim() || 'main'
+
+  // Validate branch name
+  if (!/^[a-zA-Z0-9._/-]+$/.test(branch)) {
+    uploadError.value = 'Invalid branch name. Use alphanumeric characters, dots, underscores, slashes, and hyphens only.'
+    return
+  }
+
+  isUploading.value = true
+  uploadError.value = ''
+  
   try {
     // Save token to localStorage
     localStorage.setItem(GITHUB_TOKEN_KEY, githubToken.value)
 
-    const [owner, repo] = githubRepo.value.split('/')
-    if (!owner || !repo) {
-      alert('Invalid repository format. Use: owner/repo')
+    // Get all files to upload
+    const allFiles = getAllFiles(files.value)
+    if (allFiles.length === 0) {
+      uploadError.value = 'No files to upload'
+      isUploading.value = false
       return
     }
 
-    const branch = githubBranch.value || 'main'
+    uploadProgress.value = {
+      current: 0,
+      total: allFiles.length,
+      currentFile: ''
+    }
 
-    // Create or update files via GitHub API
-    const allFiles = getAllFiles(files.value)
-    for (const file of allFiles) {
-      const content = btoa(unescape(encodeURIComponent(file.content)))
-      
-      // Check if file exists
-      const checkUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${file.path}?ref=${branch}`
-      const checkResponse = await fetch(checkUrl, {
-        headers: {
-          'Authorization': `token ${githubToken.value}`,
-          'Accept': 'application/vnd.github.v3+json'
-        }
-      })
-
-      let sha: string | undefined
-      if (checkResponse.ok) {
-        const existingFile = await checkResponse.json()
-        sha = existingFile.sha
+    // Verify repository access first
+    const verifyUrl = `https://api.github.com/repos/${owner}/${repo}`
+    const verifyResponse = await fetch(verifyUrl, {
+      headers: {
+        'Authorization': `token ${githubToken.value}`,
+        'Accept': 'application/vnd.github.v3+json'
       }
+    })
 
-      // Create or update file
-      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${file.path}`
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `token ${githubToken.value}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: `Update ${file.path}`,
-          content: content,
-          branch: branch,
-          ...(sha ? { sha } : {})
-        })
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to upload file')
+    if (!verifyResponse.ok) {
+      if (verifyResponse.status === 401) {
+        throw new Error('Invalid GitHub token. Please check your token and try again.')
+      } else if (verifyResponse.status === 404) {
+        throw new Error(`Repository ${owner}/${repo} not found. Check the repository name and ensure you have access.`)
+      } else {
+        const errorData = await verifyResponse.json().catch(() => ({}))
+        throw new Error(errorData.message || `Failed to access repository: ${verifyResponse.statusText}`)
       }
     }
 
-    alert('Successfully uploaded to GitHub!')
-    showGithubDialog.value = false
+    // Upload files one by one
+    const errors: string[] = []
+    for (let i = 0; i < allFiles.length; i++) {
+      const file = allFiles[i]
+      uploadProgress.value.current = i
+      uploadProgress.value.currentFile = file.path
+
+      try {
+        // Encode file content to base64
+        const content = btoa(unescape(encodeURIComponent(file.content)))
+        
+        // Check if file exists
+        const checkUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(file.path)}?ref=${encodeURIComponent(branch)}`
+        const checkResponse = await fetch(checkUrl, {
+          headers: {
+            'Authorization': `token ${githubToken.value}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        })
+
+        let sha: string | undefined
+        if (checkResponse.ok) {
+          const existingFile = await checkResponse.json()
+          sha = existingFile.sha
+        } else if (checkResponse.status !== 404) {
+          // 404 is expected for new files, other errors are problems
+          const errorData = await checkResponse.json().catch(() => ({}))
+          throw new Error(errorData.message || `Failed to check file: ${checkResponse.statusText}`)
+        }
+
+        // Create or update file
+        const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(file.path)}`
+        const response = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${githubToken.value}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: sha ? `Update ${file.path}` : `Add ${file.path}`,
+            content: content,
+            branch: branch,
+            ...(sha ? { sha } : {})
+          })
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.message || `Failed to upload ${file.path}: ${response.statusText}`)
+        }
+      } catch (fileError: any) {
+        errors.push(`${file.path}: ${fileError.message}`)
+      }
+    }
+
+    uploadProgress.value.current = allFiles.length
+
+    if (errors.length > 0) {
+      uploadError.value = `Some files failed to upload:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n... and ${errors.length - 5} more` : ''}`
+      isUploading.value = false
+      return
+    }
+
+    // Success
+    setTimeout(() => {
+      showGithubDialog.value = false
+      isUploading.value = false
+      uploadError.value = ''
+      uploadProgress.value = { current: 0, total: 0, currentFile: '' }
+      alert(`Successfully uploaded ${allFiles.length} file(s) to ${owner}/${repo} on branch ${branch}!`)
+    }, 500)
   } catch (error: any) {
     console.error('GitHub upload failed:', error)
-    alert(`Failed to upload: ${error.message}`)
+    uploadError.value = error.message || 'Failed to upload to GitHub. Please check your repository, branch, and token.'
+    isUploading.value = false
+  }
+}
+
+function cancelUpload() {
+  if (isUploading.value) {
+    // Just stop the upload (can't actually cancel in-flight requests)
+    isUploading.value = false
+    uploadError.value = 'Upload cancelled'
+  } else {
+    showGithubDialog.value = false
+    uploadError.value = ''
+    uploadProgress.value = { current: 0, total: 0, currentFile: '' }
   }
 }
 
@@ -1150,6 +1340,24 @@ async function createPairSession() {
           user_id: p.user_id
         }))
       },
+      onChatMessage: (message: ChatMessage) => {
+        chatMessages.value.push(message)
+        // Auto-scroll to bottom
+        setTimeout(() => {
+          const chatContainer = document.querySelector('.overflow-y-auto')
+          if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight
+          }
+        }, 100)
+      },
+      onTypingStart: (username: string) => {
+        if (!typingUsers.value.includes(username)) {
+          typingUsers.value.push(username)
+        }
+      },
+      onTypingStop: (username: string) => {
+        typingUsers.value = typingUsers.value.filter(u => u !== username)
+      },
       onError: (message: string) => {
         alert(`Pair programming error: ${message}`)
       }
@@ -1208,6 +1416,24 @@ async function joinPairSession() {
           user_id: p.user_id
         }))
       },
+      onChatMessage: (message: ChatMessage) => {
+        chatMessages.value.push(message)
+        // Auto-scroll to bottom
+        setTimeout(() => {
+          const chatContainer = document.querySelector('.overflow-y-auto')
+          if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight
+          }
+        }, 100)
+      },
+      onTypingStart: (username: string) => {
+        if (!typingUsers.value.includes(username)) {
+          typingUsers.value.push(username)
+        }
+      },
+      onTypingStop: (username: string) => {
+        typingUsers.value = typingUsers.value.filter(u => u !== username)
+      },
       onError: (message: string) => {
         alert(`Pair programming error: ${message}`)
       }
@@ -1228,10 +1454,59 @@ function leavePairSession() {
   isInPairSession.value = false
   pairSessionId.value = null
   participants.value = []
+  chatMessages.value = []
+  chatInput.value = ''
+  typingUsers.value = []
+  showPairChat.value = false
   if (codeChangeTimeout) {
     clearTimeout(codeChangeTimeout)
     codeChangeTimeout = null
   }
+  if (typingTimeout) {
+    clearTimeout(typingTimeout)
+    typingTimeout = null
+  }
+}
+
+function sendChatMessage() {
+  if (!chatInput.value.trim() || !isInPairSession.value) return
+  
+  pairProgrammingClient.sendChatMessage(chatInput.value)
+  chatInput.value = ''
+  pairProgrammingClient.sendTypingStop()
+  if (typingTimeout) {
+    clearTimeout(typingTimeout)
+    typingTimeout = null
+  }
+}
+
+function handleChatTyping() {
+  if (!isInPairSession.value) return
+  
+  pairProgrammingClient.sendTypingStart()
+  
+  if (typingTimeout) {
+    clearTimeout(typingTimeout)
+  }
+  
+  typingTimeout = setTimeout(() => {
+    pairProgrammingClient.sendTypingStop()
+  }, 3000)
+}
+
+function formatTime(date: Date): string {
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const seconds = Math.floor(diff / 1000)
+  const minutes = Math.floor(seconds / 60)
+  
+  if (seconds < 60) return 'just now'
+  if (minutes < 60) return `${minutes}m ago`
+  
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  
+  return date.toLocaleDateString()
 }
 
 // Watch for file changes

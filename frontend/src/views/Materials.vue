@@ -112,6 +112,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { apiFetchWithErrorHandling, formatApiError, type ApiError } from '../utils/api'
 
 const materials = ref<any[]>([])
 const categories = ref<string[]>([])
@@ -125,6 +126,7 @@ let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
 const loadMaterials = async () => {
   loading.value = true
+  error.value = ''
   try {
     const params = new URLSearchParams()
     if (searchQuery.value) {
@@ -135,16 +137,10 @@ const loadMaterials = async () => {
     }
     
     const url = `/api/materials${params.toString() ? '?' + params.toString() : ''}`
-    const response = await fetch(url, {
-      credentials: 'include'
-    })
-    if (response.ok) {
-      materials.value = await response.json()
-    } else {
-      error.value = 'Failed to load materials'
-    }
+    materials.value = await apiFetchWithErrorHandling(url)
   } catch (e) {
-    error.value = 'An error occurred'
+    error.value = formatApiError(e)
+    console.error('Error loading materials:', e)
   } finally {
     loading.value = false
   }
@@ -152,14 +148,10 @@ const loadMaterials = async () => {
 
 const loadCategories = async () => {
   try {
-    const response = await fetch('/api/materials/categories', {
-      credentials: 'include'
-    })
-    if (response.ok) {
-      categories.value = await response.json()
-    }
+    categories.value = await apiFetchWithErrorHandling('/api/materials/categories')
   } catch (e) {
-    // Ignore errors
+    // Ignore errors for categories - not critical
+    console.warn('Failed to load categories:', e)
   }
 }
 
@@ -184,20 +176,9 @@ const syncFromNotion = async () => {
   success.value = ''
   
   try {
-    const response = await fetch('/api/materials/sync-notion', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      }
+    const result = await apiFetchWithErrorHandling('/api/materials/sync-notion', {
+      method: 'POST'
     })
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.error || 'Failed to sync from Notion')
-    }
-    
-    const result = await response.json()
     
     if (result.success) {
       success.value = `Successfully synced ${result.synced_count || 0} materials from Notion`
@@ -211,7 +192,7 @@ const syncFromNotion = async () => {
       throw new Error(result.error || 'Sync failed')
     }
   } catch (e: any) {
-    error.value = e.message || 'An error occurred while syncing from Notion'
+    error.value = formatApiError(e)
     console.error('Notion sync error:', e)
   } finally {
     syncing.value = false

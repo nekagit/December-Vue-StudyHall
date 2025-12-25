@@ -357,6 +357,160 @@ const exercises = [
       { input: 'find_duplicates([1, 2, 3])', output: '[]' },
       { input: 'find_duplicates([1, 1, 1, 2, 2])', output: '[1, 2]' }
     ]
+  },
+  {
+    id: 11,
+    title: 'List Comprehension - Squares',
+    difficulty: 'Beginner',
+    description: 'Use list comprehension to create a list of squares.',
+    problem: 'Write a function that takes a list of numbers and returns a list of their squares using list comprehension.',
+    example: 'squares([1, 2, 3, 4]) should return [1, 4, 9, 16]',
+    hints: ['Use list comprehension syntax: [expression for item in list]', 'Square a number using ** operator'],
+    solution: 'def squares(numbers):\n    return [n ** 2 for n in numbers]',
+    testCases: [
+      { input: 'squares([1, 2, 3, 4])', output: '[1, 4, 9, 16]' },
+      { input: 'squares([0, 5, 10])', output: '[0, 25, 100]' },
+      { input: 'squares([-2, -1, 0, 1, 2])', output: '[4, 1, 0, 1, 4]' }
+    ]
+  },
+  {
+    id: 12,
+    title: 'Filter Even Numbers',
+    difficulty: 'Beginner',
+    description: 'Filter even numbers from a list.',
+    problem: 'Write a function that takes a list of numbers and returns only the even numbers.',
+    example: 'filter_even([1, 2, 3, 4, 5, 6]) should return [2, 4, 6]',
+    hints: ['Use modulo operator (%) to check if number is even', 'Use filter() or list comprehension'],
+    solution: 'def filter_even(numbers):\n    return [n for n in numbers if n % 2 == 0]\n\n# Or using filter:\ndef filter_even(numbers):\n    return list(filter(lambda n: n % 2 == 0, numbers))',
+    testCases: [
+      { input: 'filter_even([1, 2, 3, 4, 5, 6])', output: '[2, 4, 6]' },
+      { input: 'filter_even([1, 3, 5])', output: '[]' },
+      { input: 'filter_even([0, 2, 4, 6, 8])', output: '[0, 2, 4, 6, 8]' }
+    ]
+  },
+  {
+    id: 13,
+    title: 'Dictionary Merge',
+    difficulty: 'Intermediate',
+    description: 'Merge two dictionaries with conflict resolution.',
+    problem: 'Write a function that merges two dictionaries. If there are duplicate keys, the value from the second dictionary should be used.',
+    example: 'merge_dicts({"a": 1, "b": 2}, {"b": 3, "c": 4}) should return {"a": 1, "b": 3, "c": 4}',
+    hints: ['Use dictionary unpacking **', 'Or use update() method', 'Second dict values take precedence'],
+    solution: 'def merge_dicts(dict1, dict2):\n    return {**dict1, **dict2}\n\n# Or:\ndef merge_dicts(dict1, dict2):\n    result = dict1.copy()\n    result.update(dict2)\n    return result',
+    testCases: [
+      { input: 'merge_dicts({"a": 1, "b": 2}, {"b": 3, "c": 4})', output: "{'a': 1, 'b': 3, 'c': 4}" },
+      { input: 'merge_dicts({"x": 10}, {"y": 20})', output: "{'x': 10, 'y': 20}" },
+      { input: 'merge_dicts({}, {"a": 1})', output: "{'a': 1}" }
+    ]
+  },
+  {
+    id: 14,
+    title: 'Count Words',
+    difficulty: 'Intermediate',
+    description: 'Count word frequency in a string.',
+    problem: 'Write a function that takes a string and returns a dictionary with word frequencies (case-insensitive).',
+    example: 'count_words("Hello hello world") should return {"hello": 2, "world": 1}',
+    hints: ['Convert to lowercase', 'Split by spaces', 'Use dictionary to count'],
+    solution: 'def count_words(text):\n    words = text.lower().split()\n    count = {}\n    for word in words:\n        count[word] = count.get(word, 0) + 1\n    return count',
+    testCases: [
+      { input: 'count_words("Hello hello world")', output: "{'hello': 2, 'world': 1}" },
+      { input: 'count_words("Python is great Python")', output: "{'python': 2, 'is': 1, 'great': 1}" },
+      { input: 'count_words("")', output: '{}' }
+    ]
+  },
+  {
+    id: 15,
+    title: 'Binary Search',
+    difficulty: 'Hard',
+    description: 'Implement binary search algorithm.',
+    problem: 'Write a function that performs binary search on a sorted list. Return the index if found, -1 otherwise.',
+    example: 'binary_search([1, 3, 5, 7, 9], 5) should return 2',
+    hints: ['Use two pointers (left and right)', 'Calculate middle index', 'Compare and adjust pointers'],
+    solution: 'def binary_search(arr, target):\n    left, right = 0, len(arr) - 1\n    while left <= right:\n        mid = (left + right) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            left = mid + 1\n        else:\n            right = mid - 1\n    return -1',
+    testCases: [
+      { input: 'binary_search([1, 3, 5, 7, 9], 5)', output: '2' },
+      { input: 'binary_search([1, 3, 5, 7, 9], 10)', output: '-1' },
+      { input: 'binary_search([1, 2, 3, 4, 5], 1)', output: '0' },
+      { input: 'binary_search([1, 2, 3, 4, 5], 5)', output: '4' }
+    ]
+  },
+  {
+    id: 16,
+    title: 'Remove Duplicates',
+    difficulty: 'Beginner',
+    description: 'Remove duplicates from a list while preserving order.',
+    problem: 'Write a function that removes duplicate elements from a list while maintaining the original order.',
+    example: 'remove_duplicates([1, 2, 2, 3, 3, 3, 4]) should return [1, 2, 3, 4]',
+    hints: ['Use a set to track seen elements', 'Or use dict.fromkeys()', 'Preserve order'],
+    solution: 'def remove_duplicates(lst):\n    seen = set()\n    result = []\n    for item in lst:\n        if item not in seen:\n            seen.add(item)\n            result.append(item)\n    return result\n\n# Or simpler:\ndef remove_duplicates(lst):\n    return list(dict.fromkeys(lst))',
+    testCases: [
+      { input: 'remove_duplicates([1, 2, 2, 3, 3, 3, 4])', output: '[1, 2, 3, 4]' },
+      { input: 'remove_duplicates([1, 1, 1])', output: '[1]' },
+      { input: 'remove_duplicates([1, 2, 3])', output: '[1, 2, 3]' }
+    ]
+  },
+  {
+    id: 17,
+    title: 'Prime Number Check',
+    difficulty: 'Intermediate',
+    description: 'Check if a number is prime.',
+    problem: 'Write a function that checks if a number is prime (only divisible by 1 and itself).',
+    example: 'is_prime(7) should return True, is_prime(10) should return False',
+    hints: ['Check divisibility from 2 to sqrt(n)', 'Return False if divisible by any number', 'Handle edge cases (1, 2)'],
+    solution: 'import math\n\ndef is_prime(n):\n    if n < 2:\n        return False\n    if n == 2:\n        return True\n    if n % 2 == 0:\n        return False\n    for i in range(3, int(math.sqrt(n)) + 1, 2):\n        if n % i == 0:\n            return False\n    return True',
+    testCases: [
+      { input: 'is_prime(7)', output: 'True' },
+      { input: 'is_prime(10)', output: 'False' },
+      { input: 'is_prime(2)', output: 'True' },
+      { input: 'is_prime(1)', output: 'False' },
+      { input: 'is_prime(17)', output: 'True' }
+    ]
+  },
+  {
+    id: 18,
+    title: 'String Anagrams',
+    difficulty: 'Intermediate',
+    description: 'Check if two strings are anagrams.',
+    problem: 'Write a function that checks if two strings are anagrams (contain the same characters in different order).',
+    example: 'is_anagram("listen", "silent") should return True',
+    hints: ['Sort both strings and compare', 'Or count character frequencies', 'Case-insensitive comparison'],
+    solution: 'def is_anagram(s1, s2):\n    return sorted(s1.lower().replace(" ", "")) == sorted(s2.lower().replace(" ", ""))',
+    testCases: [
+      { input: 'is_anagram("listen", "silent")', output: 'True' },
+      { input: 'is_anagram("hello", "world")', output: 'False' },
+      { input: 'is_anagram("rail safety", "fairy tales")', output: 'True' },
+      { input: 'is_anagram("python", "typhon")', output: 'True' }
+    ]
+  },
+  {
+    id: 19,
+    title: 'Matrix Transpose',
+    difficulty: 'Intermediate',
+    description: 'Transpose a matrix (2D list).',
+    problem: 'Write a function that transposes a matrix (swaps rows and columns).',
+    example: 'transpose([[1, 2, 3], [4, 5, 6]]) should return [[1, 4], [2, 5], [3, 6]]',
+    hints: ['Use nested list comprehension', 'Swap row and column indices', 'zip() can be helpful'],
+    solution: 'def transpose(matrix):\n    return [[matrix[j][i] for j in range(len(matrix))] for i in range(len(matrix[0]))]\n\n# Or using zip:\ndef transpose(matrix):\n    return list(map(list, zip(*matrix)))',
+    testCases: [
+      { input: 'transpose([[1, 2, 3], [4, 5, 6]])', output: '[[1, 4], [2, 5], [3, 6]]' },
+      { input: 'transpose([[1, 2], [3, 4]])', output: '[[1, 3], [2, 4]]' },
+      { input: 'transpose([[1]])', output: '[[1]]' }
+    ]
+  },
+  {
+    id: 20,
+    title: 'Flatten Nested List',
+    difficulty: 'Hard',
+    description: 'Flatten a nested list of any depth.',
+    problem: 'Write a function that flattens a nested list structure of any depth into a single list.',
+    example: 'flatten([1, [2, 3], [4, [5, 6]]]) should return [1, 2, 3, 4, 5, 6]',
+    hints: ['Use recursion', 'Check if element is a list', 'Handle nested structures'],
+    solution: 'def flatten(nested_list):\n    result = []\n    for item in nested_list:\n        if isinstance(item, list):\n            result.extend(flatten(item))\n        else:\n            result.append(item)\n    return result',
+    testCases: [
+      { input: 'flatten([1, [2, 3], [4, [5, 6]]])', output: '[1, 2, 3, 4, 5, 6]' },
+      { input: 'flatten([1, 2, 3])', output: '[1, 2, 3]' },
+      { input: 'flatten([[1], [2], [3]])', output: '[1, 2, 3]' }
+    ]
   }
 ]
 

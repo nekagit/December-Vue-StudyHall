@@ -123,24 +123,20 @@ const refreshCoverage = async () => {
   error.value = ''
   
   try {
-    // Simulate fetching coverage data
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const response = await fetch('/api/test-coverage')
+    if (!response.ok) {
+      throw new Error('Failed to fetch coverage data')
+    }
     
-    // Simulate updated coverage data
-    const variation = Math.random() * 5 - 2.5 // -2.5 to +2.5
-    overallCoverage.value = Math.max(0, Math.min(100, Math.round(85 + variation)))
+    const data = await response.json()
     
-    // Update module coverage with slight variations
-    moduleCoverage.value = moduleCoverage.value.map(module => ({
-      ...module,
-      coverage: Math.max(0, Math.min(100, Math.round(module.coverage + (Math.random() * 4 - 2))))
-    }))
-    
-    // Update test counts
-    const testVariation = Math.floor(Math.random() * 3) - 1
-    totalTests.value = Math.max(0, 42 + testVariation)
-    passedTests.value = Math.max(0, totalTests.value - Math.floor(Math.random() * 3))
-    failedTests.value = totalTests.value - passedTests.value
+    overallCoverage.value = Math.round(data.overallCoverage || 0)
+    totalTests.value = data.totalTests || 0
+    passedTests.value = data.passedTests || 0
+    failedTests.value = data.failedTests || 0
+    filesCovered.value = data.filesCovered || 0
+    totalFiles.value = data.totalFiles || 0
+    moduleCoverage.value = data.moduleCoverage || []
     
     loading.value = false
   } catch (e: any) {
@@ -154,19 +150,24 @@ const runTests = async () => {
   error.value = ''
   
   try {
-    // Simulate test execution
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    const response = await fetch('/api/test-coverage/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
     
-    // Simulate test results
-    const newPassed = Math.floor(Math.random() * 5) + 38
-    const newFailed = totalTests.value - newPassed
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'Failed to run tests')
+    }
     
-    passedTests.value = newPassed
-    failedTests.value = newFailed
+    const data = await response.json()
     
-    // Update overall coverage based on test results
-    const successRate = (newPassed / totalTests.value) * 100
-    overallCoverage.value = Math.round(successRate * 0.9) // Coverage slightly lower than pass rate
+    if (!data.success) {
+      throw new Error(data.message || 'Tests failed')
+    }
+    
+    // Refresh coverage data after running tests
+    await refreshCoverage()
     
     loading.value = false
   } catch (e: any) {
@@ -176,7 +177,7 @@ const runTests = async () => {
 }
 
 onMounted(() => {
-  // Optionally fetch coverage data on mount
-  // refreshCoverage()
+  // Fetch coverage data on mount
+  refreshCoverage()
 })
 </script>

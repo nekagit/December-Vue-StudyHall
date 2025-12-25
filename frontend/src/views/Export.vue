@@ -40,15 +40,26 @@
       <div class="bg-msit-dark-800 border-2 border-msit-accent rounded-lg p-4 sm:p-6">
         <h3 class="text-lg font-semibold text-msit-dark-50 mb-3 font-sans">Complete Export</h3>
         <p class="text-sm text-msit-dark-200 mb-4 font-sans">Export everything: code, materials, and notes in one file</p>
-        <button
-          @click="exportEverything"
-          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-msit-dark bg-msit-accent hover:bg-msit-accent-500 transition-colors font-sans"
-        >
-          <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-          Export Everything
-        </button>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button
+            @click="exportEverything('json')"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-msit-dark bg-msit-accent hover:bg-msit-accent-500 transition-colors font-sans"
+          >
+            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            Export as JSON
+          </button>
+          <button
+            @click="exportEverything('markdown')"
+            class="inline-flex items-center px-4 py-2 border border-msit-dark-600 text-sm font-medium rounded-md text-msit-dark-200 bg-msit-dark-700 hover:bg-msit-dark-600 transition-colors font-sans"
+          >
+            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export as Markdown
+          </button>
+        </div>
       </div>
 
       <!-- Export History -->
@@ -136,9 +147,14 @@ const exportCode = () => {
     }
     
     const content = `# Code Export - ${new Date().toLocaleDateString()}\n\n` +
+      `**Total Snippets:** ${codeHistory.length}\n\n` +
+      `---\n\n` +
       codeHistory.map((item: any, index: number) => 
-        `## Code Snippet ${index + 1} - ${item.timestamp || 'Unknown time'}\n\`\`\`python\n${item.code || ''}\n\`\`\`\n`
-      ).join('\n')
+        `## Code Snippet ${index + 1}\n\n` +
+        `*Timestamp: ${item.timestamp || 'Unknown time'}*\n\n` +
+        `\`\`\`python\n${item.code || ''}\n\`\`\`\n\n` +
+        `---\n\n`
+      ).join('')
     
     const filename = `code-export-${new Date().toISOString().split('T')[0]}.md`
     downloadFile(content, filename, 'text/markdown')
@@ -166,10 +182,14 @@ const exportMaterials = async () => {
     }
     
     const content = `# Materials Export - ${new Date().toLocaleDateString()}\n\n` +
+      `**Total Materials:** ${materials.length}\n\n` +
+      `---\n\n` +
       materials.map((m: any) => 
         `## ${m.title || 'Untitled'}\n\n` +
-        `**Category:** ${m.category || 'N/A'}\n\n` +
-        `${m.content || 'No content'}\n\n` +
+        `**Category:** ${m.category || 'N/A'}\n` +
+        (m.created_at ? `**Created:** ${m.created_at}\n` : '') +
+        (m.notion_url ? `**Notion URL:** [View](${m.notion_url})\n` : '') +
+        `\n${m.content || 'No content'}\n\n` +
         `---\n\n`
       ).join('')
     
@@ -182,10 +202,14 @@ const exportMaterials = async () => {
   }
 }
 
-const exportEverything = async () => {
+const exportEverything = async (format: 'json' | 'markdown' = 'json') => {
   try {
     const codeHistory = localStorage.getItem('python_code_history')
     const codeData = codeHistory ? JSON.parse(codeHistory) : []
+    
+    // Get editor files if available
+    const editorFiles = localStorage.getItem('editor_files')
+    const editorData = editorFiles ? JSON.parse(editorFiles) : []
     
     const materialsResponse = await fetch('/api/materials', {
       credentials: 'include'
@@ -196,37 +220,109 @@ const exportEverything = async () => {
       date: new Date().toISOString().split('T')[0],
       timestamp: new Date().toISOString(),
       code: codeData,
+      editorFiles: editorData,
       materials: materials,
       summary: {
         codeSnippets: codeData.length,
+        editorFiles: Array.isArray(editorData) ? editorData.length : 0,
         materials: materials.length
       }
     }
     
-    // Use the export API endpoint
-    const exportResponse = await fetch('/api/export', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      credentials: 'include',
-      body: JSON.stringify(exportData)
-    })
-    
-    if (!exportResponse.ok) {
-      throw new Error('Failed to export via API')
+    if (format === 'markdown') {
+      // Generate markdown format
+      const markdown = generateMarkdownExport(exportData)
+      const filename = `studyhall-export-${new Date().toISOString().split('T')[0]}.md`
+      downloadFile(markdown, filename, 'text/markdown')
+      saveExportHistory(filename, exportData)
+    } else {
+      // Use the export API endpoint for JSON
+      const exportResponse = await fetch('/api/export', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(exportData)
+      })
+      
+      if (!exportResponse.ok) {
+        throw new Error('Failed to export via API')
+      }
+      
+      const result = await exportResponse.json()
+      const filename = result.filename || `studyhall-export-${new Date().toISOString().split('T')[0]}.json`
+      
+      // Download the file
+      downloadFile(JSON.stringify(exportData, null, 2), filename, 'application/json')
+      saveExportHistory(filename, exportData)
     }
-    
-    const result = await exportResponse.json()
-    const filename = result.filename || `studyhall-export-${new Date().toISOString().split('T')[0]}.json`
-    
-    // Download the file
-    downloadFile(JSON.stringify(exportData, null, 2), filename, 'application/json')
-    saveExportHistory(filename, exportData)
   } catch (e: any) {
     console.error('Export error:', e)
     alert(`Error exporting everything: ${e.message || 'Unknown error'}`)
   }
+}
+
+const generateMarkdownExport = (data: any): string => {
+  const lines: string[] = []
+  
+  lines.push('# StudyHall Export')
+  lines.push(`\n**Date:** ${data.date}`)
+  lines.push(`**Timestamp:** ${data.timestamp}`)
+  lines.push(`\n## Summary\n`)
+  lines.push(`- Code Snippets: ${data.summary.codeSnippets}`)
+  lines.push(`- Editor Files: ${data.summary.editorFiles}`)
+  lines.push(`- Materials: ${data.summary.materials}`)
+  
+  // Code Section
+  if (data.code && data.code.length > 0) {
+    lines.push(`\n## Code Snippets\n`)
+    data.code.forEach((item: any, index: number) => {
+      lines.push(`\n### Code Snippet ${index + 1}`)
+      if (item.timestamp) {
+        lines.push(`*Created: ${item.timestamp}*`)
+      }
+      lines.push(`\n\`\`\`python`)
+      lines.push(item.code || '')
+      lines.push(`\`\`\``)
+    })
+  }
+  
+  // Editor Files Section
+  if (data.editorFiles && Array.isArray(data.editorFiles) && data.editorFiles.length > 0) {
+    lines.push(`\n## Editor Files\n`)
+    data.editorFiles.forEach((file: any) => {
+      if (file.type === 'file') {
+        lines.push(`\n### ${file.name || file.path || 'Untitled'}`)
+        lines.push(`\n\`\`\`${file.language || 'text'}`)
+        lines.push(file.content || '')
+        lines.push(`\`\`\``)
+      }
+    })
+  }
+  
+  // Materials Section
+  if (data.materials && data.materials.length > 0) {
+    lines.push(`\n## Materials\n`)
+    data.materials.forEach((material: any) => {
+      lines.push(`\n### ${material.title || 'Untitled'}`)
+      if (material.category) {
+        lines.push(`*Category: ${material.category}*`)
+      }
+      if (material.created_at) {
+        lines.push(`*Created: ${material.created_at}*`)
+      }
+      lines.push(`\n${material.content || 'No content'}`)
+      if (material.notion_url) {
+        lines.push(`\n[View in Notion](${material.notion_url})`)
+      }
+      lines.push(`\n---`)
+    })
+  }
+  
+  lines.push(`\n\n---\n*Exported from StudyHall Platform*`)
+  
+  return lines.join('\n')
 }
 
 const downloadExport = (item: any) => {
